@@ -116,12 +116,12 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
         </Alert>
       )}
 
-      {draft && !awarded && <PoDraft rfq={rfq} orders={draft} ranks={ranks} onCancel={() => setDraft(null)} onPlaced={setPlaced} />}
+      {draft && !awarded && <PoDraft rfq={rfq} orders={draft} ranks={ranks} {...(split && draft.length === 1 ? { onUseSplit: () => setDraft(split.allocations.map((a) => ({ offerId: a.offerId, rfqLineIds: a.rfqLineIds }))) } : {})} onCancel={() => setDraft(null)} onPlaced={setPlaced} />}
     </div>
   );
 }
 
-function PoDraft({ rfq, orders, ranks, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrder[]; ranks: Map<string, number>; onCancel: () => void; onPlaced: (pos: PurchaseOrder[]) => void }) {
+function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrder[]; ranks: Map<string, number>; onUseSplit?: () => void; onCancel: () => void; onPlaced: (pos: PurchaseOrder[]) => void }) {
   const allOffers = useDemo((s) => s.offers);
   const facilities = useDemo((s) => s.creditFacilities);
   const facility = facilities.find((f) => f.contractorId === rfq.contractorId) ?? null;
@@ -187,6 +187,31 @@ function PoDraft({ rfq, orders, ranks, onCancel, onPlaced }: { rfq: Rfq; orders:
               {!eligibility.ok && <span className="block text-ink-muted">{eligibility.reason}</span>}
             </span>
           </label>
+          {rfq.wantsCredit && !eligibility.ok && (
+            <div data-testid="po-credit-blocked">
+              <Alert tone="caution" title="Pay with credit is not available for this order">
+                <span className="block">{eligibility.reason}</span>
+                <span className="mt-1 block">You can:</span>
+                <span className="block">· pay the supplier on its own terms by bank transfer (selected below);</span>
+                {onUseSplit && (
+                  <span className="block">
+                    ·{" "}
+                    <button type="button" className="underline" data-testid="po-blocked-split" onClick={onUseSplit}>
+                      split the basket across suppliers
+                    </button>{" "}
+                    so a smaller order may fit;
+                  </span>
+                )}
+                <span className="block">
+                  ·{" "}
+                  <Link href="/contractor/credit/apply" className="underline" data-testid="po-blocked-apply">
+                    {facility ? "apply for a higher credit cap" : "apply for a credit cap"}
+                  </Link>
+                  .
+                </span>
+              </Alert>
+            </div>
+          )}
           <label className="flex items-start gap-2">
             <input type="radio" name="pay" data-testid="po-pay-bank" checked={!useCredit} onChange={() => setMethod("bank_transfer")} className="mt-1" />
             <span>Bank transfer to the supplier on its agreed terms</span>
