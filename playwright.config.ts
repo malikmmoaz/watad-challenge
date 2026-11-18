@@ -4,13 +4,19 @@ import { defineConfig, devices } from "@playwright/test";
  * E2E smoke tests (#15). Three journeys, kept fast and stable.
  *
  * Target:
- *  - PLAYWRIGHT_BASE_URL set -> test that deployment (Vercel preview or the live link).
+ *  - PLAYWRIGHT_BASE_URL set -> test that deployment (a PR preview; production is refused).
  *  - unset                   -> build and serve the app locally on E2E_PORT (default 3110,
  *                               inside the team's 3100-3199 range; 3100 stays free for `pnpm dev`).
  *    E2E_PREBUILT=1 skips the build when `.next` is already fresh.
  */
 const port = Number(process.env.E2E_PORT ?? 3110);
-const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL;
+// Empty counts as unset (the cross-browser workflow passes an empty input).
+const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL || undefined;
+// Automated runs against production tripped Vercel's bot mitigation on 18 Nov
+// (docs/incidents.md). Test a local production build or a PR preview instead.
+if (externalBaseURL && /\/\/watad-challenge\.vercel\.app(\/|$)/.test(externalBaseURL)) {
+  throw new Error("PLAYWRIGHT_BASE_URL points at production. Use a local build (leave it unset) or a PR preview URL.");
+}
 const baseURL = externalBaseURL ?? `http://127.0.0.1:${port}`;
 const isCI = !!process.env.CI;
 const start = `pnpm exec next start -H 127.0.0.1 -p ${port}`;
