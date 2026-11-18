@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonClass, Icon } from "./ui";
 
 const LINKS = [
   { href: "/about", label: "About" },
@@ -8,15 +9,18 @@ const LINKS = [
 /** Pine bar for pages outside the three role areas: product name and the explanation pages. */
 export function SiteHeader({ current }: { current?: (typeof LINKS)[number]["href"] }) {
   return (
-    <header className="bg-pine text-on-pine">
+    <header className="sticky top-0 z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-10 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         Skip to content
       </a>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5 sm:px-8">
-        <Link href="/" className="rounded-sm text-base font-semibold text-on-pine focus-visible:outline-on-pine">
+        <Link href="/" className="flex items-center gap-2 rounded-md text-base font-semibold tracking-[-0.01em] text-ink">
+          <span aria-hidden="true" className="grid size-7 place-items-center rounded-lg bg-pine-deep text-on-pine shadow-button">
+            <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45" />
+          </span>
           Watad challenge demo
         </Link>
-        <nav aria-label="About this demo" data-testid="site-nav" className="flex gap-1 text-sm">
+        <nav aria-label="About this demo" data-testid="site-nav" className="flex gap-1 rounded-full border border-line bg-surface p-1 text-sm shadow-card">
           {LINKS.map((l) => {
             const active = l.href === current;
             return (
@@ -24,8 +28,8 @@ export function SiteHeader({ current }: { current?: (typeof LINKS)[number]["href
                 key={l.href}
                 href={l.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-8 items-center whitespace-nowrap rounded-md px-3 transition-colors duration-150 focus-visible:outline-on-pine ${
-                  active ? "bg-on-pine font-semibold text-pine" : "text-on-pine-muted hover:bg-pine-raised hover:text-on-pine"
+                className={`flex h-8 items-center whitespace-nowrap rounded-full px-3.5 font-medium transition-colors duration-150 ${
+                  active ? "bg-pine-deep text-on-pine shadow-button" : "text-ink-muted hover:bg-paper hover:text-ink"
                 }`}
               >
                 {l.label}
@@ -35,7 +39,7 @@ export function SiteHeader({ current }: { current?: (typeof LINKS)[number]["href
         </nav>
         <Link
           href="/"
-          className="ml-auto flex h-8 items-center rounded-md border border-on-pine-muted/60 px-3 text-sm text-on-pine transition-colors duration-150 hover:bg-pine-raised focus-visible:outline-on-pine"
+          className={buttonClass("primary", "sm", "ml-auto rounded-full px-4")}
         >
           Choose a role
         </Link>
