@@ -43,6 +43,12 @@ export function RoleNav({ current }: { current: Role }) {
         </nav>
         <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-pine-muted">
           {persona ? <span className="hidden md:inline">{persona}</span> : null}
+          <Link href="/about" data-testid="nav-about" className="rounded-sm text-on-pine-muted underline decoration-on-pine-muted/50 underline-offset-[3px] hover:text-on-pine focus-visible:outline-on-pine">
+            About
+          </Link>
+          <Link href="/how-we-built" data-testid="nav-how-we-built" className="rounded-sm text-on-pine-muted underline decoration-on-pine-muted/50 underline-offset-[3px] hover:text-on-pine focus-visible:outline-on-pine">
+            How we built it
+          </Link>
           <span className="rounded-sm border border-dashed border-on-pine-muted px-2 py-1 text-on-pine">Sample data · simulated AI</span>
           <ResetDemoButton />
         </div>

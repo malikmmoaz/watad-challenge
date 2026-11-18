@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { RoleLink } from "@/components/role-link";
 import { ROLES } from "@/components/role-nav";
 import { Icon } from "@/components/ui";
@@ -35,6 +36,14 @@ export default function Home() {
       </ul>
       <p className="max-w-2xl border-t border-line pt-5 text-sm text-ink-muted">
         All companies, prices and credit files in this demo are sample data. AI features are simulated and labelled where they appear.
+      </p>
+      <p className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <Link href="/about" data-testid="landing-about" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+          About this demo: business model, priorities, stack, AI, assumptions
+        </Link>
+        <Link href="/how-we-built" data-testid="landing-how-we-built" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+          How we built it
+        </Link>
       </p>
     </main>
   );
