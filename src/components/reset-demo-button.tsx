@@ -2,9 +2,14 @@
 
 import { resetDemo } from "@/store";
 
+/** Sits on the pine bar: restores the seeded sample data. */
 export function ResetDemoButton() {
   return (
-    <button type="button" onClick={resetDemo} className="rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-100">
+    <button
+      type="button"
+      onClick={resetDemo}
+      className="flex h-7 items-center rounded-md border border-on-pine-muted/60 px-2 text-xs text-on-pine transition-colors duration-150 hover:bg-pine-raised focus-visible:outline-on-pine"
+    >
       Reset demo data
     </button>
   );

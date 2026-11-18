@@ -1,0 +1,158 @@
+/*
+ * Design tokens. Tailwind v4 theme: every `--color-*`, `--text-*`, `--radius-*`
+ * and `--shadow-*` below becomes a utility (bg-paper, text-ink-muted, rounded-md).
+ * Use these roles in new code. The default Tailwind palette stays available until
+ * the screens are migrated in #7; it will be switched off then.
+ * See DESIGN.md for when to use each one.
+ */
+@theme {
+  --color-white: #fff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Grounds: green-tinted security paper, two plies */
+  --color-paper: oklch(0.972 0.007 155);
+  --color-surface: oklch(0.995 0.003 155);
+  --color-panel: oklch(0.948 0.01 155);
+  --color-line: oklch(0.895 0.012 155);
+  --color-line-strong: oklch(0.8 0.016 155);
+  /* Edges of inputs and secondary buttons: 3:1 against surface */
+  --color-line-control: oklch(0.62 0.02 158);
+
+  /* Ink */
+  --color-ink: oklch(0.235 0.022 160);
+  --color-ink-muted: oklch(0.43 0.022 160);
+  --color-ink-subtle: oklch(0.52 0.02 160);
+
+  /* Shell: the pine rail */
+  --color-pine: oklch(0.285 0.048 162);
+  --color-pine-raised: oklch(0.345 0.055 162);
+  --color-on-pine: oklch(0.955 0.02 155);
+  --color-on-pine-muted: oklch(0.8 0.035 158);
+
+  /* Action: only on things that can be pressed */
+  --color-action: oklch(0.44 0.105 156);
+  --color-action-hover: oklch(0.39 0.1 156);
+  --color-action-active: oklch(0.345 0.09 156);
+  --color-action-soft: oklch(0.94 0.035 156);
+  --color-on-action: oklch(0.99 0.01 155);
+
+  /* Stamp ink: evidence, attestation, links to source documents */
+  --color-stamp: oklch(0.41 0.135 266);
+  --color-stamp-hover: oklch(0.35 0.14 266);
+  --color-stamp-soft: oklch(0.945 0.025 266);
+
+  /* Simulated AI */
+  --color-ai: oklch(0.4 0.115 300);
+  --color-ai-soft: oklch(0.953 0.024 300);
+  --color-ai-line: oklch(0.78 0.07 300);
+
+  /* State */
+  --color-positive: oklch(0.43 0.1 150);
+  --color-positive-soft: oklch(0.94 0.04 150);
+  --color-caution: oklch(0.45 0.095 70);
+  --color-caution-soft: oklch(0.945 0.055 85);
+  --color-caution-mark: oklch(0.76 0.15 75);
+  --color-negative: oklch(0.46 0.16 27);
+  --color-negative-soft: oklch(0.95 0.03 27);
+  --color-neutral-soft: oklch(0.93 0.008 155);
+
+  /* Credit bands A to E */
+  --color-band-a: oklch(0.5 0.12 152);
+  --color-band-b: oklch(0.62 0.13 135);
+  --color-band-c: oklch(0.76 0.15 85);
+  --color-band-d: oklch(0.66 0.16 55);
+  --color-band-e: oklch(0.52 0.18 27);
+
+  /* Type: one family, fixed rem scale, ratio about 1.15 */
+  --font-sans: var(--font-public-sans), "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-noto-arabic), "Noto Sans Arabic", "Geeza Pro", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: 2.75rem;
+
+  /* Shape: small radii, like a printed form */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* Two plies only: the page, and one raised leaf */
+  --shadow-leaf: 0 1px 2px oklch(0.235 0.022 160 / 0.06), 0 8px 24px -6px oklch(0.235 0.022 160 / 0.16);
+  --shadow-press: inset 0 1px 2px oklch(0.235 0.022 160 / 0.18);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--color-line-strong) transparent;
+    accent-color: var(--color-action);
+    caret-color: var(--color-action);
+  }
+  body {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: oklch(0.44 0.105 156 / 0.22);
+    color: var(--color-ink);
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p, li, dd {
+    text-wrap: pretty;
+  }
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-stamp);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+  [lang="ar"] {
+    font-family: var(--font-arabic);
+    line-height: 1.7;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@keyframes skeleton-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@keyframes seal-press {
+  from { transform: scale(1.18) rotate(-6deg); opacity: 0; }
+  to { transform: scale(1) rotate(-6deg); opacity: 1; }
+}

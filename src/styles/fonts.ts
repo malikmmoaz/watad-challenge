@@ -1,0 +1,27 @@
+import { Geist_Mono, Noto_Sans_Arabic, Public_Sans } from "next/font/google";
+
+/** UI face: headings, labels, body and data. */
+export const publicSans = Public_Sans({
+  subsets: ["latin"],
+  variable: "--font-public-sans",
+  display: "swap",
+});
+
+/** Document, order and registration numbers only. */
+export const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
+/** Arabic company and material names (`nameAr`). */
+export const notoArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-noto-arabic",
+  weight: ["400", "600"],
+  display: "swap",
+  preload: false,
+});
+
+/** Put on <html>: `className={fontVariables}`. */
+export const fontVariables = `${publicSans.variable} ${geistMono.variable} ${notoArabic.variable}`;

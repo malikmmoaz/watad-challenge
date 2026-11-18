@@ -17,8 +17,8 @@ export function DemoCounts() {
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {items.map(([label, n]) => (
-        <div key={label} className="rounded border border-neutral-200 bg-white p-4">
-          <dt className="text-sm text-neutral-600">{label}</dt>
+        <div key={label} className="rounded-lg border border-line bg-surface p-4">
+          <dt className="text-xs text-ink-muted">{label}</dt>
           <dd className="text-2xl font-semibold tabular-nums">{n}</dd>
         </div>
       ))}
