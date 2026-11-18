@@ -1,58 +1,18 @@
-"use client";
-
 import Link from "next/link";
-import { Fragment, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { tour } from "@/content/tour";
 import type { Role } from "@/domain/types";
+import { GuideShell, HideGuideButton } from "./reviewer-guide-client";
 import { Icon } from "./ui";
 
 /*
  * Reviewer guide (#16): one panel per role with three steps, copy in
- * src/content/tour.ts. It sits inline under the app bar, never floating over a
- * page, so it cannot cover a primary action. "Hide guide" stores the dismissal;
- * "Restart tour" in the app bar clears it.
+ * src/content/tour.ts. A server component, so its content ships as HTML, not
+ * JavaScript; the dismissed state lives in reviewer-guide-client.tsx. It sits
+ * inline under the app bar, never floating over a page, so it cannot cover a
+ * primary action, and it is in the first paint, so it causes no layout shift.
  */
 
-const EVENT = "watad-tour-change";
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
-/**
- * "open" | "hidden". The server renders "open", which is right for a first
- * visit, so the guide is in the first paint and never pushes the page down
- * (no layout shift for new visitors). A reviewer who dismissed it sees it
- * collapse right after hydration.
- */
-function useGuideState(): "open" | "hidden" {
-  return useSyncExternalStore(
-    subscribe,
-    () => {
-      try {
-        return window.localStorage.getItem(tour.storageKey) === "1" ? "hidden" : "open";
-      } catch {
-        return "open";
-      }
-    },
-    () => "open",
-  );
-}
-
-function setHidden(hidden: boolean) {
-  try {
-    if (hidden) window.localStorage.setItem(tour.storageKey, "1");
-    else window.localStorage.removeItem(tour.storageKey);
-  } catch {
-    // Storage blocked: the guide simply stays open this visit.
-  }
-  window.dispatchEvent(new Event(EVENT));
-}
 
 /** `**Label**` becomes the button-label style; everything else stays plain text. */
 function withLabels(text: string): ReactNode {
@@ -68,11 +28,10 @@ function withLabels(text: string): ReactNode {
 }
 
 export function ReviewerGuide({ role }: { role: Role }) {
-  const state = useGuideState();
   const panel = tour.panels[role];
-  if (state === "hidden") return null;
 
   return (
+    <GuideShell>
     <section
       aria-labelledby="reviewer-guide-h"
       data-testid="reviewer-guide"
@@ -87,15 +46,7 @@ export function ReviewerGuide({ role }: { role: Role }) {
             </h2>
             <p className="mt-0.5 text-sm text-on-pine-muted">{panel.intro}</p>
           </div>
-          <button
-            type="button"
-            data-testid="reviewer-guide-hide"
-            onClick={() => setHidden(true)}
-            className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-on-pine/25 px-3 text-xs font-medium text-on-pine transition-colors duration-150 hover:bg-on-pine/10 focus-visible:outline-on-pine"
-          >
-            <Icon name="x" size={12} strokeWidth={2} />
-            {tour.dismissLabel}
-          </button>
+          <HideGuideButton />
         </div>
 
         <ol className="mt-4 grid gap-3 md:grid-cols-3">
@@ -127,26 +78,6 @@ export function ReviewerGuide({ role }: { role: Role }) {
         </div>
       </div>
     </section>
-  );
-}
-
-/** App-bar link that reopens the guide; shown only while the guide is hidden. */
-export function RestartTour() {
-  const state = useGuideState();
-  if (state !== "hidden") return null;
-  return (
-    <button
-      type="button"
-      data-testid="reviewer-guide-restart"
-      aria-label={tour.restartLabel}
-      onClick={() => {
-        setHidden(false);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }}
-      className="whitespace-nowrap text-sm text-ink-muted transition-colors duration-150 hover:text-ink"
-    >
-      <span className="sm:hidden">Guide</span>
-      <span className="hidden sm:inline">{tour.restartLabel}</span>
-    </button>
+    </GuideShell>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Role } from "@/domain/types";
 import { Icon } from "./ui";
 import { ResetDemoButton } from "./reset-demo-button";
-import { RestartTour } from "./reviewer-guide";
+import { RestartTour } from "./reviewer-guide-client";
 import { RoleLink } from "./role-link";
 
 export const ROLES: { role: Role; href: string; label: string; persona: string; blurb: string }[] = [
