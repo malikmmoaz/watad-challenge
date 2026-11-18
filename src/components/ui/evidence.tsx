@@ -68,9 +68,9 @@ const decisionStyle: Record<Decision, { word: string; cls: string }> = {
 export function DecisionStamp({ decision, by, at, animate = false }: { decision: DecisionInput; by: string; at: string; animate?: boolean }) {
   const d = decisionStyle[fromOutcome[decision]];
   return (
-    <div className={cx("inline-flex -rotate-2 flex-col rounded-md border-2 px-3 py-1.5 outline outline-1 -outline-offset-4 outline-current/40", d.cls, animate && "motion-safe:animate-[seal-press_240ms_var(--ease-out)_both]")}>
+    <div className={cx("inline-flex max-w-[calc(100%-1rem)] -rotate-2 flex-col rounded-md border-2 px-3 py-1.5 outline outline-1 -outline-offset-4 outline-current/40", d.cls, animate && "motion-safe:animate-[seal-press_240ms_var(--ease-out)_both]")}>
       <span className="whitespace-nowrap text-sm font-bold uppercase tracking-wide">{d.word}</span>
-      <span className="whitespace-nowrap text-xs font-medium">
+      <span className="text-xs font-medium">
         {by} · {at}
       </span>
     </div>
