@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { demoPersona, reference } from "@/data";
-import { Badge, CellNote, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, Table, Td, Th, THead, Tr } from "@/components/ui";
+import { Badge, CellNote, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, StatStrip, Table, Td, Th, THead, Tr } from "@/components/ui";
 import type { Rfq, Supplier } from "@/domain/types";
 import { formatDate, formatPercent } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/procurement/labels";
@@ -25,16 +25,21 @@ function whyRelevant(rfq: Rfq, me: Supplier): string[] {
 export function SupplierHome() {
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
+  const pos = useDemo((s) => s.purchaseOrders);
   const me = reference.suppliers.find((s) => s.id === demoPersona.supplier);
   if (!me) return null;
 
   const requests = rfqs
     .filter((r) => r.status !== "draft" && r.status !== "cancelled" && r.invitedSupplierIds.includes(me.id))
     .sort((a, b) => a.closesAt.localeCompare(b.closesAt));
+  const awaitingOffer = requests.filter((r) => (r.status === "sent" || r.status === "offers_received") && !offers.some((o) => o.rfqId === r.id && o.supplierId === me.id && o.status !== "withdrawn")).length;
+  const submitted = offers.filter((o) => o.supplierId === me.id && o.status === "submitted").length;
+  const toFulfil = pos.filter((p) => p.supplierId === me.id && !["delivered", "paid", "cancelled", "invoiced"].includes(p.status)).length;
 
   return (
     <>
       <PageHeader
+        eyebrow="Supplier"
         title="Supplier portal"
         status={<SampleDataLabel />}
         meta={
@@ -47,6 +52,15 @@ export function SupplierHome() {
             ) : null}
           </>
         }
+      />
+
+      <StatStrip
+        items={[
+          { label: "Requests waiting for your offer", value: awaitingOffer },
+          { label: "Offers submitted", value: submitted, note: "the contractor has not chosen yet" },
+          { label: "POs to fulfil", value: toFulfil },
+          { label: "Delivered on time", value: formatPercent(me.performance.onTimeRate), note: `over ${me.performance.ordersCompleted.toLocaleString("en-SA")} orders` },
+        ]}
       />
 
       <section aria-labelledby="inbox-h" className="flex flex-col gap-3">
