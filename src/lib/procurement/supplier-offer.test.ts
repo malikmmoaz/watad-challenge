@@ -106,7 +106,7 @@ describe("submitOffer", () => {
 });
 
 describe("PO actions by role", () => {
-  const facility = { creditCaseId: "cc" as never, contractorId: rfq.contractorId, cap: sar(1e6), drawn: sar(0), available: sar(1e6), band: "B" as const, maxTenorDays: 60 as const, profitRate: 0.03, conditions: [], approvedAt: now, reviewDue: now };
+  const facility = { creditCaseId: "cc" as never, contractorId: rfq.contractorId, cap: sar(1e6), drawn: sar(0), band: "B" as const, maxTenorDays: 60 as const, profitRate: 0.03, conditions: [], approvedAt: now, reviewDue: now };
   const placed = (method: "platform_credit" | "bank_transfer") => {
     const s = state({ rfqs: [{ ...open, status: "offers_received" }], offers: [offer("a", 3000, 15)], creditFacilities: [facility] });
     const r = placePurchaseOrders(s, { rfqId: open.id, orders: [{ offerId: "a" as never }], method, suppliers: [supplier("sup_a")], now });
