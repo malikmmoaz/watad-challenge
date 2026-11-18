@@ -29,4 +29,8 @@ Events and their properties are typed in `src/lib/analytics/events.ts`. Add a ne
 
 ## Status
 
-Wired so far: `role_selected` (landing cards and header switcher) and `demo_reset`. The other events are captured by the feature PRs that own those screens. Arrival in PostHog is verified on the first Vercel deploy: the build machine cannot run a headless browser.
+Wired so far: `role_selected` (landing cards and header switcher) and `demo_reset`. The other events are captured by the feature PRs that own those screens.
+
+Verified 2026-11-18 15:21 UTC: a local production build with the key sent `$pageview`, `role_selected` (role, source), `$autocapture` and `$web_vitals` to the project, with `app` and `role` registered.
+
+**Bots and E2E:** posthog-js drops events from headless or automated browsers (`navigator.webdriver`, Headless user agent), so Playwright runs in CI and against production do not pollute the data. Do not set `opt_out_useragent_filter`.
