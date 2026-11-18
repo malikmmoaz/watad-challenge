@@ -92,7 +92,7 @@ export function ContractorCredit() {
             <div data-testid="credit-facility">
               <Panel title="Your credit cap">
                 <div className="space-y-5">
-                  <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={fmt} />
+                  <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={fmt} barOnly />
                   <Facts
                     columns={2}
                     items={[
