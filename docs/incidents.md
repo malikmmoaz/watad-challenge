@@ -8,6 +8,17 @@ Short, blameless notes on things that went wrong while building, what we did, an
 
 **Likely cause.** Automated requests from the team against production through the day, all from one machine (srv1041554) or CI: Playwright runs with `PLAYWRIGHT_BASE_URL` set to the live site (cross-browser runs, design sweeps, verification of fixes), `curl` loops over the routes after each deploy, and headless browsers checking analytics and headers. Tariq ran several of these himself to verify merges on production. To bot mitigation this looks like scraping.
 
+Timeline of the heaviest automated traffic, reported by each agent (UTC, all headless Chromium from srv1041554 unless noted):
+- 18:15–18:20 · narrow-width runs on `/` (5 widths) and screenshots (Layla)
+- 18:27, 18:30, 19:17, 19:21 · cross-browser workflow dispatched against production from CI (Firefox, WebKit, WebKit mobile)
+- ~18:59 and ~19:15 · verification of merged PRs: 2 viewports, then a 16-screen audit plus phone shots (Omar)
+- ~19:55 · design audit, 16 pages × 2 widths, about 32 page loads (Layla)
+- 20:22–20:26 · final design sweep, 16 pages × 3 widths, about 48 page loads (Layla)
+- through the day, and ~20:30 · route checks with `curl` after each merge, and a 320 px check of 5 credit pages (Tariq)
+- ~20:45 · production starts answering `403` with `x-vercel-mitigated: challenge`
+
+Hana's runs all used local builds.
+
 **What we did.**
 1. Every agent was told directly to stop all automated requests to production.
 2. The cross-browser workflow no longer defaults to production: it builds and serves the app inside the job, accepts a PR preview URL, and refuses the production URL.
