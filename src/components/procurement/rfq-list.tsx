@@ -2,33 +2,62 @@
 
 import Link from "next/link";
 import { demoPersona } from "@/data";
+import { Badge, CellNote, EmptyState, Table, Td, Th, THead, Tr } from "@/components/ui";
+import { formatDate } from "@/lib/format";
+import { RFQ_STATUS } from "@/lib/status";
 import { useDemo } from "@/store";
 
-/** The contractor's RFQs, newest first, with the entry point to create one. */
+/** The contractor's RFQs, newest first, with how many offers each has and when offers close. */
 export function RfqList() {
   const rfqs = useDemo((s) => s.rfqs);
-  const mine = rfqs.filter((r) => r.contractorId === demoPersona.contractor);
+  const offers = useDemo((s) => s.offers);
+  const mine = rfqs.filter((r) => r.contractorId === demoPersona.contractor).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  if (mine.length === 0) {
+    return (
+      <EmptyState title="No RFQs yet">Upload an RFQ or pick materials from the catalog. Shortlisted suppliers then send their offers here.</EmptyState>
+    );
+  }
+
   return (
-    <section aria-label="My RFQs" className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">My RFQs</h2>
-        <Link href="/contractor/rfq/new" data-testid="rfq-new" className="rounded bg-neutral-900 px-4 py-2 text-sm text-white">
-          New RFQ
-        </Link>
-      </div>
-      <ul className="divide-y divide-neutral-200 rounded border border-neutral-200 bg-white">
-        {mine.map((r) => (
-          <li key={r.id} data-testid="rfq-row" className="flex flex-wrap items-baseline justify-between gap-2 p-3 text-sm">
-            <span>
-              <Link href={`/contractor/rfq/${r.id}`} className="font-medium underline-offset-2 hover:underline">{r.title}</Link> <span className="font-mono text-neutral-600">{r.id}</span>
-            </span>
-            <span className="text-neutral-700">
-              {r.lines.length} lines · {r.deliveryCity} · by {r.requiredBy.slice(0, 10)} · {r.source === "upload" ? "from upload" : "from catalog"} · <span className="capitalize">{r.status.replace(/_/g, " ")}</span>
-            </span>
-          </li>
-        ))}
-        {mine.length === 0 && <li className="p-3 text-sm text-neutral-600">No RFQs yet.</li>}
-      </ul>
-    </section>
+    <Table caption="My RFQs" minWidth={720}>
+      <THead>
+        <tr>
+          <Th>RFQ</Th>
+          <Th>Status</Th>
+          <Th align="end">Offers</Th>
+          <Th>Offers close</Th>
+          <Th>Required on site</Th>
+        </tr>
+      </THead>
+      <tbody>
+        {mine.map((r) => {
+          const received = offers.filter((o) => o.rfqId === r.id && o.status !== "withdrawn").length;
+          const status = RFQ_STATUS[r.status];
+          return (
+            <Tr key={r.id} data-testid="rfq-row">
+              <Td>
+                <Link href={`/contractor/rfq/${r.id}`} className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
+                  {r.title}
+                </Link>
+                <CellNote>
+                  <span className="font-mono">{r.id}</span> · {r.lines.length} {r.lines.length === 1 ? "line" : "lines"} · {r.deliveryCity} · {r.source === "upload" ? "from uploaded RFQ" : "from catalog"}
+                  {r.wantsCredit ? " · paying from credit cap" : ""}
+                </CellNote>
+              </Td>
+              <Td>
+                <Badge tone={status.tone}>{status.label}</Badge>
+              </Td>
+              <Td align="end">
+                {received}
+                <CellNote>of {r.invitedSupplierIds.length} invited</CellNote>
+              </Td>
+              <Td className="whitespace-nowrap">{r.status === "draft" ? "Not sent yet" : formatDate(r.closesAt)}</Td>
+              <Td className="whitespace-nowrap">{formatDate(r.requiredBy)}</Td>
+            </Tr>
+          );
+        })}
+      </tbody>
+    </Table>
   );
 }

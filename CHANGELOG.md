@@ -10,3 +10,4 @@
 - Product analytics with PostHog (EU): anonymous, typed event catalog, off when no key is set.
 - Contractor: explainable, credit-aware supplier shortlist on each RFQ, with why / why not per supplier, a reserved slot for a vetted new supplier, the available credit cap, a blind-comparison option, and sending the RFQ to the suppliers you pick (#9).
 - Contractor: compare offers (bids) side by side on landed cost incl. delivery and 15% VAT, price vs benchmark, coverage, lead time, terms, reliability and local content, with a score breakdown, blind mode and a suggested basket split; place the PO by bank transfer or pay with credit (Murabaha draw, supplier paid directly), with a confirmation and a status timeline (#11).
+- Contractor and supplier open on live work: RFQs with offer counts, credit cap and latest PO status; supplier requests with match reasons (#7).

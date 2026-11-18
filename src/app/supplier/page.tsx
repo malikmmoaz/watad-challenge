@@ -1,12 +1,10 @@
-import { DemoCounts } from "@/components/demo-counts";
+import { SupplierHome } from "@/components/home/supplier-home";
 
-/** Placeholder landing for this role area. Owner: Omar (#10). */
+/** Supplier first view: requests matched to this supplier and their record. */
 export default function Page() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Supplier portal</h1>
-      <p className="text-ink-muted">This area is being built. The numbers below are read live from the shared demo store.</p>
-      <DemoCounts />
+    <div className="flex flex-col gap-6">
+      <SupplierHome />
     </div>
   );
 }
