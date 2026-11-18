@@ -15,9 +15,10 @@ export const test = base.extend<{ errors: string[] }>({
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (e) => {
-        // WebKit reports a Next.js route prefetch (?_rsc=) cancelled by a navigation or reload as
-        // "... due to access control checks". Nothing breaks for the user; Chromium and Firefox stay silent.
-        if (/_rsc=.* due to access control checks/.test(e.message)) return;
+        // WebKit reports a same-origin request cancelled by a navigation as "... due to access
+        // control checks": Next.js route prefetches (?_rsc=) and blob: worker URLs (/<uuid>, e.g. the
+        // analytics recorder). Nothing breaks for the user; Chromium and Firefox stay silent.
+        if (/(_rsc=\S*|\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) due to access control checks/.test(e.message)) return;
         errors.push(`pageerror: ${e.message}`);
       });
       page.on("console", (m) => {
