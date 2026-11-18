@@ -10,7 +10,13 @@ const POSTHOG = ["https://eu.i.posthog.com", "https://eu-assets.i.posthog.com"];
 /** Vercel's preview toolbar; previews only (production never loads it). */
 const VERCEL_LIVE = ["https://vercel.live"];
 
-export function contentSecurityPolicy({ dev = false, preview = false } = {}): string {
+/**
+ * `local`: a production build served over plain http on this machine or in CI
+ * (`next start` on 127.0.0.1). Safari/WebKit applies upgrade-insecure-requests to
+ * localhost, so every asset would be requested over https and fail; Chromium and
+ * Firefox exempt localhost. Deployed builds (Vercel sets VERCEL=1) always upgrade.
+ */
+export function contentSecurityPolicy({ dev = false, preview = false, local = false } = {}): string {
   const extra = preview ? VERCEL_LIVE : [];
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -27,11 +33,11 @@ export function contentSecurityPolicy({ dev = false, preview = false } = {}): st
     "frame-ancestors": ["'none'"],
   };
   const csp = Object.entries(directives).map(([k, v]) => `${k} ${v.join(" ")}`);
-  if (!dev) csp.push("upgrade-insecure-requests");
+  if (!dev && !local) csp.push("upgrade-insecure-requests");
   return csp.join("; ");
 }
 
-export function securityHeaders(env: { dev?: boolean; preview?: boolean } = {}): { key: string; value: string }[] {
+export function securityHeaders(env: { dev?: boolean; preview?: boolean; local?: boolean } = {}): { key: string; value: string }[] {
   return [
     { key: "Content-Security-Policy", value: contentSecurityPolicy(env) },
     { key: "X-Frame-Options", value: "DENY" },

@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     const headers = securityHeaders({
       dev: process.env.NODE_ENV === "development",
       preview: process.env.VERCEL_ENV === "preview",
+      // Not on Vercel: a local `next start` over http (tests, Lighthouse).
+      local: !process.env.VERCEL,
     });
     return [{ source: "/(.*)", headers }];
   },
