@@ -15,7 +15,9 @@ export default function Home() {
       <ul className="grid gap-4 md:grid-cols-3">
         {ROLES.map((r) => (
           <li key={r.role}>
-            <RoleLink role={r.role} source="landing"
+            <RoleLink
+              role={r.role}
+              source="landing"
               href={r.href}
               data-testid={`role-${r.role}`}
               className="group flex h-full flex-col gap-2 rounded-lg border border-line-strong bg-surface p-5 transition-colors duration-150 hover:border-action"

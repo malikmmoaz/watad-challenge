@@ -25,7 +25,9 @@ export function RoleNav({ current }: { current: Role }) {
           {ROLES.map((r) => {
             const active = r.role === current;
             return (
-              <RoleLink role={r.role} source="switcher"
+              <RoleLink
+                role={r.role}
+                source="switcher"
                 key={r.role}
                 href={r.href}
                 data-testid={`role-switcher-${r.role}`}
