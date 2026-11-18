@@ -17,8 +17,9 @@ permissions:
 jobs:
   e2e:
     name: e2e (${{ matrix.project }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Pinned: Playwright 1.65 lists WebKit system deps for Ubuntu 24.04; on the 26.04 image the install stalls.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
