@@ -2,6 +2,22 @@
 
 Short, blameless notes on things that went wrong while building, what we did, and what changed so they don't happen again. Newest first.
 
+## 2026-11-18 · Our own automated traffic tripped Vercel's bot protection
+
+**What happened.** From about 20:45 UTC the live site answered `403` with `x-vercel-mitigated: challenge`: Vercel's Security Checkpoint was challenging visitors. Reviewers opening the link would have met a challenge page instead of the app. Agents have no Vercel access, so the checkpoint itself is handled by Malik in the Vercel Firewall.
+
+**Likely cause.** Automated requests from the team against production through the day, all from one machine (srv1041554) or CI: Playwright runs with `PLAYWRIGHT_BASE_URL` set to the live site (cross-browser runs, design sweeps, verification of fixes), `curl` loops over the routes after each deploy, and headless browsers checking analytics and headers. Tariq ran several of these himself to verify merges on production. To bot mitigation this looks like scraping.
+
+**What we did.**
+1. Every agent was told directly to stop all automated requests to production.
+2. The cross-browser workflow no longer defaults to production: it builds and serves the app inside the job, accepts a PR preview URL, and refuses the production URL.
+3. `playwright.config.ts` throws if `PLAYWRIGHT_BASE_URL` points at production, so no local run can do it by accident.
+4. Lighthouse was already safe: it audits a local production build on 127.0.0.1.
+
+**What we changed.**
+- Automated checks (e2e, accessibility, Lighthouse, cross-browser, smoke loops) run against a local production build or a PR preview, never production.
+- Production is checked by people in a real browser, and by Vercel's deployment status on the commit.
+
 ## 2026-11-18 · Stacked PRs closed when their base branch was deleted
 
 **What happened.** Four PRs (#68 homes, #69 reviewer guide, #78 procurement polish, #79 credit restyle) were stacked on the landing redesign's branch `feat/7-landing-v2` (#60). After Malik approved #60, Tariq merged it with `gh pr merge --squash --delete-branch`. Deleting the base branch made GitHub **close** the four stacked PRs instead of retargeting them to `main`.
