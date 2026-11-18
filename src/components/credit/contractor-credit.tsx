@@ -7,10 +7,12 @@ import { availableCredit } from "@/domain/credit/facility";
 import { formatSar, murabaha } from "@/domain/money";
 import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
-import { Alert, buttonClass, CreditCapMeter, EmptyState, Facts, LoadingRows, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
+import { Alert, buttonClass, CreditCapMeter, StatStrip, EmptyState, Facts, LoadingRows, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
 import { useHash, useHydrated } from "./client-state";
 import { ApplicationTracker } from "./application-tracker";
 import { DrawLedger } from "./draw-ledger";
+import { useToday } from "./use-today";
+import { utilisation } from "@/domain/credit/draws";
 import { formatDate } from "@/lib/format";
 
 const fmt = (n: number) => formatSar(n as Halalas);
@@ -28,6 +30,9 @@ export function ContractorCredit() {
   const facility = facilities.find((f) => f.contractorId === contractorId);
   const isPersona = contractorId === demoPersona.contractor;
   const hydrated = useHydrated();
+  const today = useToday();
+  const pos = useDemo((s) => s.purchaseOrders);
+  const use = facility ? utilisation(facility, pos, today) : { openDraws: 0, nextDue: undefined };
   const hash = useHash();
   const justSubmitted = cases.find((c) => c.id === hash && c.status === "submitted");
 
@@ -51,22 +56,6 @@ export function ContractorCredit() {
         }
       />
 
-      <div className="max-w-sm">
-        <Select
-          label="Sample contractor"
-          hint={isPersona ? "You are signed in as this contractor." : "Read-only preview of another sample contractor's applications."}
-          value={contractorId}
-          onChange={(e) => setContractorId(e.target.value as OrgId)}
-          data-testid="credit-contractor-select"
-        >
-          {reference.contractors.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.id === demoPersona.contractor ? " (you)" : ""}
-            </option>
-          ))}
-        </Select>
-      </div>
 
       {!hydrated ? (
         <LoadingRows rows={4} label="Loading your credit" />
@@ -83,19 +72,35 @@ export function ContractorCredit() {
             <p className="text-sm text-ink-muted">No credit cap yet. Once an application is approved, your cap and every draw appear here.</p>
           )}
           {facility && (
+            <div data-testid="credit-figures">
+              <StatStrip
+                items={[
+                  { label: "Credit cap left", value: formatSar(availableCredit(facility)), note: `of ${formatSar(facility.cap)}`, compact: true },
+                  { label: "Drawn on open orders", value: formatSar(facility.drawn), note: `${use.openDraws} open ${use.openDraws === 1 ? "order" : "orders"}`, compact: true },
+                  {
+                    label: "Next repayment",
+                    value: use.nextDue ? formatSar(use.nextDue.amount) : "None due",
+                    note: use.nextDue ? `due ${formatDate(use.nextDue.dueDate)}` : "Nothing outstanding",
+                    compact: true,
+                  },
+                  { label: "Credit band", value: facility.band, note: `review due ${formatDate(facility.reviewDue)}` },
+                ]}
+              />
+            </div>
+          )}
+          {facility && (
             <div data-testid="credit-facility">
               <Panel title="Your credit cap">
                 <div className="space-y-5">
                   <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={fmt} />
                   <Facts
-                    columns={3}
+                    columns={2}
                     items={[
-                      { label: "Available", value: formatSar(availableCredit(facility)) },
                       {
                         label: `Murabaha markup, ${facility.maxTenorDays} days`,
                         value: `${(facility.profitRate * 100).toFixed(2)}% (APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%)`,
                       },
-                      { label: `Band ${facility.band} · review due`, value: formatDate(facility.reviewDue) },
+                      { label: "Supplier payment", value: "Paid directly by the platform" },
                     ]}
                   />
                   {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">Conditions: {facility.conditions.join("; ")}</p>}
@@ -130,6 +135,23 @@ export function ContractorCredit() {
           )}
         </>
       )}
+
+      <div className="max-w-sm border-t border-line pt-6">
+        <Select
+          label="Preview another sample contractor"
+          hint={isPersona ? "You are signed in as this contractor." : "Read-only preview of another sample contractor's applications."}
+          value={contractorId}
+          onChange={(e) => setContractorId(e.target.value as OrgId)}
+          data-testid="credit-contractor-select"
+        >
+          {reference.contractors.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+              {c.id === demoPersona.contractor ? " (you)" : ""}
+            </option>
+          ))}
+        </Select>
+      </div>
     </div>
   );
 }
