@@ -7,9 +7,10 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
 - `src/lib/procurement/comparison.ts`: landed cost, benchmark flag, scored comparison, blind labels, basket split (pure). 34 unit tests.
 
 ## State
-- Written against Tariq's shared types (`@/domain/types`, `@/domain/money`). Needs one extra
-  `ShortlistReasonCode`: `"responsiveness"` (requested on #1).
-- Tests were run in the worktree with the scaffold's dependencies; CI runs once #1 is on main.
+- Branch `feat/9-shortlist-logic`, stacked on `feat/1-scaffold` (rebase on main once #1 merges).
+- Uses the shared types (`@/domain/types`, `@/domain/money`); `responsiveness` reason code and
+  `ShortlistEntry.newSupplierSlot` are in the scaffold.
+- On srv1041554: 66 unit tests pass (56 procurement), typecheck and lint clean.
 
 ## Next
 - #8 RFQ upload (simulated BOQ parsing, labelled) and catalog picker, then #9 shortlist UI,
