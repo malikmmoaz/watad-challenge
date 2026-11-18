@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { sar } from "@/domain/money";
 import type { ShortlistReasonCode } from "@/domain/types";
 import { materials, rfq, supplier } from "./fixtures.test-util";
-import { SHORTLIST_WEIGHTS, assessSupplier, buildShortlist, estimateRfqValue, type ShortlistContext } from "./shortlist";
+import { SHORTLIST_WEIGHTS, assessSupplier, buildShortlist, estimateRfqValue, priceIndexFromOffers, type ShortlistContext } from "./shortlist";
+import { offer } from "./fixtures.test-util";
 
 const ctx: ShortlistContext = { materials, facility: { available: sar(400_000) }, priceIndex: {} };
 const reasonOf = (row: ReturnType<typeof assessSupplier>, ...codes: ShortlistReasonCode[]) =>
@@ -182,5 +183,18 @@ describe("buildShortlist", () => {
 
   it("is deterministic on ties", () => {
     expect(buildShortlist([supplier("b"), supplier("a")], rfq, ctx).shortlisted.map((r) => r.supplierId)).toEqual(["a", "b"]);
+  });
+});
+
+describe("priceIndexFromOffers", () => {
+  it("compares quoted value with benchmark value across a supplier's past offer lines", () => {
+    // benchmark: rebar 3,000, cement 15. a quotes 3,300 / 15 -> (33,000 + 15,000) / (30,000 + 15,000)
+    const index = priceIndexFromOffers([rfq], [offer("a", 3300, 15), offer("b", 2850, null)], materials);
+    expect(index).toEqual({ sup_a: 1.067, sup_b: 0.95 });
+  });
+
+  it("ignores lines it cannot match to an RFQ and suppliers without offers", () => {
+    const stray = { ...offer("c", 3000, 15), rfqId: "rfq_unknown" as typeof rfq.id };
+    expect(priceIndexFromOffers([rfq], [stray], materials)).toEqual({});
   });
 });

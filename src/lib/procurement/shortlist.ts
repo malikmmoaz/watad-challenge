@@ -13,6 +13,7 @@ import type {
   Halalas,
   Material,
   MaterialCategory,
+  Offer,
   PaymentTerms,
   Rfq,
   ShortlistEntry,
@@ -248,4 +249,28 @@ export function buildShortlist(suppliers: Supplier[], rfq: Rfq, ctx: ShortlistCo
       .filter((r) => !pickedSet.has(r))
       .map((r) => (r.eligible ? { ...r, whyNot: [...r.whyNot, `Match score ${r.matchScore} is below the top ${size}`] } : r)),
   };
+}
+
+/**
+ * Typical quoted price per supplier relative to the 90-day benchmark, from
+ * its past offers on the platform: quoted value / benchmark value over every
+ * offer line it submitted. 1.04 means it usually quotes 4% above benchmark.
+ * Suppliers with no past offers are left out (scored neutrally).
+ */
+export function priceIndexFromOffers(rfqs: Rfq[], offers: Offer[], materials: Material[]): Record<string, number> {
+  const benchmark = new Map(materials.map((m) => [m.id as string, m.benchmarkUnitPrice as number]));
+  const lineMaterial = new Map(rfqs.flatMap((r) => r.lines.map((l) => [`${r.id}/${l.id}`, l.materialId as string] as const)));
+  const totals = new Map<string, { quoted: number; bench: number }>();
+  for (const offer of offers) {
+    for (const ol of offer.lines) {
+      const materialId = lineMaterial.get(`${offer.rfqId}/${ol.rfqLineId}`);
+      const bench = materialId ? benchmark.get(materialId) : undefined;
+      if (!bench || ol.quantityAvailable <= 0) continue;
+      const t = totals.get(offer.supplierId) ?? { quoted: 0, bench: 0 };
+      t.quoted += ol.unitPrice * ol.quantityAvailable;
+      t.bench += bench * ol.quantityAvailable;
+      totals.set(offer.supplierId, t);
+    }
+  }
+  return Object.fromEntries([...totals].map(([id, t]) => [id, Math.round((t.quoted / t.bench) * 1000) / 1000]));
 }

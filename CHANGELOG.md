@@ -8,3 +8,4 @@
 - Contractor: create an RFQ by uploading an RFQ / BOQ (simulated AI extraction, labelled, editable) or picking from the catalog; confirm quantities, specs, delivery site, date and terms (#8).
 - Design system: the "attested document" look (green-tinted paper, pine bar, one action green, stamp-ink blue for evidence), shared UI components, and a live reference at `/design-system`.
 - Product analytics with PostHog (EU): anonymous, typed event catalog, off when no key is set.
+- Contractor: explainable, credit-aware supplier shortlist on each RFQ, with why / why not per supplier, a reserved slot for a vetted new supplier, the available credit cap, a blind-comparison option, and sending the RFQ to the suppliers you pick (#9).
