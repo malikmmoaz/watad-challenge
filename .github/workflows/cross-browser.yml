@@ -17,9 +17,13 @@ permissions:
 jobs:
   e2e:
     name: e2e (${{ matrix.project }})
-    # Pinned: Playwright 1.65 lists WebKit system deps for Ubuntu 24.04; on the 26.04 image the install stalls.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # Browsers and their system libraries come preinstalled in Playwright's image (match the
+    # @playwright/test version); installing WebKit's ~200 apt packages on a runner can take 20+ min.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --user 1001
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -32,8 +36,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install browser
-        run: pnpm exec playwright install --with-deps ${{ startsWith(matrix.project, 'webkit') && 'webkit' || 'firefox' }}
       - name: Run e2e
         env:
           E2E_ALL_BROWSERS: "1"
