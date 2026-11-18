@@ -18,7 +18,7 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
 - `src/lib/procurement/boq.ts`: simulated "BOQ reader" (CSV/TXT really parsed, other files get a
   fixed sample extraction). 15 unit tests.
 - Verified: tests, typecheck, lint, `next build`, both pages return 200 with the test ids.
-  NOT verified: clicking through in a real browser (no browser on the server); Noor's e2e covers it.
+  Browser-verified (see below).
 - Each worktree needs its own `pnpm install --frozen-lockfile` (Turbopack rejects a symlinked node_modules).
 
 ## #9 shortlist UI (branch `feat/9-shortlist-ui`, stacked on `feat/8-rfq-catalog`)
@@ -28,8 +28,12 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
   Sent RFQs show the suppliers actually invited, not a recomputed shortlist.
 - `priceIndexFromOffers` derives each supplier's price vs benchmark from its past offers.
 - Seed: added `sup_nakheel` (vetted, 2 orders) so the reserved newcomer slot shows in the demo.
-- Verified: 83 tests, typecheck, lint, build; SSR of rfq_1042 lists its 3 invitees. NOT verified in a
-  browser: the draft path (select, blind toggle, send).
+- Verified: 106 tests, typecheck, lint, build; SSR of rfq_1042 lists its 3 invitees.
+- Browser walkthrough (headless Chromium via Noor's Playwright + Layla's libs, script kept out of git):
+  sample BOQ -> 5 labelled lines -> confirm -> shortlist (5 rows, newcomer slot, cap) -> untick, blind,
+  send -> status sent, survives reload; catalog path -> confirm -> listed on /contractor. No console errors.
+  Run: LD_LIBRARY_PATH=~/watad-team/tools/chromium-libs/root/usr/lib/x86_64-linux-gnu node <script>,
+  requiring ~/watad-team/wt/noor/node_modules/@playwright/test.
 
 ## Next
 - #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
