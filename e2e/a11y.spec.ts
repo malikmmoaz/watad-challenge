@@ -22,8 +22,12 @@ const PAGES = [
 
 for (const p of PAGES) {
   test(`a11y: ${p.name} has no serious or critical issues`, async ({ page }, info) => {
+    // Audit the settled page: entry animations fade text in, and a contrast check taken
+    // mid-fade reports false failures (seen in WebKit).
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(p.path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       // cacheComponents keeps earlier routes in the DOM, hidden; only audit what is shown.
