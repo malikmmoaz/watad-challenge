@@ -165,6 +165,15 @@
     outline-offset: 2px;
     border-radius: var(--radius-xs);
   }
+  /*
+   * Custom radios and checkboxes: when the real input is visually hidden
+   * (sr-only) inside its label, the label shows the focus ring instead, so
+   * keyboard focus is visible and distinct from the selected style (#74).
+   */
+  label:has(input.sr-only:focus-visible) {
+    outline: 2px solid var(--color-stamp);
+    outline-offset: 3px;
+  }
   [lang="ar"] {
     font-family: var(--font-arabic);
     line-height: 1.7;

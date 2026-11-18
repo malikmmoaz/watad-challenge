@@ -26,7 +26,7 @@ export function RoleNav({ current }: { current: Role }) {
           <span aria-hidden="true" className="grid size-7 place-items-center rounded-lg bg-pine-deep text-on-pine shadow-button">
             <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45" />
           </span>
-          <span className="hidden sm:inline">Watad challenge demo</span>
+          <span className="sr-only sm:not-sr-only">Watad challenge demo</span>
         </Link>
         <nav aria-label="Switch role" data-testid="role-switcher" className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1 shadow-card text-sm sm:order-none sm:w-auto">
           {ROLES.map((r) => {
