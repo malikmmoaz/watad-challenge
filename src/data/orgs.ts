@@ -192,6 +192,22 @@ export const suppliers: Supplier[] = [
     acceptsPlatformCredit: true,
   },
   {
+    // Vetted but new to the platform: fills the shortlist's reserved newcomer slot in the demo.
+    id: org("sup_nakheel"),
+    kind: "supplier",
+    name: "Nakheel Modern Building Supplies",
+    nameAr: "النخيل الحديثة لمواد البناء",
+    city: "Riyadh",
+    categories: ["rebar_steel", "cement", "blocks_aggregates"],
+    brandsStocked: ["Rajhi Steel", "Yamama Cement"],
+    serviceCities: ["Riyadh"],
+    localContent: true,
+    vetted: true,
+    performance: { onTimeRate: 1, fillRate: 1, ordersCompleted: 2, avgResponseHours: 5, disputeRate: 0 },
+    acceptedTerms: [NET30, CREDIT60, ON_DELIVERY],
+    acceptsPlatformCredit: true,
+  },
+  {
     id: org("sup_shamal"),
     kind: "supplier",
     name: "Shamal Pipes & Infrastructure Supply",

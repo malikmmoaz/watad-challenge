@@ -116,9 +116,14 @@ export function RfqBuilder() {
           </p>
           <p className="mt-2 text-sm text-neutral-700">Saved as a draft. Next step: choose which suppliers receive it from the explainable shortlist.</p>
         </div>
-        <Link href="/contractor" className="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white">
-          Back to my RFQs
-        </Link>
+        <div className="flex gap-3">
+          <Link href={`/contractor/rfq/${created.id}`} data-testid="rfq-choose-suppliers" className="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white">
+            Choose suppliers
+          </Link>
+          <Link href="/contractor" className="inline-block rounded border border-neutral-300 px-4 py-2 text-sm">
+            Back to my RFQs
+          </Link>
+        </div>
       </div>
     );
   }

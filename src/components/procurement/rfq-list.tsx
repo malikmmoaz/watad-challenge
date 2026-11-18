@@ -20,7 +20,7 @@ export function RfqList() {
         {mine.map((r) => (
           <li key={r.id} data-testid="rfq-row" className="flex flex-wrap items-baseline justify-between gap-2 p-3 text-sm">
             <span>
-              <span className="font-medium">{r.title}</span> <span className="font-mono text-neutral-600">{r.id}</span>
+              <Link href={`/contractor/rfq/${r.id}`} className="font-medium underline-offset-2 hover:underline">{r.title}</Link> <span className="font-mono text-neutral-600">{r.id}</span>
             </span>
             <span className="text-neutral-700">
               {r.lines.length} lines · {r.deliveryCity} · by {r.requiredBy.slice(0, 10)} · {r.source === "upload" ? "from upload" : "from catalog"} · <span className="capitalize">{r.status.replace(/_/g, " ")}</span>
