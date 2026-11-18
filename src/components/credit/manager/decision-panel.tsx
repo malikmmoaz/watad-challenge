@@ -5,6 +5,7 @@ import { demoPersona } from "@/data";
 import { decide, validateDecision, type DecisionInput } from "@/domain/credit/workflow";
 import { formatSar } from "@/domain/money";
 import type { CreditCase, CreditDecisionOutcome } from "@/domain/types";
+import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
 import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -82,6 +83,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     const now = new Date().toISOString();
     const current = getState().creditFacilities.find((f) => f.contractorId === c.contractorId);
     const { case: next, facility } = decide(c, input, now, current);
+    track("credit_decision_made", { case_id: c.id, outcome: input.outcome, overrode_ai: next.decision?.overrodeAi ?? false });
     justDecided.add(c.id);
     update((s) => ({
       ...s,

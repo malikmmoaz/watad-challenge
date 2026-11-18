@@ -133,3 +133,70 @@ test("analytics carry ids, counts and enums only (no names or free text)", async
   const text = JSON.stringify(await events(page));
   for (const forbidden of ["Rawasi", "Najd", "Al Malqa", "SAR", "Riyadh"]) expect(text, `no "${forbidden}" in analytics`).not.toContain(forbidden);
 });
+
+test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> answer -> repay", async ({ page }) => {
+  // Contractor applies.
+  await enterAs(page, "contractor");
+  await page.goto("/contractor/credit/apply");
+  await expect(tid(page, "credit-apply-form")).toBeVisible();
+  expect(await once(page, "credit_application_started", [])).toEqual({});
+  await tid(page, "credit-apply-cap").fill("500000");
+  await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
+  await tid(page, "credit-apply-sample-docs").click();
+  await tid(page, "credit-apply-sample-docs").click(); // attaching the same files again adds nothing
+  const uploaded = (await only(page, "credit_document_uploaded")).map((e) => e.properties);
+  expect(uploaded).toHaveLength(8);
+  expect(new Set(uploaded.map((p) => p.document_type)).size).toBe(8);
+  for (const p of uploaded) expect(Object.keys(p)).toEqual(["document_type"]);
+  await tid(page, "credit-apply-simah-consent").check();
+  await tid(page, "credit-apply-declaration").check();
+  await tid(page, "credit-apply-submit").click();
+  await expect(page).toHaveURL(/\/contractor\/credit#(cc_\w+)$/);
+  const caseId = new URL(page.url()).hash.slice(1);
+  expect(await once(page, "credit_application_submitted", ["case_id", "document_count"])).toEqual({ case_id: caseId, document_count: 8 });
+
+  // Credit manager opens the case and runs the (simulated) checks.
+  await page.goto(`/credit/cases/${caseId}`);
+  await expect(tid(page, "credit-run-checks")).toBeVisible();
+  expect(await once(page, "credit_case_opened", ["case_id"])).toEqual({ case_id: caseId });
+  expect(await only(page, "credit_memo_viewed")).toHaveLength(0);
+  await tid(page, "credit-run-checks").click();
+  await expect(tid(page, "credit-decision-form")).toBeVisible();
+  const checks = await once(page, "credit_checks_run", ["case_id", "band", "proposed_outcome", "provisional", "simulated_ai"]);
+  expect(checks).toMatchObject({ case_id: caseId, simulated_ai: true });
+  expect(["A", "B", "C", "D"]).toContain(checks.band);
+  expect(["approve", "request_info", "decline"]).toContain(checks.proposed_outcome);
+  expect(await once(page, "credit_memo_viewed", ["case_id", "simulated_ai"])).toEqual({ case_id: caseId, simulated_ai: true });
+
+  await tid(page, "credit-gates").getByRole("link").first().click();
+  const evidence = await once(page, "credit_evidence_opened", ["case_id", "document_type"]);
+  expect(evidence.case_id).toBe(caseId);
+
+  // Decision: request more information.
+  await tid(page, "credit-outcome-request_info").check({ force: true });
+  await tid(page, "credit-decision-items").fill("Bank statements for the second operating account");
+  await tid(page, "credit-decision-reason").fill("Bank inflows need the second account to reconcile with VAT-declared sales.");
+  const override = tid(page, "credit-decision-override");
+  const overriding = (await override.count()) > 0;
+  if (overriding) await override.fill("Manager wants the second account before deciding.");
+  await tid(page, "credit-decision-submit").click();
+  await expect(tid(page, "credit-case-status")).toHaveAttribute("data-status", "more_info_requested");
+  expect(await once(page, "credit_decision_made", ["case_id", "outcome", "overrode_ai"])).toEqual({ case_id: caseId, outcome: "request_info", overrode_ai: overriding });
+  expect(await only(page, "credit_case_opened"), "deciding does not re-open the case").toHaveLength(1);
+
+  // Contractor answers, then repays the seeded credit draw.
+  await page.goto("/contractor/credit");
+  const card = tid(page, `credit-case-${caseId}`);
+  await card.locator("textarea").fill("Attached the second account.");
+  await card.getByTestId("credit-more-info-send").click();
+  await expect(card.getByTestId("credit-more-info")).toHaveCount(0);
+  expect(await once(page, "credit_info_provided", ["case_id", "file_count", "has_note"])).toEqual({ case_id: caseId, file_count: 0, has_note: true });
+
+  await tid(page, "credit-repay-po_3007").click();
+  await expect(tid(page, "credit-draw-po_3007")).toHaveAttribute("data-state", "repaid");
+  expect(await once(page, "draw_repaid", ["po_id", "repaid_before_due", "tenor_days"])).toEqual({ po_id: "po_3007", repaid_before_due: true, tenor_days: 60 });
+
+  // Credit events carry ids, counts and enums only.
+  const text = JSON.stringify((await events(page)).filter((e) => e.event.startsWith("credit_") || e.event === "draw_repaid"));
+  for (const forbidden of ["Najd", "Narjis", "SAR", "second account", "Reem"]) expect(text, `no "${forbidden}" in credit analytics`).not.toContain(forbidden);
+});

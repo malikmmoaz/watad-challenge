@@ -6,6 +6,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { CREDIT_CASE_STATUS } from "@/lib/status";
 import { formatSar, murabaha } from "@/domain/money";
 import type { CreditCase, CreditFacility, GateResult } from "@/domain/types";
+import { track } from "@/lib/analytics";
 import { update } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 
@@ -136,6 +137,7 @@ function MoreInfoForm({ c }: { c: CreditCase }) {
   const send = () => {
     try {
       const next = provideMoreInfo(c, files, note, new Date().toISOString());
+      track("credit_info_provided", { case_id: c.id, file_count: files.length, has_note: note.trim().length > 0 });
       update((s) => ({ ...s, creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)) }));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
