@@ -207,6 +207,6 @@
   to { background-position: -100% 0; }
 }
 @keyframes seal-press {
-  from { transform: scale(1.18) rotate(-6deg); opacity: 0; }
-  to { transform: scale(1) rotate(-6deg); opacity: 1; }
+  from { transform: scale(1.18) rotate(-6deg); }
+  to { transform: scale(1) rotate(-6deg); }
 }

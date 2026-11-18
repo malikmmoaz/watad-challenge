@@ -11,6 +11,7 @@ import { Alert, buttonClass, CreditCapMeter, EmptyState, Facts, LoadingRows, Pag
 import { useHash, useHydrated } from "./client-state";
 import { ApplicationTracker } from "./application-tracker";
 import { DrawLedger } from "./draw-ledger";
+import { formatDate } from "@/lib/format";
 
 const fmt = (n: number) => formatSar(n as Halalas);
 
@@ -94,7 +95,7 @@ export function ContractorCredit() {
                         label: `Murabaha markup, ${facility.maxTenorDays} days`,
                         value: `${(facility.profitRate * 100).toFixed(2)}% (APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%)`,
                       },
-                      { label: `Band ${facility.band} · review due`, value: facility.reviewDue },
+                      { label: `Band ${facility.band} · review due`, value: formatDate(facility.reviewDue) },
                     ]}
                   />
                   {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">Conditions: {facility.conditions.join("; ")}</p>}

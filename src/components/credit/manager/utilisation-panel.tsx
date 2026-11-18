@@ -7,6 +7,7 @@ import type { Halalas } from "@/domain/types";
 import { useDemo } from "@/store";
 import { Alert, CreditCapMeter, Facts, Panel } from "@/components/ui";
 import { useToday } from "../use-today";
+import { formatDate } from "@/lib/format";
 
 const fmt = (n: number) => formatSar(n as Halalas);
 
@@ -27,7 +28,7 @@ export function UtilisationPanel({ caseId }: { caseId: string }) {
             items={[
               { label: "Used", value: `${Math.round(u.utilisation * 100)}% of the cap` },
               { label: "Open draws", value: String(u.openDraws) },
-              { label: "Next repayment", value: u.nextDue ? `${formatSar(u.nextDue.amount)} on ${u.nextDue.dueDate}` : "None due" },
+              { label: "Next repayment", value: u.nextDue ? `${formatSar(u.nextDue.amount)} on ${formatDate(u.nextDue.dueDate)}` : "None due" },
               { label: "Repaid draws · markup earned", value: `${u.repaidDraws} · ${formatSar(u.markupEarned)}` },
             ]}
           />
