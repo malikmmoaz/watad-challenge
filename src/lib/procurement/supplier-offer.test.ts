@@ -4,7 +4,7 @@ import { sar } from "@/domain/money";
 import type { OrgId } from "@/domain/types";
 import { NET30, offer, rfq } from "./fixtures.test-util";
 import { placePurchaseOrders } from "./po";
-import { actOnPurchaseOrder, canOffer, poActionFor, submitOffer, validateOfferDraft, withdrawOffer, type OfferDraft } from "./supplier-offer";
+import { actOnPurchaseOrder, canOffer, poActionFor, submitOffer, supplierNextStep, validateOfferDraft, withdrawOffer, type OfferDraft } from "./supplier-offer";
 import { supplier } from "./fixtures.test-util";
 
 const me = "sup_me" as OrgId;
@@ -144,5 +144,23 @@ describe("PO actions by role", () => {
     expect(po.timeline.map((e) => e.status)).toEqual(["placed", "confirmed", "dispatched", "delivered", "invoiced", "paid"]);
     expect(po.timeline[4]!.note).toBe("ZATCA e-invoice INV-1");
     expect(po.creditDraw!.supplierPaidAt).toBe(now);
+  });
+});
+
+describe("supplierNextStep", () => {
+  const base = (status: string, credit = false) =>
+    ({ status, creditDraw: credit ? { supplierPaidAt: now } : undefined }) as unknown as Parameters<typeof supplierNextStep>[0];
+
+  it("names the supplier's own step and marks it as theirs", () => {
+    expect(supplierNextStep(base("placed"))).toEqual({ text: "Accept purchase order", yours: true });
+    expect(supplierNextStep(base("confirmed"))).toEqual({ text: "Mark as dispatched", yours: true });
+    expect(supplierNextStep(base("delivered"))).toEqual({ text: "Issue invoice", yours: true });
+  });
+
+  it("says who it is waiting for otherwise", () => {
+    expect(supplierNextStep(base("dispatched"))).toMatchObject({ yours: false, text: expect.stringContaining("confirm delivery") });
+    expect(supplierNextStep(base("invoiced"))).toMatchObject({ yours: false, text: expect.stringContaining("bank transfer") });
+    expect(supplierNextStep(base("paid", true)).text).toContain("credit cap");
+    expect(supplierNextStep(base("paid")).text).toBe("Paid");
   });
 });
