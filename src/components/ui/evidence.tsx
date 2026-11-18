@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { CreditDecisionOutcome } from "@/domain/types";
 import { cx } from "./cx";
 
 function SealMark({ size = 16 }: { size?: number }) {
@@ -45,7 +46,7 @@ export function NoEvidence({ children = "No document on file" }: { children?: Re
 
 type Decision = "approved" | "referred" | "declined";
 /** The domain's `CreditDecisionOutcome` values are accepted as they are. */
-type DecisionInput = Decision | "approve" | "request_info" | "decline";
+type DecisionInput = Decision | CreditDecisionOutcome;
 const fromOutcome: Record<DecisionInput, Decision> = {
   approved: "approved",
   referred: "referred",
