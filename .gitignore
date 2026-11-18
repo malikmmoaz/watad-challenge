@@ -46,3 +46,6 @@ next-env.d.ts
 /blob-report/
 
 !.env.example
+
+# lighthouse ci
+/.lighthouseci/

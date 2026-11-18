@@ -66,3 +66,26 @@ jobs:
             e2e/.results
           retention-days: 7
           if-no-files-found: ignore
+
+  lighthouse:
+    name: lighthouse (budgets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Pinned, run with npx so Lighthouse stays out of the app's lockfile.
+      - run: npx -y @lhci/cli@0.16.1 autorun
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/reports
+          retention-days: 7
+          if-no-files-found: ignore
