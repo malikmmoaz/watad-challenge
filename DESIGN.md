@@ -233,6 +233,7 @@ Tone first, then a short shadow scale. `paper` under `surface`, separated by a 1
 - `animate-rise` (700 ms) for the hero's entrance, staggered 80 ms; `animate-fade` when a showcase tab changes; `animate-drift` for background glow only.
 - Always behind `motion-safe:`; under `prefers-reduced-motion` everything is static.
 - Hover lifts are 2px at most. Nothing moves on its own except background glow.
+- Entrances move but never fade text: text is at full contrast in every frame (an accessibility check sampling mid-animation must pass).
 
 ### Named Rules
 **The No Nested Cards Rule.** A card never sits inside another card. Group content inside a card with a hairline, a heading, or a borderless tinted well (`bg-paper`).
