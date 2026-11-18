@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { RoleLink } from "@/components/role-link";
 import { ROLES } from "@/components/role-nav";
 import { Icon } from "@/components/ui";
 
@@ -15,7 +15,9 @@ export default function Home() {
       <ul className="grid gap-4 md:grid-cols-3">
         {ROLES.map((r) => (
           <li key={r.role}>
-            <Link
+            <RoleLink
+              role={r.role}
+              source="landing"
               href={r.href}
               data-testid={`role-${r.role}`}
               className="group flex h-full flex-col gap-2 rounded-lg border border-line-strong bg-surface p-5 transition-colors duration-150 hover:border-action"
@@ -27,7 +29,7 @@ export default function Home() {
                 Enter as {r.label.toLowerCase()}
                 <Icon name="arrow-right" className="transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
               </span>
-            </Link>
+            </RoleLink>
           </li>
         ))}
       </ul>
