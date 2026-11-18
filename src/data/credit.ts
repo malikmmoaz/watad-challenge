@@ -90,7 +90,7 @@ const hijazDocs: CreditDocument[] = [
     f("fin_net_worth", "Total equity", "SAR 2,300,000", "p.3, Balance sheet, line 27"),
   ]),
   doc("d_hijaz_simah", "simah_report", "", "missing", "not provided"),
-  doc("d_hijaz_zakat", "zakat_certificate", "Zakat-certificate.pdf", "flagged", "expired 2026-09-30"),
+  doc("d_hijaz_zakat", "zakat_certificate", "Zakat-certificate.pdf", "flagged", "expired 30 Sep 2026"),
   doc("d_hijaz_gosi", "gosi_certificate", "GOSI-certificate.pdf", "verified", "issued 2026-10-05", [f("gosi_headcount", "Registered employees", "38", "p.1, summary")]),
   doc("d_hijaz_class", "classification_certificate", "Classification.pdf", "verified", "valid to 2027-06-01", [f("class_grade", "Buildings grade", "Grade 4", "p.1")]),
 ];
@@ -104,7 +104,7 @@ hijazDocs[1]!.findings.push({
 hijazDocs[5]!.findings.push({
   severity: "warning",
   kind: "expired",
-  text: "Zakat certificate expired on 2026-09-30. A renewed certificate is required.",
+  text: "Zakat certificate expired on 30 Sep 2026. A renewed certificate is required.",
   relatedDocumentIds: [],
   ai: ai("Document reader", 0.98),
 });
