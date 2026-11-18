@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Lighthouse CI output.
+    ".lighthouseci/**",
     // Playwright output (bundled report JS).
     "e2e/.report/**",
     "e2e/.results/**",
