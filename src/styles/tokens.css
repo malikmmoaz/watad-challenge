@@ -57,12 +57,11 @@
   --color-negative-soft: oklch(0.95 0.03 27);
   --color-neutral-soft: oklch(0.93 0.008 155);
 
-  /* Credit bands A to E */
+  /* Credit bands A to D */
   --color-band-a: oklch(0.5 0.12 152);
   --color-band-b: oklch(0.62 0.13 135);
-  --color-band-c: oklch(0.76 0.15 85);
-  --color-band-d: oklch(0.66 0.16 55);
-  --color-band-e: oklch(0.52 0.18 27);
+  --color-band-c: oklch(0.72 0.15 70);
+  --color-band-d: oklch(0.52 0.18 27);
 
   /* Type: one family, fixed rem scale, ratio about 1.15 */
   --font-sans: var(--font-public-sans), "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;

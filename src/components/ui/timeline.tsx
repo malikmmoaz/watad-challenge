@@ -4,7 +4,8 @@ import { Icon } from "./icon";
 
 export interface TimelineStep {
   label: string;
-  state: "done" | "current" | "upcoming" | "problem";
+  /** `skipped`: a step this case did not need, e.g. "More information requested". */
+  state: "done" | "current" | "upcoming" | "problem" | "skipped";
   /** Already formatted: "18 Nov 2026, 14:20". */
   at?: string;
   /** Who moved it: "Supplier", "Platform". */
@@ -17,6 +18,7 @@ const dot: Record<TimelineStep["state"], string> = {
   current: "border-ink bg-surface text-ink",
   upcoming: "border-line-strong bg-paper text-transparent",
   problem: "border-negative bg-negative text-on-action",
+  skipped: "border-dashed border-line-strong bg-paper text-ink-subtle",
 };
 
 /** Status of a PO or a credit application, oldest first. One step is current. */
@@ -32,12 +34,13 @@ export function StatusTimeline({ steps, label }: { steps: TimelineStep[]; label:
               {s.state === "done" ? <Icon name="check" size={11} strokeWidth={2.25} /> : null}
               {s.state === "problem" ? <Icon name="x" size={11} strokeWidth={2.25} /> : null}
               {s.state === "current" ? <span className="size-[7px] rounded-full bg-ink" /> : null}
+              {s.state === "skipped" ? <Icon name="minus" size={11} strokeWidth={2.25} /> : null}
             </span>
             <div className="min-w-0 flex-1">
-              <p className={cx("text-sm", s.state === "upcoming" ? "text-ink-subtle" : "font-medium text-ink")}>
+              <p className={cx("text-sm", s.state === "upcoming" || s.state === "skipped" ? "text-ink-subtle" : "font-medium text-ink")}>
                 {s.label}
                 <span className="sr-only">
-                  {s.state === "done" ? " (done)" : s.state === "current" ? " (current)" : s.state === "problem" ? " (problem)" : " (not yet)"}
+                  {s.state === "done" ? " (done)" : s.state === "current" ? " (current)" : s.state === "problem" ? " (problem)" : s.state === "skipped" ? " (not needed)" : " (not yet)"}
                 </span>
               </p>
               {s.at || s.actor ? (

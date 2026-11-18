@@ -44,6 +44,16 @@ export function NoEvidence({ children = "No document on file" }: { children?: Re
 }
 
 type Decision = "approved" | "referred" | "declined";
+/** The domain's `CreditDecisionOutcome` values are accepted as they are. */
+type DecisionInput = Decision | "approve" | "request_info" | "decline";
+const fromOutcome: Record<DecisionInput, Decision> = {
+  approved: "approved",
+  referred: "referred",
+  declined: "declined",
+  approve: "approved",
+  request_info: "referred",
+  decline: "declined",
+};
 const decisionStyle: Record<Decision, { word: string; cls: string }> = {
   approved: { word: "Approved", cls: "border-positive text-positive" },
   referred: { word: "More information requested", cls: "border-caution text-caution" },
@@ -54,8 +64,8 @@ const decisionStyle: Record<Decision, { word: string; cls: string }> = {
  * A human decision, printed like a stamp in the decision log. Only for
  * decisions a named person made; AI proposals use AiLabel and plain text.
  */
-export function DecisionStamp({ decision, by, at, animate = false }: { decision: Decision; by: string; at: string; animate?: boolean }) {
-  const d = decisionStyle[decision];
+export function DecisionStamp({ decision, by, at, animate = false }: { decision: DecisionInput; by: string; at: string; animate?: boolean }) {
+  const d = decisionStyle[fromOutcome[decision]];
   return (
     <div className={cx("inline-flex -rotate-2 flex-col rounded-md border-2 px-3 py-1.5 outline outline-1 -outline-offset-4 outline-current/40", d.cls, animate && "motion-safe:animate-[seal-press_240ms_var(--ease-out)_both]")}>
       <span className="whitespace-nowrap text-sm font-bold uppercase tracking-wide">{d.word}</span>

@@ -10,13 +10,15 @@ export interface Band {
   meaning: string;
 }
 
-/** Default credit bands. Pass the scoring engine's own bands when they differ. */
+/**
+ * Default credit bands: the scoring engine's own cut-offs (A from 80, B from 65,
+ * C from 50, D below), matching `CreditBand` and `bandFor()` in the domain.
+ */
 export const creditBands: Band[] = [
-  { name: "E", from: 0, color: "bg-band-e", meaning: "Decline" },
-  { name: "D", from: 40, color: "bg-band-d", meaning: "Refer" },
-  { name: "C", from: 55, color: "bg-band-c", meaning: "Refer" },
-  { name: "B", from: 70, color: "bg-band-b", meaning: "Approve" },
-  { name: "A", from: 85, color: "bg-band-a", meaning: "Approve" },
+  { name: "D", from: 0, color: "bg-band-d", meaning: "Decline" },
+  { name: "C", from: 50, color: "bg-band-c", meaning: "Approve with conditions" },
+  { name: "B", from: 65, color: "bg-band-b", meaning: "Approve" },
+  { name: "A", from: 80, color: "bg-band-a", meaning: "Approve" },
 ];
 
 /**

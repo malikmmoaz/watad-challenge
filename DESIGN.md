@@ -36,9 +36,8 @@ colors:
   neutral-soft: "oklch(0.93 0.008 155)"
   band-a: "oklch(0.5 0.12 152)"
   band-b: "oklch(0.62 0.13 135)"
-  band-c: "oklch(0.76 0.15 85)"
-  band-d: "oklch(0.66 0.16 55)"
-  band-e: "oklch(0.52 0.18 27)"
+  band-c: "oklch(0.72 0.15 70)"
+  band-d: "oklch(0.52 0.18 27)"
 typography:
   display:
     fontFamily: "Public Sans, Noto Sans Arabic, ui-sans-serif, system-ui, sans-serif"
@@ -172,7 +171,7 @@ A green-tinted neutral ground with one action colour and three meaning colours.
 
 ### State
 - **Positive**, **caution**, **negative**, each with a `-soft` fill. Text in the strong tone on its soft fill is at least 6.4:1.
-- **Credit bands** `band-a` to `band-e`: fills on the score scale only, never text colours. The band is always named in words beside the score.
+- **Credit bands** `band-a` to `band-d` (A from 80, B from 65, C from 50, D below: the scoring engine's cut-offs): fills on the score scale only, never text colours. The band is always named in words beside the score.
 
 ### Named Rules
 **The Pressable Green Rule.** Action green appears only on things that can be pressed. A success state uses `positive` and a check, not the action colour.
@@ -256,7 +255,7 @@ All exported from `@/components/ui`.
 ### Signature: evidence and decisions (`EvidenceSeal`, `NoEvidence`, `DecisionStamp`)
 - `EvidenceSeal` marks a value a document backs and opens that document. `source` names the document and the place in it: "ZATCA VAT return Q3 2026, box 6".
 - `NoEvidence` (amber text) for a value nothing on file supports. It is never drawn as a seal.
-- `DecisionStamp` prints a decision a named person made: approved, more information requested, declined. AI proposals never get a stamp.
+- `DecisionStamp` prints a decision a named person made: approved, more information requested, declined (it also accepts the domain outcomes `approve`, `request_info`, `decline`). AI proposals never get a stamp.
 
 ### Score and credit (`ScoreScale`, `FactorBar`, `CreditCapMeter`)
 - `ScoreScale`: the score on a ruled 0 to 100 scale with band and outcome in words. Pass the scoring engine's own bands if they differ from `creditBands`.
@@ -264,7 +263,7 @@ All exported from `@/components/ui`.
 - `CreditCapMeter`: drawn, this PO, and what is left. A PO that passes the cap shows the overflow in red past a hard edge.
 
 ### Time (`StatusTimeline`, `LeadTimeBar`)
-- `StatusTimeline`: oldest first, exactly one `current` step, each step with who moved it and when.
+- `StatusTimeline`: oldest first, exactly one `current` step, each step with who moved it and when. A step the case did not need is `skipped` (dashed, "not needed").
 - `LeadTimeBar`: length is duration. Every bar in one comparison shares `maxDays`; the tick is the required-by date.
 
 ### States (`EmptyState`, `LoadingRows`, `Skeleton`, `ErrorState`, `Alert`)
