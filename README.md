@@ -17,7 +17,7 @@ All companies, prices and credit files are **sample data**. AI features are **si
 | Why and how | In the app: [About](https://watad-challenge.vercel.app/about) (business model, priorities, stack, use of AI, assumptions, research) · [How we built it](https://watad-challenge.vercel.app/how-we-built) (team of agents, timeline, process) |
 | Decisions | [ADR 0001 stack](docs/adr/0001-stack.md) · [0002 procurement ranking](docs/adr/0002-procurement-ranking.md) · [0003 credit assessment](docs/adr/0003-credit-assessment.md) · [0004 browser state and observability](docs/adr/0004-browser-state-and-observability.md) |
 | Quality | Every PR needs green **verify** (lint, types, unit tests, build), **e2e** (Playwright on desktop and phone, axe WCAG 2.2 AA, keyboard-only journeys) and **Lighthouse** budgets, plus a recorded review · [brief checklist](docs/BRIEF-CHECKLIST.md) · [incidents and how we handled them](docs/incidents.md) |
-| Analytics | Anonymous, typed events and funnels: [docs/analytics.md](docs/analytics.md) |
+| Analytics and uptime | Anonymous, typed events and funnels: [docs/analytics.md](docs/analytics.md) · [live status page](https://watad-challenge-demo.betteruptime.com) (Better Stack, checked every 3 minutes) |
 | Work log | [Issues](https://github.com/malikmmoaz/watad-challenge/issues?q=is%3Aissue) · [Pull requests](https://github.com/malikmmoaz/watad-challenge/pulls?q=is%3Apr) · [CHANGELOG](CHANGELOG.md) · [PLAN](PLAN.md) · [handoff notes](docs/handoff/) |
 
 ## Explore the three roles in 5 minutes

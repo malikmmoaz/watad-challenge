@@ -23,7 +23,7 @@ ADR 0001 chose no backend: demo state lives in the reviewer's browser. With the 
 **Errors and monitoring.**
 - `src/app/error.tsx` (route errors) and `src/app/global-error.tsx` (root layout errors) show a designed page with *Try again* and, for route errors, *Reset demo data and try again*, since stale browser state is the most likely cause. Both report through `captureError()` to PostHog error tracking; uncaught exceptions are captured too (`capture_exceptions`).
 - `src/app/not-found.tsx` gives unknown URLs a page with a way back to every role.
-- Better Stack (#4) adds an uptime monitor on the live link, a public status page, Sentry-compatible error tracking and server logs. Its hosts join the CSP and `captureError()` when it lands; until then PostHog is the only error sink.
+- Better Stack (#4): an uptime monitor checks the live link every 3 minutes and feeds the public status page https://watad-challenge-demo.betteruptime.com; error boundaries also report to Better Stack error tracking through the Sentry browser SDK, loaded lazily and only when `NEXT_PUBLIC_BETTER_STACK_ERRORS_DSN` is set (no PII, no replay, no tracing). No log source: the app is fully static, so there are no server logs.
 
 **Security headers.**
 - Set for every route in `next.config.ts` from `src/config/security-headers.ts`: CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy`, HSTS; `X-Powered-By` removed.

@@ -4,9 +4,9 @@ import { contentSecurityPolicy, securityHeaders } from "./security-headers";
 const directive = (csp: string, name: string) => csp.split("; ").find((d) => d.startsWith(`${name} `)) ?? "";
 
 describe("security headers", () => {
-  it("allows PostHog EU and nothing else off-origin in production", () => {
+  it("allows PostHog EU and Better Stack ingest, nothing else off-origin, in production", () => {
     const csp = contentSecurityPolicy();
-    expect(directive(csp, "connect-src")).toBe("connect-src 'self' https://eu.i.posthog.com https://eu-assets.i.posthog.com");
+    expect(directive(csp, "connect-src")).toBe("connect-src 'self' https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.betterstackdata.com");
     expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");
     expect(csp).not.toContain("unsafe-eval");
     expect(csp).not.toContain("vercel.live");
