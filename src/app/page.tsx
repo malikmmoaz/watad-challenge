@@ -270,9 +270,17 @@ export default function Home() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-6 text-sm text-ink-muted sm:px-8">
           <p className="max-w-2xl">All companies, prices and credit files in this demo are sample data. AI features are simulated and labelled where they appear.</p>
-          <Link href="/design-system" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
-            Design system
-          </Link>
+          <nav aria-label="About this demo" className="flex flex-wrap gap-x-6 gap-y-1">
+            <Link href="/about" data-testid="landing-about" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+              About: business model, priorities, stack, AI, assumptions
+            </Link>
+            <Link href="/how-we-built" data-testid="landing-how-we-built" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+              How we built it
+            </Link>
+            <Link href="/design-system" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+              Design system
+            </Link>
+          </nav>
         </div>
       </footer>
     </>
