@@ -11,8 +11,10 @@ import { simulateDocuments, toAiProposal, toGates, toScorecard } from "./to-case
 import type { Assessment, CreditProfile } from "./types";
 
 /** Runs documents, gated checks, scorecard and the AI proposal; the case moves to review. */
-export function runChecks(c: CreditCase, p: CreditProfile, now: string): { case: CreditCase; assessment: Assessment } {
-  const assessment = assessCase({ ...p, id: c.id }, now.slice(0, 10));
+export function runChecks(c: CreditCase, profile: CreditProfile, now: string): { case: CreditCase; assessment: Assessment } {
+  // The application's own request wins over the figures on file.
+  const p: CreditProfile = { ...profile, id: c.id, request: { capSar: c.requestedCap / 100, tenorDays: c.requestedTenorDays } };
+  const assessment = assessCase(p, now.slice(0, 10));
   const parsed = simulateDocuments(p, c.id, c.submittedAt ?? now);
   // Keep the contractor's own file names where they uploaded one.
   const documents = parsed.map((d) => {

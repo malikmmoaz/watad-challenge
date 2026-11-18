@@ -67,6 +67,13 @@ describe("runChecks", () => {
   });
 });
 
+it("assesses the amount and term on the application, not the profile's", () => {
+  const c = { ...shell(rawasiNajd), requestedCap: 40_000_000 as CreditCase["requestedCap"], requestedTenorDays: 30 as const };
+  const { case: done, assessment } = runChecks(c, rawasiNajd, now);
+  expect(done.aiProposal?.proposedCap).toBe(40_000_000);
+  expect(assessment.limit.purchasesOverTermSar).toBe(1_800_000);
+});
+
 describe("decide", () => {
   const approve: DecisionInput = {
     outcome: "approve",
