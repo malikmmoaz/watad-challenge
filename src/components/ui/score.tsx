@@ -1,3 +1,5 @@
+import { BAND_FLOORS } from "@/domain/credit/scorecard";
+import type { Band as CreditBandName } from "@/domain/credit/types";
 import { cx } from "./cx";
 
 export interface Band {
@@ -10,14 +12,17 @@ export interface Band {
   meaning: string;
 }
 
-/** Default credit bands. Pass the scoring engine's own bands when they differ. */
-export const creditBands: Band[] = [
-  { name: "E", from: 0, color: "bg-band-e", meaning: "Decline" },
-  { name: "D", from: 40, color: "bg-band-d", meaning: "Refer" },
-  { name: "C", from: 55, color: "bg-band-c", meaning: "Refer" },
-  { name: "B", from: 70, color: "bg-band-b", meaning: "Approve" },
-  { name: "A", from: 85, color: "bg-band-a", meaning: "Approve" },
-];
+/**
+ * Default credit bands, built from the scoring engine's own floors (`BAND_FLOORS`),
+ * so the scale can never disagree with `bandFor()`.
+ */
+const BAND_STYLE: Record<CreditBandName, { color: string; meaning: string }> = {
+  D: { color: "bg-band-d", meaning: "Decline" },
+  C: { color: "bg-band-c", meaning: "Approve with conditions" },
+  B: { color: "bg-band-b", meaning: "Approve" },
+  A: { color: "bg-band-a", meaning: "Approve" },
+};
+export const creditBands: Band[] = (Object.keys(BAND_STYLE) as CreditBandName[]).map((name) => ({ name, from: BAND_FLOORS[name], ...BAND_STYLE[name] }));
 
 /**
  * Score gauge: the score on a ruled 0 to 100 scale with its band named in

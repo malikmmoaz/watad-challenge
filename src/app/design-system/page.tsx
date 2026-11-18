@@ -45,7 +45,7 @@ const swatches: { group: string; items: [name: string, cls: string][] }[] = [
   { group: "Stamp ink (evidence)", items: [["stamp", "bg-stamp"], ["stamp-soft", "bg-stamp-soft"]] },
   { group: "Simulated AI", items: [["ai", "bg-ai"], ["ai-soft", "bg-ai-soft"]] },
   { group: "State", items: [["positive", "bg-positive"], ["caution", "bg-caution"], ["caution-mark", "bg-caution-mark"], ["negative", "bg-negative"]] },
-  { group: "Credit bands", items: [["band-a", "bg-band-a"], ["band-b", "bg-band-b"], ["band-c", "bg-band-c"], ["band-d", "bg-band-d"], ["band-e", "bg-band-e"]] },
+  { group: "Credit bands", items: [["band-a", "bg-band-a"], ["band-b", "bg-band-b"], ["band-c", "bg-band-c"], ["band-d", "bg-band-d"]] },
 ];
 
 const typeScale: [cls: string, use: string][] = [
@@ -303,6 +303,7 @@ export default function DesignSystemPage() {
               { label: "Confirmed by supplier", state: "done", at: "14 Nov 2026, 11:40", actor: "Supplier" },
               { label: "Supplier paid from credit cap", state: "done", at: "15 Nov 2026, 08:00", actor: "Platform", note: "Paid directly to the supplier." },
               { label: "Out for delivery", state: "current", at: "18 Nov 2026, 06:30", actor: "Supplier" },
+              { label: "Return requested", state: "skipped", note: "Not needed for this PO." },
               { label: "Delivered", state: "upcoming" },
             ]}
           />
