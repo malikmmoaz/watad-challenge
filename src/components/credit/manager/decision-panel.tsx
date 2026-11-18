@@ -5,7 +5,7 @@ import { demoPersona } from "@/data";
 import { decide, validateDecision, type DecisionInput } from "@/domain/credit/workflow";
 import { formatSar } from "@/domain/money";
 import type { CreditCase, CreditDecisionOutcome } from "@/domain/types";
-import { update } from "@/store";
+import { getState, update } from "@/store";
 import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/components/ui";
 import { shortDate } from "./shared";
 
@@ -58,7 +58,8 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     setErrors(e);
     if (e.length > 0) return;
     const now = new Date().toISOString();
-    const { case: next, facility } = decide(c, input, now);
+    const current = getState().creditFacilities.find((f) => f.contractorId === c.contractorId);
+    const { case: next, facility } = decide(c, input, now, current);
     update((s) => ({
       ...s,
       creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)),

@@ -78,8 +78,11 @@ export function validateDecision(c: CreditCase, d: DecisionInput): string[] {
 
 const addDays = (iso: string, days: number) => new Date(Date.parse(iso) + days * 86_400_000).toISOString().slice(0, 10);
 
-/** Records the human decision; an approval also opens the credit facility. */
-export function decide(c: CreditCase, d: DecisionInput, now: string): { case: CreditCase; facility?: CreditFacility } {
+/**
+ * Records the human decision; an approval opens the credit facility, or replaces
+ * the contractor's current one. Draws still outstanding on it carry over.
+ */
+export function decide(c: CreditCase, d: DecisionInput, now: string, current?: CreditFacility): { case: CreditCase; facility?: CreditFacility } {
   const errors = validateDecision(c, d);
   if (errors.length > 0) throw new Error(errors.join(" "));
   const approvedCap = d.outcome === "approve" && d.approvedCapSar ? sar(d.approvedCapSar) : undefined;
@@ -113,8 +116,8 @@ export function decide(c: CreditCase, d: DecisionInput, now: string): { case: Cr
       creditCaseId: c.id,
       contractorId: c.contractorId,
       cap: approvedCap,
-      drawn: 0 as Halalas,
-      available: approvedCap,
+      drawn: (current?.drawn ?? 0) as Halalas,
+      available: Math.max(0, approvedCap - (current?.drawn ?? 0)) as Halalas,
       band,
       maxTenorDays: c.requestedTenorDays,
       // Flat Murabaha profit rate for the full tenor, matching CreditFacility.profitRate.

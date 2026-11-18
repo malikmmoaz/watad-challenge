@@ -91,6 +91,15 @@ describe("decide", () => {
     expect(c.log.at(-1)).toMatchObject({ actor: "credit_manager", action: "Approved" });
   });
 
+  it("carries outstanding draws into a replacement facility", () => {
+    const current = decide(run(rawasiNajd), approve, now).facility!;
+    const withDraws = { ...current, drawn: 30_000_000 as typeof current.drawn, available: 70_000_000 as typeof current.drawn };
+    const higher = decide(run(rawasiNajd), { ...approve, approvedCapSar: 800_000 }, now, withDraws).facility!;
+    expect(higher).toMatchObject({ cap: 80_000_000, drawn: 30_000_000, available: 50_000_000 });
+    const below = decide(run(rawasiNajd), { ...approve, approvedCapSar: 200_000 }, now, withDraws).facility!;
+    expect(below).toMatchObject({ drawn: 30_000_000, available: 0 });
+  });
+
   it("requests more information with the items listed", () => {
     const { case: c, facility } = decide(
       run(sahelAlSharq),
