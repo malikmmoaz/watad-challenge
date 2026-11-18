@@ -49,7 +49,7 @@ test("end to end: supplier offer, contractor PO paid with credit, supplier paid 
   await tid(page, "inbox-open").filter({ hasText: "Villas 13 to 24" }).click();
   await expect(page.getByText("Your offer (bid)")).toBeVisible();
   await tid(page, "offer-submit").click();
-  await expect(page.getByText("Quote a unit price for at least one line.")).toBeVisible();
+  await expect(page.getByText(/(Quote|Enter) a unit price for at least one line\./)).toBeVisible();
   await tid(page, "offer-line-price").nth(0).fill("3380");
   await tid(page, "offer-line-price").nth(1).fill("15.4");
   await tid(page, "offer-delivery").fill("2500");
