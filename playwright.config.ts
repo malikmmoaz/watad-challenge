@@ -44,6 +44,14 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
     // Chromium at a phone viewport: one browser download, still catches layout breaks.
     { name: "mobile", use: { ...devices["Pixel 7"] } },
+    // Cross-browser (opt-in with E2E_ALL_BROWSERS=1; run by .github/workflows/cross-browser.yml, not required CI).
+    ...(process.env.E2E_ALL_BROWSERS
+      ? [
+          { name: "firefox", use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } } },
+          { name: "webkit", use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
+          { name: "webkit-mobile", use: { ...devices["iPhone 14"] } },
+        ]
+      : []),
   ],
   webServer: externalBaseURL
     ? undefined
