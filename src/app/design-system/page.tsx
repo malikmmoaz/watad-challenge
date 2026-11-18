@@ -33,6 +33,7 @@ import {
   Tr,
 } from "@/components/ui";
 import { formatSar, sar } from "@/domain/money";
+import { OfferComparisonDemo } from "./offer-comparison-demo";
 
 export const metadata: Metadata = { title: "Design system" };
 
@@ -83,6 +84,7 @@ const sections = [
   ["forms", "Forms"],
   ["status", "Badges and labels"],
   ["tables", "Tables"],
+  ["comparison", "Offer comparison"],
   ["evidence", "Evidence and decisions"],
   ["credit", "Score and credit cap"],
   ["timeline", "Status timeline"],
@@ -238,6 +240,10 @@ export default function DesignSystemPage() {
             ))}
           </tbody>
         </Table>
+      </Section>
+
+      <Section id="comparison" title="Offer comparison" lead="OfferComparisonTable, on seeded offers. Every offer shows the same fields in the same order; the score opens into the factors behind it. The ranking informs, the contractor chooses.">
+        <OfferComparisonDemo />
       </Section>
 
       <Section id="evidence" title="Evidence and decisions" lead="The seal marks a value a document backs, and opens that document. A stamp records a decision a named person made. AI proposals never get a stamp.">
