@@ -9,7 +9,7 @@ import { reference } from "@/data";
 import { add, formatSar } from "@/domain/money";
 import type { Halalas, Offer, OfferId, PaymentMethod, PurchaseOrder, Rfq } from "@/domain/types";
 import { blindLabels, compareOffers, suggestBasketSplit } from "@/lib/procurement/comparison";
-import { PO_STEPS, creditEligibility, placePurchaseOrders, quoteOrder, type PoOrder } from "@/lib/procurement/po";
+import { PO_STEPS, creditEligibility, creditFit, placePurchaseOrders, quoteOrder, type PoOrder } from "@/lib/procurement/po";
 import { getState, update, useDemo } from "@/store";
 
 
@@ -19,6 +19,8 @@ const fmt = (n: number) => formatSar(n as Halalas);
 export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const allOffers = useDemo((s) => s.offers);
   const allPos = useDemo((s) => s.purchaseOrders);
+  const facilities = useDemo((s) => s.creditFacilities);
+  const facility = facilities.find((f) => f.contractorId === rfq.contractorId) ?? null;
   const offers = useMemo(() => allOffers.filter((o) => o.rfqId === rfq.id && o.status !== "withdrawn"), [allOffers, rfq.id]);
   const pos = useMemo(() => allPos.filter((p) => p.rfqId === rfq.id), [allPos, rfq.id]);
   const [today] = useState(() => new Date().toISOString());
@@ -78,6 +80,12 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
             {...(awardedOffer ? { chosenOfferId: awardedOffer.id } : {})}
             {...(awarded ? {} : { onChoose: (offerId: OfferId) => setDraft([{ offerId }]) })}
             acceptsCredit={(r) => supplierOf(r.supplierId)?.acceptsPlatformCredit ?? false}
+            creditFit={(r) => {
+              if (!supplierOf(r.supplierId)?.acceptsPlatformCredit) return null;
+              const fit = creditFit(r.landedCostInclVat, facility);
+              if (fit.status === "no_cap") return null;
+              return fit.status === "fits" ? { fits: true, text: "Fits your credit cap" } : { fits: false, text: `Over your credit cap by ${formatSar(fit.overBy)}` };
+            }}
           />
         </div>
       </Panel>
@@ -130,7 +138,11 @@ function PoDraft({ rfq, orders, ranks, onCancel, onPlaced }: { rfq: Rfq; orders:
   const tenor = facility?.maxTenorDays ?? 60;
 
   const place = () => {
-    const r = placePurchaseOrders(getState(), { rfqId: rfq.id, orders, method: useCredit ? "platform_credit" : "bank_transfer", suppliers: reference.suppliers, now: new Date().toISOString() });
+    // Read the cap before this order is drawn, so the funnel records whether it fitted.
+    const before = getState();
+    const fit = creditFit(total, before.creditFacilities.find((f) => f.contractorId === rfq.contractorId) ?? null);
+    const withinCap = fit.status === "no_cap" ? null : fit.status === "fits";
+    const r = placePurchaseOrders(before, { rfqId: rfq.id, orders, method: useCredit ? "platform_credit" : "bank_transfer", suppliers: reference.suppliers, now: new Date().toISOString() });
     if (!r.ok) {
       setError(r.error);
       return;
@@ -138,7 +150,7 @@ function PoDraft({ rfq, orders, ranks, onCancel, onPlaced }: { rfq: Rfq; orders:
     update(() => r.state);
     for (const po of r.pos) {
       track("offer_awarded", { rfq_id: rfq.id, offer_id: po.offerId, rank: ranks.get(po.offerId) ?? 0 });
-      track("po_placed", { po_id: po.id, payment_method: po.paymentMethod, within_credit_cap: facility ? total <= facility.available : null });
+      track("po_placed", { po_id: po.id, payment_method: po.paymentMethod, within_credit_cap: withinCap });
     }
     onPlaced(r.pos);
   };

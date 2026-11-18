@@ -3,7 +3,7 @@ import type { DemoState } from "@/data";
 import { sar } from "@/domain/money";
 import type { CreditCaseId, CreditFacility, OfferId, OrgId } from "@/domain/types";
 import { offer, rfq, supplier } from "./fixtures.test-util";
-import { PO_STEPS, advancePurchaseOrder, creditEligibility, placePurchaseOrders, quoteOrder } from "./po";
+import { PO_STEPS, advancePurchaseOrder, creditEligibility, creditFit, placePurchaseOrders, quoteOrder } from "./po";
 
 const facility: CreditFacility = {
   creditCaseId: "cc_1" as CreditCaseId,
@@ -144,5 +144,14 @@ describe("advancePurchaseOrder", () => {
     if (!r.ok) throw new Error(r.error);
     const cancelled = { ...r.pos[0]!, status: "cancelled" as const };
     expect(advancePurchaseOrder(cancelled, now)).toBe(cancelled);
+  });
+});
+
+describe("creditFit", () => {
+  it("uses cap minus drawn, before the order is drawn", () => {
+    expect(creditFit(sar(300_000), { cap: sar(500_000), drawn: sar(100_000) })).toEqual({ status: "fits", leftAfter: sar(100_000) });
+    expect(creditFit(sar(400_000), { cap: sar(500_000), drawn: sar(100_000) })).toEqual({ status: "fits", leftAfter: sar(0) });
+    expect(creditFit(sar(450_000), { cap: sar(500_000), drawn: sar(100_000) })).toEqual({ status: "over", overBy: sar(50_000) });
+    expect(creditFit(sar(1), null)).toEqual({ status: "no_cap" });
   });
 });

@@ -40,6 +40,8 @@ export interface OfferComparisonTableProps {
   onChoose?: (offerId: OfferId) => void;
   /** Whether the offer's supplier accepts payment from the contractor's credit cap; shown under the terms. */
   acceptsCredit?: (row: OfferComparisonRow) => boolean;
+  /** Whether this offer fits the contractor's credit cap, shown under the landed cost. Omit to hide. */
+  creditFit?: (row: OfferComparisonRow) => { fits: boolean; text: string } | null;
 }
 
 /**
@@ -52,7 +54,7 @@ export interface OfferComparisonTableProps {
  * is a stacked card with its own "Choose offer" button, so nothing sits behind a
  * sideways scroll on a phone. Test ids therefore appear once per offer.
  */
-export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, chosenOfferId, onChoose, acceptsCredit }: OfferComparisonTableProps) {
+export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, chosenOfferId, onChoose, acceptsCredit, creditFit }: OfferComparisonTableProps) {
   const sorted = [...rows].sort((a, b) => a.rank - b.rank);
   const maxDays = Math.max(requiredInDays, ...sorted.map((r) => r.leadTimeDays), 1);
   const columns = onChoose ? 7 : 6;
@@ -114,6 +116,16 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                 <Cell end label="Landed cost incl. 15% VAT">
                   <span className="whitespace-nowrap font-medium text-ink">{formatSar(r.landedCostInclVat)}</span>
                   <CellNote>incl. delivery {formatSar(r.deliveryFee)}</CellNote>
+                  {(() => {
+                    const fit = creditFit?.(r);
+                    return fit ? (
+                      <CellNote>
+                        <span data-testid="offer-credit-fit" data-fits={fit.fits} className={fit.fits ? "text-positive" : "text-negative"}>
+                          {fit.text}
+                        </span>
+                      </CellNote>
+                    ) : null;
+                  })()}
                   <CellNote>
                     <span className={flag.tone === "caution" ? "text-caution" : flag.tone === "positive" ? "text-positive" : undefined}>
                       {r.vsBenchmarkPct > 0 ? "+" : ""}

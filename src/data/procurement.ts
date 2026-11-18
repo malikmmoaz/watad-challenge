@@ -144,6 +144,29 @@ export const rfqs: Rfq[] = [
     blindComparison: false,
     createdAt: "2026-11-15T11:30:00Z",
   },
+  {
+    // Two specialists each beat the one full-range offer on a line, even after the second
+    // delivery fee, so the comparison suggests a basket split (sample data).
+    id: "rfq_1045" as RfqId,
+    contractorId: org("con_najd"),
+    projectId: "prj_school",
+    title: "Block C walls: rebar and blockwork",
+    source: "catalog",
+    status: "offers_received",
+    lines: [
+      line("l1", "mat_rebar_16", "Deformed rebar 16 mm", "SASO ASTM A615 Grade 60, 12 m lengths", 30, "tonne"),
+      line("l2", "mat_block_20", "Hollow concrete block 20 cm", "SASO 1012, 400 × 200 × 200 mm, load-bearing", 12000, "piece"),
+    ],
+    deliveryCity: "Riyadh",
+    deliverySite: "Al Narjis Schools Complex, Gate 2, Riyadh",
+    requiredBy: "2026-12-12",
+    closesAt: "2026-11-22T14:00:00Z",
+    preferredTerms: CREDIT60,
+    wantsCredit: true,
+    invitedSupplierIds: [org("sup_nakheel"), org("sup_sawari"), org("sup_sahra")],
+    blindComparison: false,
+    createdAt: "2026-11-17T07:30:00Z",
+  },
 ];
 
 export const offers: Offer[] = [
@@ -235,6 +258,47 @@ export const offers: Offer[] = [
     localContent: false,
     validUntil: "2026-11-26",
     submittedAt: "2026-11-17T12:00:00Z",
+  },
+  // rfq_1045: Nakheel quotes everything; Sawari (rebar) and Sahra (blocks) each quote one line cheaper.
+  {
+    id: "off_2120" as OfferId,
+    rfqId: "rfq_1045" as RfqId,
+    supplierId: org("sup_nakheel"),
+    status: "submitted",
+    lines: [ol("l1", 3450, 30, "Rajhi Steel"), ol("l2", 2.7, 12000, "Local block factories")],
+    deliveryFee: sar(1800),
+    leadTimeDays: 5,
+    paymentTerms: CREDIT60,
+    localContent: true,
+    validUntil: "2026-11-30",
+    submittedAt: "2026-11-17T15:10:00Z",
+  },
+  {
+    id: "off_2121" as OfferId,
+    rfqId: "rfq_1045" as RfqId,
+    supplierId: org("sup_sawari"),
+    status: "submitted",
+    lines: [ol("l1", 3330, 30, "Al Ittefaq Steel")],
+    deliveryFee: sar(2000),
+    leadTimeDays: 6,
+    paymentTerms: CREDIT60,
+    localContent: true,
+    validUntil: "2026-11-30",
+    submittedAt: "2026-11-17T16:40:00Z",
+    notes: "Rebar only; we do not stock blocks.",
+  },
+  {
+    id: "off_2122" as OfferId,
+    rfqId: "rfq_1045" as RfqId,
+    supplierId: org("sup_sahra"),
+    status: "submitted",
+    lines: [ol("l2", 2.35, 12000, "Own batching plants (Riyadh South, Riyadh North)")],
+    deliveryFee: sar(900),
+    leadTimeDays: 3,
+    paymentTerms: CREDIT60,
+    localContent: true,
+    validUntil: "2026-11-30",
+    submittedAt: "2026-11-18T08:05:00Z",
   },
 ];
 

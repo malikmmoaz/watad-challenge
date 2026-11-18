@@ -9,7 +9,7 @@ import type { OrgId, PaymentTerms, StockStatus } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
 import { CATEGORY_LABELS, UNIT_LABELS } from "@/lib/procurement/labels";
 import { canOffer, submitOffer, withdrawOffer, type OfferDraft, type OfferErrors } from "@/lib/procurement/supplier-offer";
-import { termsKey as analyticsTerms, track } from "@/lib/analytics";
+import { termsKey, track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 
 const STOCK: { value: StockStatus; label: string }[] = [
@@ -17,7 +17,6 @@ const STOCK: { value: StockStatus; label: string }[] = [
   { value: "partial", label: "Partly in stock" },
   { value: "made_to_order", label: "Made to order" },
 ];
-const termsKey = (t: PaymentTerms) => ("days" in t ? `${t.kind}:${t.days}` : t.kind);
 
 export function SupplierRfq({ rfqId }: { rfqId: string }) {
   const rfqs = useDemo((s) => s.rfqs);
@@ -186,7 +185,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
       return;
     }
     update(() => r.state);
-    track("offer_submitted", { rfq_id: rfq.id, offer_id: r.offer.id, local_content: r.offer.localContent, terms: analyticsTerms(r.offer.paymentTerms) });
+    track("offer_submitted", { rfq_id: rfq.id, offer_id: r.offer.id, local_content: r.offer.localContent, terms: termsKey(r.offer.paymentTerms) });
     setErrors({});
     onDone();
   };

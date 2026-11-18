@@ -55,6 +55,15 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
 - Browser-verified: supplier offers on rfq_1044 -> contractor chooses, pays with credit -> supplier
   accepts, dispatches -> contractor confirms delivery -> supplier invoices -> paid. No console errors.
 
+## #14 credit fit (branch `feat/14-credit-fit`)
+- `creditFit()` in `po.ts` (cap − drawn, read before the draw); comparison rows show it via the
+  table's optional `creditFit` prop (`offer-credit-fit`, `data-fits`). Hana owns repayments, the
+  draws ledger and utilisation.
+- `po_placed.within_credit_cap` now reads the cap before drawing; supplier form uses shared `termsKey`.
+- Seed `rfq_1045` (Nakheel full, Sawari rebar, Sahra blocks) produces a split saving SAR 7,705;
+  `seed-scenarios.test.ts` guards it and rfq_1044.
+- Files released to Layla for restyling: rfq-builder, rfq-shortlist, supplier-rfq, po-detail.
+
 ## Next
 - #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
   #10 supplier inbox and offer form.

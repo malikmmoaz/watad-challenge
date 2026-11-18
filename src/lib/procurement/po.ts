@@ -173,3 +173,20 @@ export function advancePurchaseOrder(po: PurchaseOrder, now: string, note?: stri
     ...(credit && po.creditDraw ? { creditDraw: { ...po.creditDraw, supplierPaidAt: now } } : {}),
   };
 }
+
+export type CreditFit =
+  | { status: "fits"; leftAfter: Halalas }
+  | { status: "over"; overBy: Halalas }
+  | { status: "no_cap" };
+
+/**
+ * Whether an order total fits what is left of the credit cap. "Left" is
+ * always cap minus drawn, read before this order is drawn.
+ */
+export function creditFit(totalInclVat: Halalas, facility: Pick<CreditFacility, "cap" | "drawn"> | null): CreditFit {
+  if (!facility) return { status: "no_cap" };
+  const available = facility.cap - facility.drawn;
+  return totalInclVat <= available
+    ? { status: "fits", leftAfter: halalas(available - totalInclVat) }
+    : { status: "over", overBy: halalas(totalInclVat - available) };
+}
