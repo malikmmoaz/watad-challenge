@@ -56,7 +56,7 @@ export function PoDetail({ poId }: { poId: string }) {
         serial={po.id}
         status={
           <span data-testid="po-status" data-status={po.status}>
-            <Badge tone={last ? "positive" : "info"}>{step?.label ?? po.status}</Badge>
+            <Badge tone={po.status === "delivered" || po.status === "invoiced" || po.status === "paid" ? "positive" : "info"}>{step?.label ?? po.status}</Badge>
           </span>
         }
         meta={
@@ -115,7 +115,7 @@ export function PoDetail({ poId }: { poId: string }) {
               <Facts
                 items={[
                   { label: "Drawn from credit cap", value: formatSar(d.principal) },
-                  { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% flat for ${d.tenorDays} days, APR ${(d.apr * 100).toFixed(1)}%)` },
+                  { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% profit rate for ${d.tenorDays} days, ${(d.apr * 100).toFixed(1)}% APR)` },
                   { label: "You repay", value: formatSar(d.totalRepayable) },
                   { label: "Due", value: d.dueDate },
                   { label: "Supplier paid", value: d.supplierPaidAt ? `Directly by the financier, ${when(d.supplierPaidAt)}` : "Directly by the financier once invoiced" },

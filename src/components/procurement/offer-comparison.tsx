@@ -176,7 +176,7 @@ function PoDraft({ rfq, orders, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrde
             <CreditCapMeter cap={facility.cap} drawn={facility.drawn} thisPo={useCredit ? total : 0} format={fmt} />
             {useCredit && (
               <p className="text-sm text-ink-muted" data-testid="po-murabaha">
-                Murabaha: markup {(facility.profitRate * 100).toFixed(1)}% flat for {tenor} days = {formatSar(markup as Halalas)} (APR {((facility.profitRate * 365 * 100) / tenor).toFixed(1)}%). You repay{" "}
+                Murabaha: {(facility.profitRate * 100).toFixed(1)}% profit rate for {tenor} days ({((facility.profitRate * 365 * 100) / tenor).toFixed(1)}% APR), markup {formatSar(markup as Halalas)}. You repay{" "}
                 {formatSar((total + markup) as Halalas)} {tenor} days after delivery.
               </p>
             )}
@@ -227,7 +227,7 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
                   {methodLabel(po)}
                   {po.creditDraw && (
                     <span className="block text-ink-muted">
-                      Repay {formatSar(po.creditDraw.totalRepayable)} by {po.creditDraw.dueDate} (markup {formatSar(po.creditDraw.markup)}, APR {(po.creditDraw.apr * 100).toFixed(1)}%)
+                      Repay {formatSar(po.creditDraw.totalRepayable)} by {po.creditDraw.dueDate} (markup {formatSar(po.creditDraw.markup)}, {(po.creditDraw.apr * 100).toFixed(1)}% APR)
                     </span>
                   )}
                 </dd>
