@@ -39,7 +39,7 @@ export function Badge({ tone = "neutral", icon, children, className }: { tone?: 
 /** Required wherever simulated AI produced what is shown. */
 export function AiLabel({ agent, confidence, className }: { agent?: string; confidence?: number; className?: string }) {
   return (
-    <span className={cx("inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-sm border border-dashed border-ai-line bg-ai-soft px-2 text-xs font-medium text-ai", className)}>
+    <span className={cx("inline-flex min-h-6 max-w-full flex-wrap items-center gap-x-1.5 rounded-sm border border-dashed border-ai-line bg-ai-soft px-2 py-0.5 text-xs font-medium text-ai", className)}>
       Simulated AI{agent ? ` · ${agent}` : ""}
       {confidence === undefined ? null : <span className="font-normal">{Math.round(confidence * 100)}% confident</span>}
     </span>
