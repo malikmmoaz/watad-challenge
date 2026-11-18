@@ -98,7 +98,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
           PO {myPo.id} for {formatSar(myPo.totalInclVat)} incl. VAT{myPo.creditDraw ? ", paid to you directly from the contractor's credit cap once you invoice" : ""}.
         </Alert>
       )}
-      {!myPo && current?.status === "not_selected" && <Alert tone="info" title="Not selected this time">The contractor chose another offer. Thank you for quoting.</Alert>}
+      {!myPo && current?.status === "not_selected" && <Alert tone="info" title="Not selected this time">The contractor chose another offer. Thank you for your offer.</Alert>}
       {!allowed.ok && !current && <Alert tone="info" title="Closed">{allowed.reason}</Alert>}
 
       {current && !editing && (
@@ -193,7 +193,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
   return (
     <Panel title="Your offer (bid)">
       <div className="space-y-5" data-testid="offer-form">
-        <p className="text-sm text-ink-muted">Quote the lines you can supply. Leave a price empty to skip a line. Prices are per unit, in SAR excluding VAT. Every invited supplier sees the same request.</p>
+        <p className="text-sm text-ink-muted">Price the lines you can supply for your offer (bid). Leave a price empty to skip a line. Prices are per unit, in SAR excluding VAT. Every invited supplier sees the same request.</p>
         {errors.form && <Alert tone="negative" title="Cannot submit">{errors.form}</Alert>}
         {errors.lines && <p className="text-sm text-negative">{errors.lines}</p>}
         <ul className="space-y-4">
