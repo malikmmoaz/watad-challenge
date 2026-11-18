@@ -9,8 +9,7 @@ test("contractor opens on live work, not an empty state", async ({ page }) => {
   await expect(page.getByText("No RFQs yet.")).toHaveCount(0);
 });
 
-test("upload a BOQ file: simulated reader fills editable lines, RFQ is confirmed", async ({ page, isMobile }) => {
-  test.fixme(isMobile, "#29: Confirm RFQ cannot be clicked on phones while the table overflows");
+test("upload a BOQ file: simulated reader fills editable lines, RFQ is confirmed", async ({ page }) => {
   await enterAs(page, "contractor");
   const before = await tid(page, "rfq-row").count();
   await tid(page, "rfq-new").click();
@@ -42,10 +41,7 @@ test("upload a BOQ file: simulated reader fills editable lines, RFQ is confirmed
   await expect(tid(page, "rfq-row").first()).toContainText("from upload");
 });
 
-test("pick from the catalog: confirm is blocked until the RFQ is complete", async ({ page, isMobile }) => {
-  // On phones the overflowing line items table (#29) makes the page zoom out and
-  // "Confirm RFQ" cannot be clicked. Re-enable on mobile with the #29 fix.
-  test.fixme(isMobile, "#29");
+test("pick from the catalog: confirm is blocked until the RFQ is complete", async ({ page }) => {
   await enterAs(page, "contractor");
   await tid(page, "rfq-new").click();
   await tid(page, "rfq-tab-catalog").click();
@@ -66,8 +62,7 @@ test("pick from the catalog: confirm is blocked until the RFQ is complete", asyn
   await expect(tid(page, "rfq-row").first()).toContainText("from catalog");
 });
 
-test("new RFQ page fits a phone screen", async ({ page, isMobile }) => {
-  test.fail(isMobile, "#29: line items table overflows by ~120px on phones; remove this line with the fix");
+test("new RFQ page fits a phone screen", async ({ page }) => {
   await page.goto("/contractor/rfq/new");
   await tid(page, "rfq-upload-sample").click();
   await expect(tid(page, "rfq-line").first()).toBeVisible();

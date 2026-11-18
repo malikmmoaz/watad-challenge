@@ -224,54 +224,56 @@ export function RfqBuilder() {
         {lines.length === 0 ? (
           <p className="text-sm text-neutral-600">No line items yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-neutral-600">
-                <tr>
-                  <th className="py-1 pr-3 font-medium">Material</th>
-                  <th className="py-1 pr-3 font-medium">Spec</th>
-                  <th className="py-1 pr-3 font-medium">Quantity</th>
-                  <th className="py-1 font-medium"><span className="sr-only">Remove</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => (
-                  <tr key={l.id} data-testid="rfq-line" className="border-t border-neutral-200 align-top">
-                    <td className="py-2 pr-3">
-                      {l.description}
-                      {l.parsedBy && (
-                        <div className="mt-1">
-                          <SimulatedBadge>
-                            Simulated AI · {Math.round(l.parsedBy.confidence * 100)}% match{l.parsedBy.confidence < 0.8 ? " · please check" : ""}
-                          </SimulatedBadge>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-2 pr-3">
-                      <input aria-label={`Spec for ${l.description}`} className={`${input} w-full min-w-48`} value={l.spec} onChange={(e) => patch(l.id, { spec: e.target.value })} />
-                    </td>
-                    <td className="py-2 pr-3 whitespace-nowrap">
-                      <input
-                        type="number"
-                        min={0}
-                        step="any"
-                        data-testid="rfq-line-qty"
-                        aria-label={`Quantity for ${l.description}`}
-                        className={`${input} w-28 tabular-nums`}
-                        value={Number.isNaN(l.quantity) ? "" : l.quantity}
-                        onChange={(e) => patch(l.id, { quantity: e.target.valueAsNumber })}
-                      />{" "}
-                      {UNIT_LABELS[l.unit]}
-                    </td>
-                    <td className="py-2">
-                      <button type="button" className="text-neutral-600 underline" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            {/* A grid, not a table: one row per line from sm up, a stacked card on phones (#29). */}
+            <div aria-hidden="true" className="hidden gap-3 border-b border-neutral-200 pb-1 text-sm font-medium text-neutral-600 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem]">
+              <span>Material</span>
+              <span>Spec</span>
+              <span>Quantity</span>
+              <span />
+            </div>
+            <ul className="divide-y divide-neutral-200 text-sm">
+              {lines.map((l) => (
+                <li key={l.id} data-testid="rfq-line" className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem] sm:items-start sm:gap-3">
+                  <div className="min-w-0">
+                    <span className="font-medium sm:font-normal">{l.description}</span>
+                    {l.parsedBy && (
+                      <div className="mt-1">
+                        <SimulatedBadge>
+                          Simulated AI · {Math.round(l.parsedBy.confidence * 100)}% match{l.parsedBy.confidence < 0.8 ? " · please check" : ""}
+                        </SimulatedBadge>
+                      </div>
+                    )}
+                  </div>
+                  <label className="flex min-w-0 flex-col gap-1">
+                    <span className="text-neutral-600 sm:sr-only">Spec</span>
+                    <input aria-label={`Spec for ${l.description}`} className={`${input} w-full min-w-0`} value={l.spec} onChange={(e) => patch(l.id, { spec: e.target.value })} />
+                  </label>
+                  <div className="flex items-end justify-between gap-3 sm:contents">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-neutral-600 sm:sr-only">Quantity</span>
+                      <span className="flex items-center gap-2 whitespace-nowrap">
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          inputMode="decimal"
+                          data-testid="rfq-line-qty"
+                          aria-label={`Quantity for ${l.description}`}
+                          className={`${input} w-28 tabular-nums`}
+                          value={Number.isNaN(l.quantity) ? "" : l.quantity}
+                          onChange={(e) => patch(l.id, { quantity: e.target.valueAsNumber })}
+                        />
+                        {UNIT_LABELS[l.unit]}
+                      </span>
+                    </label>
+                    <button type="button" className="py-1.5 text-left text-neutral-600 underline" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
+                      Remove
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
             <p className="mt-3 text-sm text-neutral-700">
               Estimated value: <strong data-testid="rfq-estimate">{formatSar(estimate)}</strong> incl. 15% VAT, at 90-day benchmark prices (sample data). Offers will set the real price.
             </p>
