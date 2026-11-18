@@ -132,3 +132,29 @@ describe("seeded queue", async () => {
     expect(by("cc_503").assessment.proposedDecision).toBe("approve_with_conditions");
   });
 });
+
+describe("factor impact", async () => {
+  const { factorImpacts } = await import("./impact");
+  it("shows how each factor moves score, band and limit", () => {
+    const c = run(durratAlQassim);
+    const impacts = factorImpacts(c.scorecard!, c.requestedCap);
+    expect(impacts).toHaveLength(10);
+    for (const i of impacts) {
+      expect(i.atFull.score).toBeGreaterThanOrEqual(i.current.score);
+      expect(i.atZero.score).toBeLessThanOrEqual(i.current.score);
+      expect(i.atFull.limit).toBeGreaterThanOrEqual(i.atZero.limit);
+    }
+    const liquidity = impacts.find((i) => i.factorId === "liquidity")!;
+    expect(liquidity.current).toMatchObject({ band: "B", limit: 18_000_000 });
+    expect(liquidity.atZero.band).toBe("C");
+    expect(liquidity.atZero.limit).toBeLessThan(liquidity.current.limit);
+  });
+});
+
+it("requires a reason for approve, refer and decline alike", () => {
+  const c = run(rawasiNajd);
+  for (const outcome of ["approve", "request_info", "decline"] as const) {
+    const errors = validateDecision(c, { outcome, decidedBy: "R", reasonCodes: [], reasonText: " ", approvedCapSar: 100_000, requestedItems: ["x"], overrideReason: "Manager judgement on this file." });
+    expect(errors, outcome).toContain("Write the reason the contractor will read (at least 15 characters).");
+  }
+});

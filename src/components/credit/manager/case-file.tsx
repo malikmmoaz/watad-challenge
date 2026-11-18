@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { applicantName, creditProfiles, reference } from "@/data";
 import { checkConsistency } from "@/domain/credit/checks";
+import type { FactorImpact, Outcome } from "@/domain/credit/impact";
 import { formatSar, sar } from "@/domain/money";
 import type { CreditDocument, EvidenceRef, GateResult } from "@/domain/types";
+import { factorImpacts } from "@/domain/credit/impact";
 import { runChecks } from "@/domain/credit/workflow";
 import { update, useDemo } from "@/store";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
@@ -49,6 +51,22 @@ function Memo({ text }: { text: string }) {
   );
 }
 
+const outcomeText = (o: Outcome) => `score ${o.score}, band ${o.band}, limit ${formatSar(o.limit)}`;
+
+/** Effect on score, band and limit: what full marks or zero on this factor would change. */
+function ImpactLine({ impact, weight, points }: { impact?: FactorImpact; weight: number; points: number }) {
+  if (!impact) return null;
+  const same = (a: Outcome, b: Outcome) => a.band === b.band && a.limit === b.limit;
+  return (
+    <p className="text-xs text-ink-muted" data-testid="credit-factor-impact">
+      <span className="font-medium text-ink">Effect:</span> adds {points.toFixed(1)} of {weight} points.{" "}
+      {points < weight ? `At full marks: ${outcomeText(impact.atFull)}${same(impact.atFull, impact.current) ? " (band and limit unchanged)" : ""}. ` : "Already at full marks. "}
+      Without it: {outcomeText(impact.atZero)}
+      {same(impact.atZero, impact.current) ? " (band and limit unchanged)." : "."}
+    </p>
+  );
+}
+
 export function CaseFile({ id }: { id: string }) {
   const c = useDemo((s) => s.creditCases.find((x) => x.id === id));
   if (!c) {
@@ -67,6 +85,7 @@ export function CaseFile({ id }: { id: string }) {
   };
   const consistency = profile && c.scorecard ? checkConsistency(profile) : null;
   const card = c.scorecard;
+  const impacts = card ? factorImpacts(card, c.requestedCap) : [];
 
   return (
     <div className="space-y-6" data-testid="credit-case-file">
@@ -122,9 +141,9 @@ export function CaseFile({ id }: { id: string }) {
                     <li key={f.id} className="space-y-1.5">
                       <FactorBar label={f.label} points={f.points} weight={f.weight} note={f.rationale} />
                       <p className="text-xs text-ink-muted">
-                        <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters} It can move the score by up to {f.weight} points
-                        {f.points < f.weight / 2 ? `; here it cost ${(f.weight - f.points).toFixed(1)} points.` : "."}
+                        <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters}
                       </p>
+                      <ImpactLine impact={impacts.find((i) => i.factorId === f.id)} weight={f.weight} points={f.points} />
                       <Evidence refs={f.evidence} docs={c.documents} />
                     </li>
                   ))}
