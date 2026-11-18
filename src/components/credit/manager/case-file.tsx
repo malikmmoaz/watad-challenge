@@ -161,7 +161,7 @@ export function CaseFile({ id }: { id: string }) {
                       <span className="font-medium text-ink">{p.rule}</span>
                       <span className="block text-ink-muted">{p.observed}</span>
                     </span>
-                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? "Met" : p.result === "fail" ? "Breached: decline" : "Breached: refer or condition"}</Badge>
+                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? "Met" : p.result === "fail" ? "Breached: decline" : "Breached: more information or a condition"}</Badge>
                   </li>
                 ))}
               </ul>

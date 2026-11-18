@@ -209,7 +209,7 @@ export function reasonCodes(a: Assessment): ReasonCode[] {
 const DECISION_WORD: Record<Decision, string> = {
   approve: "approve",
   approve_with_conditions: "approve with conditions",
-  refer: "refer for more information",
+  refer: "request more information",
   decline: "decline",
 };
 

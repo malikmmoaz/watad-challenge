@@ -11,13 +11,13 @@ import { shortDate } from "./shared";
 
 const OUTCOMES: { value: CreditDecisionOutcome; label: string }[] = [
   { value: "approve", label: "Approve" },
-  { value: "request_info", label: "Refer for more info" },
+  { value: "request_info", label: "Request more information" },
   { value: "decline", label: "Decline" },
 ];
 const STAMP = { approve: "approved", request_info: "referred", decline: "declined" } as const;
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
-/** Approve / refer / decline with structured reasons that go back to the contractor. */
+/** Approve / request more information / decline with structured reasons that go back to the contractor. */
 export function DecisionPanel({ c }: { c: CreditCase }) {
   const ai = c.aiProposal;
   const [outcome, setOutcome] = useState<CreditDecisionOutcome>(ai?.outcome ?? "approve");
