@@ -6,7 +6,8 @@ import { applicantName, reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { CreditCase } from "@/domain/types";
 import { useDemo } from "@/store";
-import { Table, Td, Th, THead, Tr } from "@/components/ui";
+import { EmptyState, LoadingRows, Table, Td, Th, THead, Tr } from "@/components/ui";
+import { useHydrated } from "../client-state";
 import { CaseStatus, shortDate } from "./shared";
 
 const ORDER: Record<CreditCase["status"], number> = { in_assessment: 0, documents_review: 1, submitted: 2, more_info_requested: 3, draft: 4, approved: 5, declined: 6 };
@@ -18,6 +19,15 @@ export function CreditQueue() {
     () => [...all].sort((a, b) => ORDER[a.status] - ORDER[b.status] || (b.submittedAt ?? "").localeCompare(a.submittedAt ?? "")),
     [all],
   );
+  const hydrated = useHydrated();
+  if (!hydrated) return <LoadingRows rows={6} label="Loading credit applications" />;
+  if (cases.length === 0) {
+    return (
+      <EmptyState title="No applications in the queue">
+        When a contractor applies for a credit cap, the application lands here with its documents. Use Reset demo data to bring back the sample cases.
+      </EmptyState>
+    );
+  }
   return (
     <Table caption="Credit applications" minWidth={760}>
       <THead>

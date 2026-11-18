@@ -94,6 +94,16 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
   if (c.status === "more_info_requested") {
     return readOnly ? <Alert tone="caution" title="Waiting for the contractor to provide more information" /> : <MoreInfoForm c={c} />;
   }
+  const lastEntry = c.log.at(-1);
+  if (c.status === "documents_review" && lastEntry?.action === "More information provided") {
+    return (
+      <div data-testid="credit-more-info-sent">
+        <Alert tone="positive" title="Sent to the credit manager">
+          {lastEntry.detail ? `${lastEntry.detail}. ` : ""}The checks run again with what you sent; the outcome appears here.
+        </Alert>
+      </div>
+    );
+  }
   if (!d || (c.status !== "approved" && c.status !== "declined")) {
     return <p className="text-sm text-ink-muted">No decision yet. An independent credit manager decides; the simulated AI only prepares the file.</p>;
   }
