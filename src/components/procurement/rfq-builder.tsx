@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { track } from "@/lib/analytics";
 import { demoPersona, reference } from "@/data";
 import { formatSar } from "@/domain/money";
@@ -9,7 +9,7 @@ import type { City, MaterialCategory, OrgId, PaymentTerms, Rfq, RfqId, RfqLine }
 import { SAMPLE_BOQ_FILE, lineIdFor, simulateBoqExtraction, type BoqExtraction } from "@/lib/procurement/boq";
 import { CATEGORY_LABELS, CITIES, UNIT_LABELS } from "@/lib/procurement/labels";
 import { estimateRfqValue } from "@/lib/procurement/shortlist";
-import { buttonClass } from "@/components/ui";
+import { AiLabel, Badge, Facts, PageHeader, Panel, buttonClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { update } from "@/store";
 
@@ -24,14 +24,9 @@ const DAY_MS = 86_400_000;
 const input =
   "rounded-md border border-line-control bg-surface px-2.5 py-1.5 text-sm text-ink transition-[border-color] duration-150 hover:border-ink-subtle " +
   "focus-visible:border-stamp focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stamp/30 disabled:cursor-not-allowed disabled:bg-panel disabled:text-ink-subtle";
-const card = "rounded-lg border border-line bg-surface p-4 sm:p-5";
 
 const contractor = reference.contractors.find((c) => c.id === demoPersona.contractor) ?? reference.contractors[0]!;
 const categories = [...new Set(reference.materials.map((m) => m.category))];
-
-function SimulatedBadge({ children }: { children: React.ReactNode }) {
-  return <span className="inline-flex items-center rounded-sm border border-dashed border-ai-line bg-ai-soft px-1.5 py-0.5 text-xs font-medium text-ai">{children}</span>;
-}
 
 export function RfqBuilder() {
   const firstProject = contractor.activeProjects[0]!;
@@ -50,6 +45,8 @@ export function RfqBuilder() {
   const [created, setCreated] = useState<Rfq | null>(null);
 
   const started = useRef(false);
+  const idBase = useId();
+  const tabRefs = useRef<Partial<Record<"upload" | "catalog", HTMLButtonElement | null>>>({});
   const start = (source: "upload" | "catalog") => {
     if (started.current) return;
     started.current = true;
@@ -119,17 +116,32 @@ export function RfqBuilder() {
 
   if (created) {
     return (
-      <div className="space-y-4" data-testid="rfq-confirmed">
-        <h1 className="text-2xl font-semibold text-ink">RFQ confirmed</h1>
-        <div className={card}>
-          <p className="font-medium text-ink">{created.title}</p>
-          <p className="mt-1 text-sm text-ink-muted">
-            <span data-testid="rfq-id" className="font-mono">{created.id}</span> · {created.lines.length} line items · deliver to {created.deliverySite}, {created.deliveryCity} by{" "}
-            {formatDate(created.requiredBy)} · about {formatSar(estimateRfqValue(created, reference.materials))} incl. VAT at benchmark prices
-          </p>
-          <p className="mt-2 text-sm text-ink-muted">Saved as a draft. Next step: choose which suppliers receive it from the explainable shortlist.</p>
-        </div>
-        <div className="flex gap-3">
+      <div className="space-y-6" data-testid="rfq-confirmed">
+        <PageHeader
+          eyebrow="Contractor"
+          title="RFQ confirmed"
+          status={<Badge tone="neutral">Draft</Badge>}
+          meta={
+            <span data-testid="rfq-id" className="font-mono text-xs text-ink">
+              {created.id}
+            </span>
+          }
+        />
+        <Panel title={created.title} className="motion-safe:animate-rise">
+          <Facts
+            columns={3}
+            items={[
+              { label: "Scope", value: `${created.lines.length} line ${created.lines.length === 1 ? "item" : "items"}` },
+              { label: "Deliver to", value: created.deliverySite.includes(created.deliveryCity) ? created.deliverySite : `${created.deliverySite}, ${created.deliveryCity}` },
+              { label: "Required on site by", value: formatDate(created.requiredBy) },
+              { label: "Estimate incl. 15% VAT", value: <span className="tabular-nums">{formatSar(estimateRfqValue(created, reference.materials))}</span> },
+              { label: "Payment", value: created.wantsCredit ? "From your credit cap" : "Supplier terms" },
+              { label: "Source", value: created.source === "upload" ? "Uploaded BOQ (simulated reader)" : "Catalog" },
+            ]}
+          />
+          <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">Saved as a draft. Next: choose which suppliers receive it from the explainable shortlist.</p>
+        </Panel>
+        <div className="flex flex-wrap gap-3">
           <Link href={`/contractor/rfq/${created.id}`} data-testid="rfq-choose-suppliers" className={buttonClass("primary")}>
             Choose suppliers
           </Link>
@@ -141,14 +153,35 @@ export function RfqBuilder() {
     );
   }
 
+  // WAI-ARIA tabs: roving tabindex (only the selected tab is in the Tab order, which also
+  // makes it reachable in Safari), arrows / Home / End move and select, panels are linked (#81).
+  const MODES = ["upload", "catalog"] as const;
+  const tabId = (m: typeof mode) => `${idBase}-tab-${m}`;
+  const panelId = (m: typeof mode) => `${idBase}-panel-${m}`;
+  const onTabKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const i = MODES.indexOf(mode);
+    const next =
+      e.key === "ArrowRight" ? MODES[(i + 1) % MODES.length] : e.key === "ArrowLeft" ? MODES[(i - 1 + MODES.length) % MODES.length] : e.key === "Home" ? MODES[0] : e.key === "End" ? MODES[MODES.length - 1] : undefined;
+    if (!next) return;
+    e.preventDefault();
+    setMode(next);
+    tabRefs.current[next]?.focus();
+  };
   const tab = (m: typeof mode, label: string) => (
     <button
+      ref={(el) => {
+        tabRefs.current[m] = el;
+      }}
       type="button"
       role="tab"
+      id={tabId(m)}
       aria-selected={mode === m}
+      aria-controls={panelId(m)}
+      tabIndex={mode === m ? 0 : -1}
       data-testid={`rfq-tab-${m}`}
       onClick={() => setMode(m)}
-      className={`flex h-8 items-center rounded-[4px] px-3 text-sm transition-colors duration-150 ${mode === m ? "bg-surface font-medium text-ink shadow-[0_1px_2px_oklch(0.235_0.022_160/0.12)]" : "text-ink-muted hover:text-ink"}`}
+      onKeyDown={onTabKey}
+      className={`flex h-8 items-center rounded-[4px] px-3 text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${mode === m ? "bg-surface font-medium text-ink shadow-[0_1px_2px_oklch(0.235_0.022_160/0.12)]" : "text-ink-muted hover:text-ink"}`}
     >
       {label}
     </button>
@@ -156,21 +189,18 @@ export function RfqBuilder() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-ink">New request for quotation</h1>
-        <p className="mt-1 text-sm text-ink-muted">Upload a bill of quantities or pick materials from the catalog, then confirm quantities, specs and delivery.</p>
-      </div>
+      <PageHeader eyebrow="Contractor" title="New request for quotation" meta="Upload a bill of quantities or pick materials from the catalog, then confirm quantities, specs and delivery." />
 
-      <section className={card} aria-label="Add line items">
+      <Panel title="Add line items">
         <div role="tablist" aria-label="How to add line items" className="mb-4 inline-flex gap-0.5 rounded-md border border-line-control bg-panel p-0.5">
           {tab("upload", "Upload RFQ / BOQ")}
           {tab("catalog", "Pick from catalog")}
         </div>
 
         {mode === "upload" ? (
-          <div className="space-y-3">
+          <div role="tabpanel" id={panelId("upload")} aria-labelledby={tabId("upload")} tabIndex={0} className="space-y-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
             <p className="text-sm text-ink-muted">
-              <SimulatedBadge>Simulated AI</SimulatedBadge> The BOQ reader is simulated: CSV and TXT files (<code>description; quantity; unit</code>) are read and matched to the catalog by keyword; any other
+              <AiLabel agent="BOQ reader" className="mr-1 align-middle" /> The BOQ reader is simulated: CSV and TXT files (<code>description; quantity; unit</code>) are read and matched to the catalog by keyword; any other
               file returns a fixed sample extraction. Always review the lines before confirming.
             </p>
             <div className="flex flex-wrap items-center gap-3">
@@ -194,7 +224,7 @@ export function RfqBuilder() {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div role="tabpanel" id={panelId("catalog")} aria-labelledby={tabId("catalog")} tabIndex={0} className="space-y-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
             <label className="flex items-center gap-2 text-sm">
               Category
               <select className={input} value={category} onChange={(e) => setCategory(e.target.value as MaterialCategory | "all")}>
@@ -204,11 +234,11 @@ export function RfqBuilder() {
                 ))}
               </select>
             </label>
-            <ul className="grid gap-2 sm:grid-cols-2">
+            <ul className="grid gap-x-8 sm:grid-cols-2">
               {reference.materials.filter((m) => category === "all" || m.category === category).map((m) => {
                 const added = lines.some((l) => l.materialId === m.id);
                 return (
-                  <li key={m.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
+                  <li key={m.id} className="flex items-start justify-between gap-3 border-t border-line py-3">
                     <div className="text-sm">
                       <p className="font-medium text-ink">{m.name}</p>
                       <p className="text-ink-muted">{m.spec}</p>
@@ -230,10 +260,9 @@ export function RfqBuilder() {
             </ul>
           </div>
         )}
-      </section>
+      </Panel>
 
-      <section className={card} aria-label="Line items">
-        <h2 className="mb-3 text-sm font-semibold text-ink">Line items ({lines.length})</h2>
+      <Panel title={`Line items (${lines.length})`}>
         {lines.length === 0 ? (
           <p className="text-sm text-ink-muted">No line items yet.</p>
         ) : (
@@ -252,9 +281,8 @@ export function RfqBuilder() {
                     <span className="font-medium text-ink sm:font-normal">{l.description}</span>
                     {l.parsedBy && (
                       <div className="mt-1">
-                        <SimulatedBadge>
-                          Simulated AI · {Math.round(l.parsedBy.confidence * 100)}% match{l.parsedBy.confidence < 0.8 ? " · please check" : ""}
-                        </SimulatedBadge>
+                        <AiLabel confidence={l.parsedBy.confidence} />
+                        {l.parsedBy.confidence < 0.8 ? <span className="ml-2 text-xs font-medium text-caution">Please check this match</span> : null}
                       </div>
                     )}
                   </div>
@@ -292,10 +320,9 @@ export function RfqBuilder() {
             </p>
           </div>
         )}
-      </section>
+      </Panel>
 
-      <section className={card} aria-label="Delivery and terms">
-        <h2 className="mb-3 text-sm font-semibold text-ink">Delivery and terms</h2>
+      <Panel title="Delivery and terms">
         <div className="grid gap-4 text-sm sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             Project
@@ -345,9 +372,9 @@ export function RfqBuilder() {
             <textarea className={input} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
         </div>
-      </section>
+      </Panel>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface/95 p-4 shadow-float backdrop-blur">
         <button type="button" data-testid="rfq-confirm" disabled={problems.length > 0} onClick={confirm} className={buttonClass("primary")}>
           Confirm RFQ
         </button>

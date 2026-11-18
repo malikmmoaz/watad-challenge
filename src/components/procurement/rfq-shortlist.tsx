@@ -5,18 +5,17 @@ import { useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/analytics";
 import { reference } from "@/data";
 import { formatSar, murabaha } from "@/domain/money";
-import type { OrgId, ShortlistReason } from "@/domain/types";
+import type { Halalas, OrgId, ShortlistReason } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
 import { OfferComparison } from "./offer-comparison";
 import { UNIT_LABELS } from "@/lib/procurement/labels";
 import { availableCredit } from "@/lib/procurement/po";
 import { buildShortlist, estimateRfqValue, priceIndexFromOffers, type ShortlistRow } from "@/lib/procurement/shortlist";
-import { Badge, buttonClass } from "@/components/ui";
+import { Badge, CreditCapMeter, EmptyState, PageHeader, Panel, buttonClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { RFQ_STATUS } from "@/lib/status";
 import { update, useDemo } from "@/store";
 
-const card = "rounded-lg border border-line bg-surface p-4 sm:p-5";
 
 function Reason({ r }: { r: ShortlistReason }) {
   const positive = r.polarity === "positive";
@@ -124,10 +123,11 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
 
   if (!rfq || !shortlist) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold text-ink">RFQ not found</h1>
-        <p className="text-sm text-ink-muted">It may have been created in another browser, or the demo data was reset.</p>
-        <Link href="/contractor" className={buttonClass("secondary", "sm")}>Back to my RFQs</Link>
+      <div className="space-y-6">
+        <PageHeader eyebrow="Contractor" title="RFQ not found" />
+        <EmptyState title="This RFQ is not in this browser" action={<Link href="/contractor" className={buttonClass("secondary", "sm")}>Back to my RFQs</Link>}>
+          It may have been created in another browser, or the demo data was reset.
+        </EmptyState>
       </div>
     );
   }
@@ -160,20 +160,33 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm"><Link href="/contractor" className="text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">My RFQs</Link></p>
-        <h1 className="mt-1 text-2xl font-semibold text-ink">{rfq.title}</h1>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-ink-muted">
-          <span className="font-mono text-xs text-ink">{rfq.id}</span> · deliver to {rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${rfq.deliveryCity}`} by {formatDate(rfq.requiredBy)} · {describeTerms(rfq.preferredTerms)} ·{" "}
-          <Badge tone={RFQ_STATUS[rfq.status].tone} className="capitalize">
-            <span data-testid="rfq-status" data-status={rfq.status}>{rfq.status.replace(/_/g, " ")}</span>
-          </Badge>
-        </p>
+        <Link href="/contractor" className="mb-3 inline-block text-sm text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+          My RFQs
+        </Link>
+        <PageHeader
+          eyebrow="Request for quotation"
+          title={rfq.title}
+          serial={rfq.id}
+          status={
+            <Badge tone={RFQ_STATUS[rfq.status].tone}>
+              <span data-testid="rfq-status" data-status={rfq.status}>
+                {RFQ_STATUS[rfq.status].label}
+              </span>
+            </Badge>
+          }
+          meta={
+            <>
+              <span>Deliver to {rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${rfq.deliveryCity}`}</span>
+              <span>by {formatDate(rfq.requiredBy)}</span>
+              <span>{describeTerms(rfq.preferredTerms)}</span>
+            </>
+          }
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <section className={`${card} md:col-span-2`} aria-label="Line items">
-          <h2 className="mb-3 text-sm font-semibold text-ink">Line items</h2>
-          <ul className="divide-y divide-line border-y border-line text-sm [&>li]:py-1.5">
+      <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
+        <Panel title="Line items" className="lg:col-span-2" aside={<span className="text-sm tabular-nums text-ink-muted">About {formatSar(estimate)} incl. VAT</span>}>
+          <ul aria-label="Line items" className="divide-y divide-line text-sm [&>li]:py-2">
             {rfq.lines.map((l) => (
               <li key={l.id} className="flex justify-between gap-3">
                 <span className="text-ink">{material(l.materialId)?.name ?? l.description}</span>
@@ -181,14 +194,18 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-sm text-ink-muted">About {formatSar(estimate)} incl. 15% VAT at 90-day benchmark prices (sample data).</p>
-        </section>
-        <section className={card} aria-label="Credit cap" data-testid="credit-cap-panel">
-          <h2 className="mb-3 text-sm font-semibold text-ink">Credit cap</h2>
+          <p className="mt-3 text-sm text-ink-muted">Estimate incl. 15% VAT at 90-day benchmark prices (sample data). Offers set the real price.</p>
+        </Panel>
+        <Panel title="Credit cap">
+          <div data-testid="credit-cap-panel">
           {facility ? (
-            <div className="space-y-1.5 text-sm">
-              <p>
-                Available <strong data-testid="credit-cap-available" className="tabular-nums text-ink">{formatSar(availableCredit(facility))}</strong> of {formatSar(facility.cap)}
+            <div className="space-y-3 text-sm">
+              <p className="text-ink-muted">
+                Available
+                <strong data-testid="credit-cap-available" className="mt-0.5 block text-2xl font-semibold tabular-nums tracking-[var(--tracking-heading)] text-ink">
+                  {formatSar(availableCredit(facility))}
+                </strong>
+                of {formatSar(facility.cap)}
               </p>
               <p className="text-ink-muted">
                 {estimate <= availableCredit(facility) ? "This RFQ fits within your available cap." : "This RFQ is above your available cap; part would need another payment method."}
@@ -197,23 +214,22 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
                 Murabaha: {(facility.profitRate * 100).toFixed(1)}% profit rate for {facility.maxTenorDays} days (
                 {(murabaha(estimate, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}% APR) · supplier paid directly
               </p>
+              <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={(n) => formatSar(n as Halalas)} barOnly />
             </div>
           ) : (
             <p className="text-sm text-ink-muted">No approved credit cap yet. Apply from your contractor workspace to pay suppliers from a cap.</p>
           )}
           <p className="mt-3 border-t border-line pt-3 text-sm text-ink">{rfq.wantsCredit ? "You plan to pay this order from your credit cap." : "You plan to pay this order directly."}</p>
-        </section>
+          </div>
+        </Panel>
       </div>
 
       {!isDraft && <OfferComparison rfq={rfq} />}
 
-      <section className={card} aria-label="Supplier shortlist">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold text-ink">{isDraft ? "Choose who receives this RFQ" : "Suppliers invited"}</h2>
-          <p className="max-w-3xl text-sm text-ink-muted">
-            Ranked on category fit, delivery to {rfq.deliveryCity}, reliability, likely to respond, price vs benchmark, credit cap, terms and local content. One slot is kept for a vetted supplier new to the platform.
-          </p>
-        </div>
+      <Panel title={isDraft ? "Choose who receives this RFQ" : "Suppliers invited"}>
+        <p className="mb-2 max-w-3xl text-sm text-ink-muted">
+          Ranked on category fit, delivery to {rfq.deliveryCity}, reliability, likely to respond, price vs benchmark, credit cap, terms and local content. One slot is kept for a vetted supplier new to the platform.
+        </p>
         <ul>
           {shown.map((row) => (
             <SupplierCard key={row.supplierId} row={row} locked={!isDraft} checked={selected.has(row.supplierId)} onToggle={() => toggle(row.supplierId)} />
@@ -229,10 +245,10 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             ))}
           </ul>
         </details>
-      </section>
+      </Panel>
 
       {isDraft ? (
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface/95 p-4 shadow-float backdrop-blur">
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" className="size-4" data-testid="rfq-blind-toggle" checked={isBlind} onChange={(e) => setBlind(e.target.checked)} />
             Blind comparison: hide supplier names on offers until I choose
@@ -242,7 +258,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           </button>
         </div>
       ) : (
-        <p role="status" data-testid="shortlist-sent" className="text-sm text-ink-muted">
+        <p role="status" data-testid="shortlist-sent" className="rounded-xl bg-paper p-4 text-sm text-ink-muted">
           Sent to {rfq.invitedSupplierIds.length} suppliers{rfq.blindComparison ? ", blind comparison on" : ""}. Offers appear here as suppliers respond.
         </p>
       )}

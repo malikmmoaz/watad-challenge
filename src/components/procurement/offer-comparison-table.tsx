@@ -134,7 +134,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                   </CellNote>
                 </Cell>
                 <Cell label="Coverage">
-                  <span className={full ? "text-ink" : "font-medium text-caution"}>
+                  <span className={`whitespace-nowrap ${full ? "text-ink" : "font-medium text-caution"}`}>
                     {r.linesCovered} of {r.linesRequested} lines in full
                   </span>
                   <CellNote>{Math.round(r.coverage * 100)}% of requested value</CellNote>

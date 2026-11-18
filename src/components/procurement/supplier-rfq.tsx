@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Alert, Badge, Button, Checkbox, Facts, Input, PageHeader, Panel, Select, Textarea } from "@/components/ui";
+import { Alert, Badge, Button, Checkbox, EmptyState, Facts, Icon, Input, PageHeader, Panel, Select, Textarea, buttonClass, type Tone } from "@/components/ui";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { demoPersona, reference } from "@/data";
 import { add, formatSar, halalas, sar, vatOn } from "@/domain/money";
 import type { OrgId, PaymentTerms, StockStatus } from "@/domain/types";
@@ -18,6 +19,14 @@ const STOCK: { value: StockStatus; label: string }[] = [
   { value: "made_to_order", label: "Made to order" },
 ];
 
+const OFFER_STATUS: Record<string, { label: string; tone: Tone }> = {
+  submitted: { label: "Sent to contractor", tone: "info" },
+  awarded: { label: "Won", tone: "positive" },
+  not_selected: { label: "Not selected", tone: "neutral" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+};
+
 export function SupplierRfq({ rfqId }: { rfqId: string }) {
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
@@ -28,13 +37,15 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
   const current = mine.find((o) => o.status !== "withdrawn");
   const myPo = pos.find((p) => p.rfqId === rfqId && p.supplierId === me.id);
   const [editing, setEditing] = useState(false);
+  const [justSent, setJustSent] = useState(false);
 
   if (!rfq || !rfq.invitedSupplierIds.includes(me.id as OrgId)) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold text-ink">Request not available</h1>
-        <p className="text-sm text-ink-muted">You can only see requests you were invited to. The platform shows each supplier only its own matched requests.</p>
-        <Link href="/supplier" className="text-ink underline">Back to requests</Link>
+      <div className="space-y-6">
+        <PageHeader eyebrow="Supplier" title="Request not available" />
+        <EmptyState title="You were not invited to this request" action={<Link href="/supplier" className={buttonClass("secondary", "sm")}>Back to requests</Link>}>
+          The platform shows each supplier only the requests it was matched with or invited to.
+        </EmptyState>
       </div>
     );
   }
@@ -47,16 +58,23 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={rfq.title}
-        serial={rfq.id}
-        status={<Badge tone={rfq.status === "awarded" ? "neutral" : "info"}>{rfq.status === "awarded" ? "Awarded" : "Open for offers"}</Badge>}
-        meta={
-          <>
-            {contractor?.name} · offers close {rfq.closesAt.slice(0, 10)} · <Link href="/supplier" className="underline">All requests</Link>
-          </>
-        }
-      />
+      <div>
+        <Link href="/supplier" className="mb-3 inline-block text-sm text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp">
+          All requests
+        </Link>
+        <PageHeader
+          eyebrow="Supplier · request for quotation"
+          title={rfq.title}
+          serial={rfq.id}
+          status={<Badge tone={rfq.status === "awarded" ? "neutral" : "info"}>{rfq.status === "awarded" ? "Awarded" : "Open for offers"}</Badge>}
+          meta={
+            <>
+              <span>{contractor?.name}</span>
+              <span>Offers close {formatDateTime(rfq.closesAt)}</span>
+            </>
+          }
+        />
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="What is requested" className="lg:col-span-2">
@@ -78,8 +96,8 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
           <Facts
             columns={1}
             items={[
-              { label: "Deliver to", value: `${rfq.deliverySite}, ${rfq.deliveryCity}` },
-              { label: "Required on site by", value: rfq.requiredBy.slice(0, 10) },
+              { label: "Deliver to", value: rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${rfq.deliveryCity}` },
+              { label: "Required on site by", value: formatDate(rfq.requiredBy) },
               { label: "Preferred terms", value: describeTerms(rfq.preferredTerms) },
               {
                 label: "Payment",
@@ -87,17 +105,37 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
               },
             ]}
           />
-          <p className="mt-3 text-xs text-ink-muted">
+          <p className="mt-4 rounded-xl bg-paper p-3 text-xs text-ink-muted">
             Why you were matched: you stock {categories.filter((c) => me.categories.includes(c)).map((c) => CATEGORY_LABELS[c].toLowerCase()).join(" and ")} and deliver to {rfq.deliveryCity}.
           </p>
         </Panel>
       </div>
 
       {myPo && (
-        <Alert tone="positive" title="You won this order" action={<Link href={`/supplier/po/${myPo.id}`} data-testid="supplier-po-link" className="text-sm font-medium underline">Open purchase order</Link>}>
-          PO {myPo.id} for {formatSar(myPo.totalInclVat)} incl. VAT{myPo.creditDraw ? ", paid to you directly from the contractor's credit cap once you invoice" : ""}.
-        </Alert>
+        <section className="flex flex-wrap items-end justify-between gap-6 rounded-[22px] bg-positive-soft p-6 shadow-card motion-safe:animate-rise sm:p-8">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-medium text-positive">
+              <Icon name="check" size={16} strokeWidth={2.25} />
+              {contractor?.name} chose your offer
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[var(--tracking-heading)] text-ink">You won this order</h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              <span className="font-mono text-ink">{myPo.id}</span> · <span className="font-semibold tabular-nums text-ink">{formatSar(myPo.totalInclVat)}</span> incl. VAT
+              {myPo.creditDraw ? " · paid to you directly from the contractor's credit cap once you invoice" : " · bank transfer on your terms"}
+            </p>
+          </div>
+          <Link href={`/supplier/po/${myPo.id}`} data-testid="supplier-po-link" className={buttonClass("primary")}>
+            Open purchase order
+          </Link>
+        </section>
       )}
+      {justSent && current?.status === "submitted" ? (
+        <div className="motion-safe:animate-rise" data-testid="offer-sent">
+          <Alert tone="positive" title={`Offer sent to ${contractor?.name ?? "the contractor"}`}>
+            They compare it side by side with the other invited suppliers. You can revise or withdraw it until they choose.
+          </Alert>
+        </div>
+      ) : null}
       {!myPo && current?.status === "not_selected" && <Alert tone="info" title="Not selected this time">The contractor chose another offer. Thank you for your offer.</Alert>}
       {!allowed.ok && !current && <Alert tone="info" title="Closed">{allowed.reason}</Alert>}
 
@@ -115,9 +153,12 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
         >
           <div data-testid="offer-submitted" data-status={current.status} className="space-y-2 text-sm">
             <p className="text-ink">
-              Submitted {current.submittedAt.slice(0, 10)} · valid until {current.validUntil.slice(0, 10)} · <Badge tone={current.status === "awarded" ? "positive" : "neutral"}>{current.status.replace("_", " ")}</Badge>
+              <Badge tone={(OFFER_STATUS[current.status] ?? OFFER_STATUS.submitted!).tone}>{(OFFER_STATUS[current.status] ?? OFFER_STATUS.submitted!).label}</Badge>{" "}
+              <span className="text-ink-muted">
+                Sent {formatDateTime(current.submittedAt)} · valid until {formatDate(current.validUntil)}
+              </span>
             </p>
-            <ul className="space-y-1">
+            <ul className="divide-y divide-line border-y border-line [&>li]:py-1.5">
               {current.lines.map((ol) => {
                 const line = rfq.lines.find((l) => l.id === ol.rfqLineId);
                 return (
@@ -138,7 +179,15 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
         </Panel>
       )}
 
-      {showForm && <OfferForm rfqId={rfq.id} onDone={() => setEditing(false)} />}
+      {showForm && (
+        <OfferForm
+          rfqId={rfq.id}
+          onDone={() => {
+            setEditing(false);
+            setJustSent(true);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -202,7 +251,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
             const m = material(line.materialId);
             const key = (f: string) => errors[`line:${l.rfqLineId}:${f}`];
             return (
-              <li key={l.rfqLineId} data-testid="offer-line" className="rounded-md border border-line p-3">
+              <li key={l.rfqLineId} data-testid="offer-line" className="border-t border-line pt-4 first:border-t-0 first:pt-0">
                 <p className="text-sm font-medium text-ink">
                   {m?.name ?? line.description} · {line.quantity.toLocaleString("en-US")} {UNIT_LABELS[line.unit]}
                 </p>

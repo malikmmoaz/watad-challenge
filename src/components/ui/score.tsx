@@ -68,7 +68,8 @@ export function ScoreScale({ score, bands = creditBands, label = "Credit score",
  * draw, and what is left; a draw past the cap is shown past the edge, in red.
  * Amounts are whole SAR numbers already formatted by the caller's `format`.
  */
-export function CreditCapMeter({ cap, drawn, thisPo = 0, format }: { cap: number; drawn: number; thisPo?: number; format: (n: number) => string }) {
+/** `barOnly` drops the summary line when the screen already states the figures (keeps the bar and legend). */
+export function CreditCapMeter({ cap, drawn, thisPo = 0, format, barOnly = false }: { cap: number; drawn: number; thisPo?: number; format: (n: number) => string; barOnly?: boolean }) {
   const after = drawn + thisPo;
   const over = Math.max(0, after - cap);
   const scale = Math.max(cap, after) || 1;
@@ -76,11 +77,13 @@ export function CreditCapMeter({ cap, drawn, thisPo = 0, format }: { cap: number
   const summary = over > 0 ? `This PO exceeds the credit cap by ${format(over)}` : `${format(cap - after)} of the credit cap left${thisPo ? " after this PO" : ""}`;
   return (
     <div role="img" aria-label={`Credit cap ${format(cap)}. Drawn ${format(drawn)}.${thisPo ? ` This PO ${format(thisPo)}.` : ""} ${summary}.`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className={cx("text-sm font-semibold", over > 0 ? "text-negative" : "text-ink")}>{summary}</p>
-        <p className="text-xs text-ink-muted tabular-nums">Credit cap {format(cap)}</p>
-      </div>
-      <div className="relative mt-2.5 flex h-3 overflow-hidden rounded-xs bg-neutral-soft">
+      {barOnly ? null : (
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <p className={cx("text-sm font-semibold", over > 0 ? "text-negative" : "text-ink")}>{summary}</p>
+          <p className="text-xs text-ink-muted tabular-nums">Credit cap {format(cap)}</p>
+        </div>
+      )}
+      <div className={cx("relative flex h-3 overflow-hidden rounded-xs bg-neutral-soft", barOnly ? "" : "mt-2.5")}>
         <span className="bg-ink-muted" style={{ width: w(drawn) }} />
         {thisPo ? <span className="bg-pine" style={{ width: w(Math.min(thisPo, Math.max(0, cap - drawn))) }} /> : null}
         {over > 0 ? <span className="bg-negative" style={{ width: w(over) }} /> : null}

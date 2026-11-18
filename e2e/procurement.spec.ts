@@ -30,7 +30,7 @@ test("explainable shortlist: why / why not, newcomer slot, send to picked suppli
   await tid(page, "rfq-blind-toggle").check();
   await tid(page, "shortlist-send").click();
   await expect(tid(page, "shortlist-sent")).toContainText(/blind comparison on/);
-  await expect(tid(page, "rfq-status")).toHaveText(/sent/i);
+  await expect(tid(page, "rfq-status")).toHaveAttribute("data-status", "sent");
   await expectNoHorizontalScroll(page);
 });
 
@@ -111,4 +111,25 @@ test("comparison: landed cost incl. VAT, blind mode, the RFQ is awarded once", a
   await page.reload();
   await expect(tid(page, "po-row")).toHaveCount(1);
   await expect(tid(page, "offer-choose")).toHaveCount(0);
+});
+
+test("RFQ builder tabs work by keyboard alone (WAI-ARIA tabs, #81)", async ({ page }) => {
+  await enterAs(page, "contractor");
+  await tid(page, "rfq-new").click();
+  const upload = tid(page, "rfq-tab-upload");
+  const catalog = tid(page, "rfq-tab-catalog");
+  // Only the selected tab is in the Tab order.
+  await expect(upload).toHaveAttribute("tabindex", "0");
+  await expect(catalog).toHaveAttribute("tabindex", "-1");
+  await upload.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(catalog).toBeFocused();
+  await expect(catalog).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel", { name: "Pick from catalog" })).toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(upload).toBeFocused();
+  await expect(page.getByRole("tabpanel", { name: "Upload RFQ / BOQ" })).toBeVisible();
+  // Tab moves from the tab list into the panel.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("tabpanel", { name: "Upload RFQ / BOQ" })).toBeFocused();
 });
