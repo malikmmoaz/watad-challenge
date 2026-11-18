@@ -104,3 +104,24 @@ describe("decide", () => {
     expect(overridden.decision).toMatchObject({ overrodeAi: true, overrideReason: "Default settled yesterday, letter on file." });
   });
 });
+
+describe("seeded queue", async () => {
+  const { seedState, creditProfiles } = await import("@/data");
+  it("every case in the queue can be assessed and keeps the seed invariants", () => {
+    for (const c of seedState.creditCases.filter((x) => x.status === "submitted" || x.status === "in_assessment")) {
+      const p = creditProfiles[c.contractorId];
+      expect(p, c.contractorId).toBeDefined();
+      const done = runChecks(c, p!, now).case;
+      const card = done.scorecard!;
+      expect(card.factors.reduce((s, f) => s + f.points, 0)).toBeCloseTo(card.total, 5);
+      for (const ref of [...done.gates.flatMap((g) => g.evidence), ...card.factors.flatMap((f) => f.evidence)]) {
+        expect(done.documents.find((d) => d.id === ref.documentId)?.extracted.some((f) => f.key === ref.fieldKey)).toBe(true);
+      }
+    }
+  });
+  it("gives the seeded contractors the intended proposals", () => {
+    const by = (id: string) => runChecks(seedState.creditCases.find((c) => c.id === id)!, creditProfiles[seedState.creditCases.find((c) => c.id === id)!.contractorId]!, now);
+    expect(by("cc_502").case.aiProposal?.outcome).toBe("request_info");
+    expect(by("cc_503").assessment.proposedDecision).toBe("approve_with_conditions");
+  });
+});

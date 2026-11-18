@@ -3,12 +3,14 @@ import { contractors, suppliers } from "./orgs";
 import { materials } from "./materials";
 import { offers, purchaseOrders, rfqs } from "./procurement";
 import { creditCases, creditFacilities } from "./credit";
+import { sampleQueueCases } from "./credit-profiles";
 import type { Contractor, CreditCase, CreditFacility, Material, Offer, PurchaseOrder, Rfq, Supplier } from "@/domain/types";
 
 export * from "./orgs";
 export * from "./materials";
 export * from "./procurement";
 export * from "./credit";
+export * from "./credit-profiles";
 
 /** Reference data: read-only, import directly. */
 export interface ReferenceData {
@@ -28,7 +30,7 @@ export interface DemoState {
 
 export const reference: ReferenceData = { contractors, suppliers, materials };
 
-export const seedState: DemoState = { rfqs, offers, purchaseOrders, creditCases, creditFacilities };
+export const seedState: DemoState = { rfqs, offers, purchaseOrders, creditCases: [...creditCases, ...sampleQueueCases], creditFacilities };
 
 /** The persona each role signs in as in the demo (no login). */
 export const demoPersona = {

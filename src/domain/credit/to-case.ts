@@ -159,7 +159,8 @@ export function toScorecard(a: Assessment): Scorecard {
   }));
   return {
     factors,
-    total: a.score,
+    // Sum of the shown points, so the card adds up; the band uses the rounded score.
+    total: Math.round(factors.reduce((t, f) => t + f.points, 0) * 10) / 10,
     band: a.band,
     policyChecks,
     topFactors: [

@@ -4,7 +4,7 @@
  * file; decide is the only way a case reaches approved / declined.
  */
 import { sar } from "../money";
-import type { CreditCase, CreditDecision, CreditDecisionOutcome, CreditFacility, Halalas, ReasonCode } from "../types";
+import type { CreditCase, CreditDecision, EvidenceRef, CreditDecisionOutcome, CreditFacility, Halalas, ReasonCode } from "../types";
 import { assessCase } from "./engine";
 import { PROFIT_RATE_PER_30_DAYS } from "./murabaha";
 import { simulateDocuments, toAiProposal, toGates, toScorecard } from "./to-case";
@@ -19,6 +19,11 @@ export function runChecks(c: CreditCase, p: CreditProfile, now: string): { case:
     const own = c.documents.find((x) => x.type === d.type && x.fileName);
     return own ? { ...d, fileName: own.fileName } : d;
   });
+  // Evidence links only to fields the document reader actually extracted.
+  const resolves = (e: EvidenceRef) => documents.some((d) => d.id === e.documentId && d.extracted.some((f) => f.key === e.fieldKey));
+  const gates = toGates(assessment).map((g) => ({ ...g, evidence: g.evidence.filter(resolves) }));
+  const card = toScorecard(assessment);
+  const scorecard = { ...card, factors: card.factors.map((f) => ({ ...f, evidence: f.evidence.filter(resolves) })) };
   const ran = assessment.checks.filter((k) => k.status !== "skipped");
   const counts = (s: string) => ran.filter((k) => k.status === s).length;
   return {
@@ -27,8 +32,8 @@ export function runChecks(c: CreditCase, p: CreditProfile, now: string): { case:
       ...c,
       status: "in_assessment",
       documents,
-      gates: toGates(assessment),
-      scorecard: toScorecard(assessment),
+      gates,
+      scorecard,
       aiProposal: toAiProposal(p, assessment),
       log: [
         ...c.log,
