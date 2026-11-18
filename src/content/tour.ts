@@ -94,7 +94,7 @@ export const tour: Tour = {
         },
         {
           title: "Deliver and get paid",
-          text: "After the contractor places a PO, its inbox row reads *Chosen · PO placed*: **Open purchase order** → **Accept** → **Mark as dispatched** → **Issue invoice**. On credit, the financier pays you directly.",
+          text: "New POs wait under **Purchase orders** with your next step: **Accept purchase order** → **Mark as dispatched** → **Issue invoice**. On credit, the financier pays you directly.",
         },
       ],
       next: { label: "Next: the independent credit manager", href: "/credit" },
