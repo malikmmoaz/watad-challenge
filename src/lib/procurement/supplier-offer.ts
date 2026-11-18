@@ -147,3 +147,21 @@ export function actOnPurchaseOrder(po: PurchaseOrder, role: Role, now: string, n
   const next = advancePurchaseOrder(po, now, note);
   return next.status === "invoiced" && next.creditDraw ? advancePurchaseOrder(next, now) : next;
 }
+
+/** What the supplier sees as the next step on a PO, and whether it is theirs to take. */
+export function supplierNextStep(po: PurchaseOrder): { text: string; yours: boolean } {
+  const mine = poActionFor(po, "supplier");
+  if (mine) return { text: mine.label, yours: true };
+  switch (po.status) {
+    case "dispatched":
+      return { text: "Waiting for the contractor to confirm delivery", yours: false };
+    case "invoiced":
+      return { text: "Waiting for the contractor's bank transfer", yours: false };
+    case "paid":
+      return { text: po.creditDraw ? "Paid to you directly from the contractor's credit cap" : "Paid", yours: false };
+    case "cancelled":
+      return { text: "Cancelled", yours: false };
+    default:
+      return { text: "Waiting for the contractor", yours: false };
+  }
+}

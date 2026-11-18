@@ -7,6 +7,7 @@ import type { Rfq, Supplier } from "@/domain/types";
 import { formatDate, formatPercent } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/procurement/labels";
 import { describeTerms } from "@/lib/procurement/comparison";
+import { SupplierPurchaseOrders } from "@/components/procurement/supplier-pos";
 import { useDemo } from "@/store";
 
 /** Plain-language reasons this request reached this supplier. */
@@ -121,6 +122,8 @@ export function SupplierHome() {
           </Table>
         )}
       </section>
+
+      <SupplierPurchaseOrders supplierId={me.id} />
 
       <Panel title="Your record on the platform" aside={<SampleDataLabel />}>
         <div className="flex flex-col gap-4">
