@@ -1,17 +1,20 @@
 ---
 name: Watad challenge demo
-description: Construction-materials procurement and independent credit for Saudi Arabia, set like an attested document.
+description: Construction-materials procurement and independent credit for Saudi Arabia: bold, high-contrast and evidence-led.
 colors:
-  paper: "oklch(0.972 0.007 155)"
-  surface: "oklch(0.995 0.003 155)"
+  paper: "oklch(0.979 0.006 155)"
+  surface: "oklch(0.998 0.002 155)"
   panel: "oklch(0.948 0.01 155)"
   line: "oklch(0.895 0.012 155)"
   line-strong: "oklch(0.8 0.016 155)"
   line-control: "oklch(0.62 0.02 158)"
-  ink: "oklch(0.235 0.022 160)"
-  ink-muted: "oklch(0.43 0.022 160)"
+  ink: "oklch(0.19 0.022 162)"
+  ink-muted: "oklch(0.42 0.02 160)"
   ink-subtle: "oklch(0.52 0.02 160)"
-  pine: "oklch(0.285 0.048 162)"
+  pine: "oklch(0.255 0.05 163)"
+  pine-deep: "oklch(0.2 0.04 164)"
+  glow: "oklch(0.86 0.11 158)"
+  glow-warm: "oklch(0.93 0.06 95)"
   pine-raised: "oklch(0.345 0.055 162)"
   on-pine: "oklch(0.955 0.02 155)"
   on-pine-muted: "oklch(0.8 0.035 158)"
@@ -79,8 +82,10 @@ typography:
 rounded:
   xs: "2px"
   sm: "3px"
-  md: "5px"
-  lg: "8px"
+  md: "6px"
+  lg: "10px"
+  xl: "14px"
+  2xl: "22px"
   full: "999px"
 spacing:
   control-gap: "8px"
@@ -137,15 +142,17 @@ Tokens live in `src/styles/tokens.css` (Tailwind v4 `@theme`), components in `sr
 
 ## Overview
 
-**Creative North Star: "The attested document"**
+**Creative North Star: "The attested document, presented with conviction"**
+
+*Direction updated 18 Nov 2026 at Malik's request ("it needs that wow factor… we are not mediocre"): the evidence-first rules below stay; the presentation becomes bold, high-contrast and product-forward, taking its moves from five reference sites (see Inspiration). This applies to every screen, not only the landing page.*
 
 Every number on screen can show the paper it came from. The interface borrows from Saudi attested documents (a Commercial Registration, a ZATCA or Zakat certificate): pale green-tinted security paper, a pine-green shell, hairline rules, small radii, a serial number under every title, and an ink seal beside any figure a document backs.
 
-It is calm and dense in the way a well-set form is: one type family, tabular figures, tables whose columns never move. Colour is rationed by meaning. Green is for things you can press, stamp-ink blue is for evidence, violet with a dashed edge is for simulated AI, and amber and red appear only as state.
+Working screens stay dense and exact: tabular figures, tables whose columns never move. Around them the system is confident: oversized tight display type, near-black ink on bright surfaces, cards that rest on a whisper of shadow and lift on hover, a deep pine ground for the moments that matter, and short entrance motion. Colour is rationed by meaning. Green is for things you can press, stamp-ink blue is for evidence, violet with a dashed edge is for simulated AI, and amber and red appear only as state.
 
 **Key Characteristics:**
 - Light theme only: an office desk, daylight, a laptop.
-- Two plies: the page, and one raised leaf. No cards inside cards.
+- Cards rest on `shadow-card` and lift to `shadow-raised` on hover; the showcased product floats on `shadow-float`. A card inside a card is still avoided: use a borderless tinted well instead.
 - Reasons sit beside the thing they explain, never behind a tooltip.
 - The same fields in the same order for every supplier and every offer, so no supplier is favoured by layout.
 - Status is always a word and a shape as well as a colour.
@@ -181,14 +188,16 @@ A green-tinted neutral ground with one action colour and three meaning colours.
 ## Typography
 
 **Display and body font:** Public Sans (with Noto Sans Arabic, system-ui)
+**Accent serif:** Instrument Serif italic, for one phrase in the landing hero headline only
 **Serial font:** Geist Mono
 **Arabic font:** Noto Sans Arabic, on any element with `lang="ar"`
 
-**Character:** one plain, official-looking sans does everything; rank comes from size and weight, not from a second family. Figures are tabular and lining everywhere so money lines up.
+**Character:** one plain, official-looking sans does the work; display sizes are set very large and tight (`--tracking-display` -0.045em) so headlines carry the page. The serif appears once, as a voice, never as a system. Figures are tabular and lining everywhere so money lines up.
 
 ### Hierarchy
-- **Display** (600, `text-4xl` 2.5rem / 2.75rem): the credit score figure and the landing headline.
-- **Headline** (600, `text-2xl` 1.5rem / 2rem): the page title, one `h1` per page.
+- **Display** (600, `text-5xl` to `text-7xl`, 3.5 to 5.5rem, tracking -0.045em): landing headline, section openers and big numbers.
+- **Section** (600, `text-4xl`/`text-5xl`, tracking -0.035em): landing section headings; the closing phrase may take the action or glow colour.
+- **Headline** (600, `text-3xl`, tracking -0.025em): the page title in `PageHeader`, one `h1` per page.
 - **Title** (600, `text-lg` 1.0625rem; panel titles use `text-sm` 600): section leads and panel headers.
 - **Body** (400, `text-base` 0.9375rem / 1.5rem): prose, at most about 70 characters wide (`max-w-prose`).
 - **Data** (400 or 500, `text-sm` 0.8125rem / 1.25rem): tables, controls, facts.
@@ -210,18 +219,27 @@ A green-tinted neutral ground with one action colour and three meaning colours.
 
 ## Elevation & Depth
 
-Flat. Depth is carried by tone: `paper` under `surface`, separated by a 1px `line`. There are two plies only.
+Tone first, then a short shadow scale. `paper` under `surface`, separated by a 1px `line`; cards add a whisper of shadow so they read as objects.
 
 ### Shadow Vocabulary
-- **Leaf** (`shadow-leaf`): the single raised leaf, for a dialog, a popover or a document preview. Never on panels at rest.
-- **Press** (`shadow-press`): inset, on a button while it is held.
+- **Card** (`shadow-card`): resting panels, tables, secondary buttons.
+- **Raised** (`shadow-raised`): hover on interactive cards; the dark bento card.
+- **Float** (`shadow-float`): the framed product showcase only.
+- **Leaf** (`shadow-leaf`): dialogs, popovers, document previews.
+- **Button** (`shadow-button`): primary and inverse buttons; a 1px top highlight.
+- **Press** (`shadow-press`): inset, while a button is held.
+
+### Motion
+- `animate-rise` (700 ms) for the hero's entrance, staggered 80 ms; `animate-fade` when a showcase tab changes; `animate-drift` for background glow only.
+- Always behind `motion-safe:`; under `prefers-reduced-motion` everything is static.
+- Hover lifts are 2px at most. Nothing moves on its own except background glow.
 
 ### Named Rules
-**The Two-Ply Rule.** A panel never sits inside another panel. If content needs grouping inside a panel, use a hairline rule or a heading.
+**The No Nested Cards Rule.** A card never sits inside another card. Group content inside a card with a hairline, a heading, or a borderless tinted well (`bg-paper`).
 
 ## Shapes
 
-Small radii, like a printed form: 5px on controls, 8px on panels and tables, 3px on badges. Edges are 1px hairlines. Dashed edges mean "not real": simulated AI, sample data, and empty states. The only rotated element is the stamp (and the small seal mark).
+Radii: 6px on controls, 10px on buttons, 14px on panels and tables, 22px on landing cards and the product frame, full pills for tabs and hero calls to action, 3px on badges. Edges are 1px hairlines. Dashed edges mean "not real": simulated AI, sample data, and empty states. The only rotated element is the stamp (and the small seal mark).
 
 ## Components
 
@@ -275,11 +293,12 @@ All exported from `@/components/ui`.
 - The current role is the light pill on the pine bar; others are `on-pine-muted` and lighten on hover. Focus rings on pine are `on-pine`.
 
 ### Landing page (`/`)
-- **One sheet.** The hero is a single ruled sheet with crop marks at its corners: a mono strip naming the flow, the headline (`text-6xl`, 600, tracking -0.025em, at most three lines), a register of what is on file, and the three parties as cells of one ruled row. The parties are not floating cards.
-- **One click in.** Each party cell is one link (`data-testid="role-<role>"`) ending in an action-green bar, with a live line saying what is waiting for that role.
-- **Live specimens, not screenshots.** "One order, four steps" renders the app's own components on the seeded data: RFQ lines, offers with `LeadTimeBar`, a PO's status, `CreditCapMeter` and a `DecisionStamp`.
-- **No invented proof.** There are no customers or testimonials (see PRODUCT.md), so the proof slot states how the product earns trust instead.
-- Display sizes `text-5xl` and `text-6xl` are for this page's headline only.
+- **Headline first.** Centred, `text-7xl` at desktop, two lines: a roman statement and one italic serif phrase in action green.
+- **One click in.** The three roles sit directly under the headline as raised cards (`data-testid="role-<role>"`), each with what is waiting for that role. The "Sample data · simulated AI" label sits just above them.
+- **The product is the hero image.** A framed browser window (`shadow-float`) with a pill switcher above it previews each role using the app's own components on the seeded data. The switcher only previews; the role cards are the way in.
+- **Rhythm:** hero → document strip (the Saudi paper trail) → four big numbers → bento of the four steps with live specimens (one dark card) → dark pine "Agents prepare. Humans decide." → closing call with all three roles → footer with About / How we built.
+- **No invented proof.** No customer logos, testimonials or funding lines (PRODUCT.md); the document strip and the numbers take the place of a logo row.
+- **No kicker labels** above section headings and no icon tiles stacked over card titles: put the icon inline with the heading.
 
 ## Do's and Don'ts
 
@@ -294,21 +313,23 @@ All exported from `@/components/ui`.
 ### Don't:
 - **Don't** use default Tailwind colours (`neutral-*`, `amber-*`, `gray-*`) in new code; they are being migrated out and will be switched off.
 - **Don't** put action green on anything that cannot be pressed.
-- **Don't** nest a panel inside a panel, or add a shadow to a panel at rest.
+- **Don't** nest a bordered card inside another card; use a tinted well.
 - **Don't** write "interest", "quote" or "bid" (except the first mention "offers (bids)" on the PO flow), and don't round or abbreviate money.
 - **Don't** stamp or seal anything a simulated AI produced.
 - **Don't** add a dark theme or a second typeface.
 
 ## Inspiration
 
-Five reference sites were studied on 18 Nov 2026 (rendered at 1440 wide). We take patterns, never copy, logos, illustrations or layouts. Each pattern is translated into the attested-document world above; where a reference conflicts with a rule in this file, the rule wins.
+Five reference sites, re-studied on 18 Nov 2026 from 1440-wide renders (phonic.ai from its first three screens). We take patterns, never their copy, logos, illustrations or exact layouts. Where a reference conflicts with a rule in this file, the rule wins.
 
-| Reference | Pattern we take | How it maps here |
+| Reference | What we took | Where it lives here |
 | --- | --- | --- |
-| meelio.io | A very large, tightly tracked headline with a small mono line above it; the product itself directly under the hero; a strip of plain facts. | Headline at `text-6xl` with -0.025em tracking; the mono strip names the flow (RFQ → offers → PO → credit); the fact strip becomes the register of what is on file. We keep one type family and sentence case (no italic serif, no uppercase). |
-| firecrawl.dev | Page structure drawn with visible hairlines and registration marks; a working product control inside the hero. | Ruled sheets with crop marks, which is how an attested form is already built. The working control is the three role entries: one click and the reviewer is inside the product. |
-| phonic.ai | A left-aligned hero with the live product beside it and at most two actions; a restrained warm-neutral ground. | Left-aligned headline with the live register beside it; actions are limited to the three role entries. Our ground stays the green-tinted paper. |
-| amboras.com | A short headline, small buttons, then product surfaces straight away, with generous white space and no decoration. | No illustration and no gradient: the second section is already product ("One order, four steps"). Section headings are short (`text-3xl`). |
-| nabrah.ai/en | A product switcher right under the hero for its three products; a numbered step-by-step section; an Arabic toggle. | Three parties under the headline, each with what is waiting for them; the flow as four numbered steps with serials (01 · rfq_1042). The Arabic toggle stays optional for the polish pass. |
+| meelio.io | An oversized, very tight sans headline with one phrase set in an italic serif; the product in a browser frame directly under the hero. | Hero headline (`text-7xl`, -0.045em) with "with credit you can trace." in Instrument Serif italic; the framed product showcase. |
+| firecrawl.dev | A faint drawn grid behind the hero; numbered section counters; real product UI inside feature cards. | Masked grid backdrop in the hero; `[ 01 / 04 ]` counters on the bento cards, each holding a live component. |
+| phonic.ai | A live, interactive product panel as the hero's proof; three feature cards; a dark "how it works" band. | The role switcher that changes the product preview; the dark pine trust section with three cards. |
+| amboras.com | A row of big numbers; a bento grid of product surfaces with one dark tile. | Four big numbers from the seed data; the bento of the four steps with the credit card in dark pine. |
+| nabrah.ai | A soft colour wash behind the hero; a pill tab switcher right under the hero for its products; dark pill calls to action. | Green and warm glows drifting behind the hero; the pill switcher for Contractor / Supplier / Credit manager; pill CTAs in the nav and closing section. |
 
-**Not taken, on purpose:** announcement banners, funding and customer-logo rows, testimonials and pricing tables (we have no such evidence and PRODUCT.md forbids inventing it); orange and violet brand accents (action green stays the only pressable colour); scroll-driven animation (motion stays at 150 ms state changes).
+**Applied to the whole product:** higher contrast ink and brighter surfaces; display type scale and heading tracking; larger radii; card, raised and float shadows; `Button` gains `lg` and `inverse`; `Panel`, `Table` and states rest on `shadow-card`; `PageHeader` titles at `text-3xl` with an optional eyebrow; motion primitives `animate-rise`, `animate-fade`, `animate-drift`.
+
+**Not taken, on purpose:** announcement banners, funding lines, customer logos and testimonials (no such evidence exists, and PRODUCT.md forbids inventing it); orange, blue and violet brand washes (green stays our only action colour; violet stays reserved for simulated AI); kicker labels above every heading and icon tiles over card titles (flagged by impeccable as generic).

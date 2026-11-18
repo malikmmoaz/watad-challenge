@@ -3,7 +3,7 @@
 import { track } from "@/lib/analytics";
 import { resetDemo } from "@/store";
 
-/** Sits on the pine bar: restores the seeded sample data. */
+/** In the app bar: restores the seeded sample data. */
 export function ResetDemoButton() {
   return (
     <button
@@ -12,9 +12,10 @@ export function ResetDemoButton() {
         resetDemo();
         track("demo_reset", {});
       }}
-      className="flex h-7 items-center rounded-md border border-on-pine-muted/60 px-2 text-xs text-on-pine transition-colors duration-150 hover:bg-pine-raised focus-visible:outline-on-pine"
+      className="flex h-8 items-center whitespace-nowrap rounded-full border border-line-control bg-surface px-2.5 text-xs sm:px-3 font-medium text-ink shadow-card transition-colors duration-150 hover:bg-paper"
     >
-      Reset demo data
+      <span className="sm:hidden">Reset</span>
+      <span className="hidden sm:inline">Reset demo data</span>
     </button>
   );
 }
