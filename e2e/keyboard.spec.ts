@@ -7,8 +7,10 @@ import { test, expect, tid } from "./fixtures";
 test.skip(({ isMobile }) => isMobile, "keyboard-only journeys are a desktop concern");
 
 async function tabTo(page: Page, target: Locator, label: string, { checkFocusRing = true, max = 150 } = {}) {
+  // Safari's Tab moves between form fields and links only; Option+Tab reaches every control.
+  const key = page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab";
   for (let i = 0; i < max; i++) {
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(key);
     if (await target.evaluate((el) => el === document.activeElement).catch(() => false)) {
       if (checkFocusRing) {
         const visible = await page.evaluate(() => {

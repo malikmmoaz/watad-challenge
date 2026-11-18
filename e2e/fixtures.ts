@@ -14,7 +14,12 @@ export const test = base.extend<{ errors: string[] }>({
   errors: [
     async ({ page }, use) => {
       const errors: string[] = [];
-      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      page.on("pageerror", (e) => {
+        // WebKit reports a Next.js route prefetch (?_rsc=) cancelled by a navigation or reload as
+        // "... due to access control checks". Nothing breaks for the user; Chromium and Firefox stay silent.
+        if (/_rsc=.* due to access control checks/.test(e.message)) return;
+        errors.push(`pageerror: ${e.message}`);
+      });
       page.on("console", (m) => {
         if (m.type() === "error" && !IGNORED.some((re) => re.test(m.text()))) {
           errors.push(`console: ${m.text()}`);
