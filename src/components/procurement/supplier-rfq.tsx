@@ -98,7 +98,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
           PO {myPo.id} for {formatSar(myPo.totalInclVat)} incl. VAT{myPo.creditDraw ? ", paid to you directly from the contractor's credit cap once you invoice" : ""}.
         </Alert>
       )}
-      {!myPo && current?.status === "not_selected" && <Alert tone="info" title="Not selected this time">The contractor chose another offer. Thank you for quoting.</Alert>}
+      {!myPo && current?.status === "not_selected" && <Alert tone="info" title="Not selected this time">The contractor chose another offer. Thank you for your offer.</Alert>}
       {!allowed.ok && !current && <Alert tone="info" title="Closed">{allowed.reason}</Alert>}
 
       {current && !editing && (
