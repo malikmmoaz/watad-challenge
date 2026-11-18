@@ -16,6 +16,11 @@ describe("security headers", () => {
     expect(directive(contentSecurityPolicy({ dev: true }), "script-src")).toContain("'unsafe-eval'");
     expect(directive(contentSecurityPolicy({ preview: true }), "frame-src")).toBe("frame-src https://vercel.live");
   });
+  it("upgrades insecure requests everywhere except a local http build", () => {
+    expect(contentSecurityPolicy({ preview: true })).toContain("upgrade-insecure-requests");
+    expect(contentSecurityPolicy({ local: true })).not.toContain("upgrade-insecure-requests");
+    expect(contentSecurityPolicy({ local: true })).toContain("default-src 'self'");
+  });
   it("sends the full header set", () => {
     expect(securityHeaders().map((h) => h.key)).toEqual([
       "Content-Security-Policy",
