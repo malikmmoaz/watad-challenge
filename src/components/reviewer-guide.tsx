@@ -24,8 +24,13 @@ function subscribe(onChange: () => void) {
   };
 }
 
-/** "open" | "hidden" in the browser; "unknown" on the server and before hydration. */
-function useGuideState(): "open" | "hidden" | "unknown" {
+/**
+ * "open" | "hidden". The server renders "open", which is right for a first
+ * visit, so the guide is in the first paint and never pushes the page down
+ * (no layout shift for new visitors). A reviewer who dismissed it sees it
+ * collapse right after hydration.
+ */
+function useGuideState(): "open" | "hidden" {
   return useSyncExternalStore(
     subscribe,
     () => {
@@ -35,7 +40,7 @@ function useGuideState(): "open" | "hidden" | "unknown" {
         return "open";
       }
     },
-    () => "unknown",
+    () => "open",
   );
 }
 
@@ -65,13 +70,13 @@ function withLabels(text: string): ReactNode {
 export function ReviewerGuide({ role }: { role: Role }) {
   const state = useGuideState();
   const panel = tour.panels[role];
-  if (state !== "open") return null;
+  if (state === "hidden") return null;
 
   return (
     <section
       aria-labelledby="reviewer-guide-h"
       data-testid="reviewer-guide"
-      className="relative isolate overflow-hidden border-b border-pine-raised bg-pine-deep text-on-pine motion-safe:animate-fade"
+      className="relative isolate overflow-hidden border-b border-pine-raised bg-pine-deep text-on-pine"
     >
       <div aria-hidden="true" className="pointer-events-none absolute -top-24 left-1/3 -z-10 h-56 w-[40rem] rounded-full bg-glow/15 blur-3xl" />
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-8 sm:py-6">
