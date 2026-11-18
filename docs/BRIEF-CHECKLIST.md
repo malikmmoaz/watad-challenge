@@ -12,7 +12,7 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 - Each row is checked at desktop (1440) and mobile (390) widths. A row passes only if both do.
 - E2E column: the Playwright smoke test that covers it (`e2e/*.spec.ts`), if any.
 
-Last full pass: 18 Nov 16:42 UTC, pass 3 (87/90 rows) · Live link: https://watad-challenge.vercel.app
+Last full pass: 18 Nov 16:42 UTC, pass 3 (88/90 rows) · Live link: https://watad-challenge.vercel.app
 
 ## A. Platform and access
 
@@ -116,7 +116,7 @@ Last full pass: 18 Nov 16:42 UTC, pass 3 (87/90 rows) · Live link: https://wata
 | F2 | Ours | PO can be paid with credit; the draw reduces the available cap | Hana, Omar | #14 | contractor | ✅ |
 | F3 | Ours | Supplier is paid directly by the credit provider | Hana | #14 | – | ✅ |
 | F4 | Ours | Cost of credit shown as profit rate / Murabaha markup with APR | Hana | #14 | – | ✅ |
-| F5 | Ours | A PO larger than the available cap is handled (blocked or part-paid), not silently accepted | Hana | #14 | – | ❌ #55 |
+| F5 | Ours | A PO larger than the available cap is handled (blocked or part-paid), not silently accepted | Hana | #14 | – | ✅ |
 
 ## G. In-app explanation pages
 
@@ -166,7 +166,7 @@ Not pass/fail; judged at each full pass and reported to Safina with examples.
 |------------|----------------|--------|-------|
 | 18 Nov 16:05 | production, main `ad5fec5` | 73/90 pass · 4 partial · 11 fail · 2 not checked | Fails: in-app explanation pages (#17) and the walkthrough (#16, scheduled). Partial: supplier form wording and "quote" (#46, rows C3 and H1), basket split not visible with seed data (#47), comparison table at 412 (#48). Not checked: E9 decline by hand, F5 PO above the cap. Every page clean at 1440 and 412: no sideways page scroll, no console errors, no failed requests; "interest" never appears. |
 | 18 Nov 16:25 | production, after #41 and #49 | 85/90 pass · 2 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1; fix in #58). Re-checked 16:30: basket split passes (#47 closed, B18), and the full #14 credit path including repayment restores the cap. Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
-| 18 Nov 16:42 | production, after #58 and #59 | 87/90 pass · 1 partial · 2 fail | Wording fixed and verified: "Your offer (bid)", "Price the lines…", "Enter a unit price…", "Usually prices…", "Thank you for your offer" (#46 and #10 closed; C3, H1). Walkthrough merged (#61); G9 stays partial until the in-app guide ships (copy in #64, panel by Layla). Still failing: F5 over-cap PO (#55), G7 dashboards for reviewers (waiting on Better Stack approval). |
+| 18 Nov 16:42 | production, after #58 and #59 | 88/90 pass · 1 partial · 1 fail | Wording fixed and verified: "Your offer (bid)", "Price the lines…", "Enter a unit price…", "Usually prices…", "Thank you for your offer" (#46 and #10 closed; C3, H1). Walkthrough merged (#61); G9 stays partial until the in-app guide ships (copy in #64, panel by Layla). F5 re-checked 16:50: Pay with credit is disabled above the available cap, with the reason; the PO goes by bank transfer (#55 closed, via #57/#63). Supplier home now lists purchase orders (#65, closes #62). Still failing: G7 dashboards for reviewers (waiting on Better Stack approval). |
 
 ## Brief text and traceability
 
