@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Contractor: each offer shows whether it fits the credit cap ("Fits your credit cap" / "Over your credit cap by SAR x", from cap minus drawn); sample RFQ rfq_1045 shows a basket split saving SAR 7,705 (#14).
+- Credit drawn on purchase orders: contractor ledger of draws (order total, Murabaha markup with APR, due date, status) with repayment that releases the cap; credit manager sees utilisation, open and overdue draws and the next repayment on approved cases.
 - Fixed: the new RFQ page no longer scrolls sideways on phones; line items stack as cards below the small breakpoint (#29).
 - Contractor credit application: requested cap and term, contracts in hand, Saudi documents each with a one-line reason, SIMAH consent; progress tracker (submitted, checks running, under review, more info requested, decided) with outcome, reasons, conditions and Murabaha markup with APR.
 - Credit manager workspace: queue of applications; case file with gated checks (cheapest first, SIMAH last), extracted document fields with confidence, 10-factor scorecard with why each factor matters and links to evidence, policy rules, proposed limit, simulated AI panel (revenue consistency, tamper flags, drafted credit memo), approve / refer / decline with reasons, decision log. Four sample cases added to the queue.

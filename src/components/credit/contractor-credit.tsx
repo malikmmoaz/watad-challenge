@@ -8,6 +8,7 @@ import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
 import { CreditCapMeter, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
 import { ApplicationTracker } from "./application-tracker";
+import { DrawLedger } from "./draw-ledger";
 
 const fmt = (n: number) => formatSar(n as Halalas);
 
@@ -81,6 +82,8 @@ export function ContractorCredit() {
           </Panel>
         </div>
       )}
+
+      {facility && <DrawLedger contractorId={contractorId} readOnly={!isPersona} />}
 
       {cases.length === 0 ? (
         <EmptyState title="No credit applications yet">{contractor?.name} has not applied for a credit cap.</EmptyState>
