@@ -27,6 +27,11 @@ const sizes: Record<Size, string> = {
   md: "h-10 px-4 text-sm",
 };
 
+/** Classes for a link that should look like a button: `<Link className={buttonClass("primary")}>`. */
+export function buttonClass(variant: Variant = "secondary", size: Size = "md", className?: string): string {
+  return cx(base, variants[variant], sizes[size], className);
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
