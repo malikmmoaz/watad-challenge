@@ -51,11 +51,10 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                 <Alert tone="positive" title={message} />
               </div>
             )}
-            <Table caption="Credit draws" minWidth={760} className="rounded-none border-0 shadow-none">
+            <Table caption="Credit draws" minWidth={880} className="rounded-none border-0 shadow-none">
               <THead>
                 <tr>
-                  <Th>Purchase order</Th>
-                  <Th>Supplier</Th>
+                  <Th>Purchase order · supplier</Th>
                   <Th align="end">Order total (incl. VAT)</Th>
                   <Th align="end">Murabaha markup</Th>
                   <Th align="end">To repay</Th>
@@ -71,8 +70,8 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                       <Link href={`/contractor/po/${r.poId}`} className="font-mono text-xs text-stamp underline underline-offset-[3px]">
                         {r.poId}
                       </Link>
+                      <CellNote>{reference.suppliers.find((s) => s.id === r.supplierId)?.name ?? r.supplierId}</CellNote>
                     </Td>
-                    <Td>{reference.suppliers.find((s) => s.id === r.supplierId)?.name ?? r.supplierId}</Td>
                     <Td align="end">{formatSar(r.principal)}</Td>
                     <Td align="end">
                       {formatSar(r.markup)}
@@ -80,9 +79,11 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                         {(r.profitRate * 100).toFixed(2)}% for {r.tenorDays} days · {(r.apr * 100).toFixed(1)}% APR
                       </CellNote>
                     </Td>
-                    <Td align="end">{formatSar(r.totalRepayable)}</Td>
+                    <Td align="end">
+                      <span className="font-semibold text-ink">{formatSar(r.totalRepayable)}</span>
+                    </Td>
                     <Td>
-                      {formatDate(r.dueDate)}
+                      <span className="whitespace-nowrap">{formatDate(r.dueDate)}</span>
                       {r.state !== "repaid" && <CellNote>{r.daysToDue >= 0 ? `in ${r.daysToDue} days` : `${-r.daysToDue} days late`}</CellNote>}
                     </Td>
                     <Td>
@@ -91,8 +92,8 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                     {!readOnly && (
                       <Td align="end">
                         {r.state !== "repaid" && (
-                          <Button size="sm" onClick={() => repay(r.poId)} data-testid={`credit-repay-${r.poId}`}>
-                            Repay {formatSar(r.totalRepayable)}
+                          <Button size="sm" onClick={() => repay(r.poId)} aria-label={`Repay ${formatSar(r.totalRepayable)} for ${r.poId}`} data-testid={`credit-repay-${r.poId}`}>
+                            Repay
                           </Button>
                         )}
                       </Td>
