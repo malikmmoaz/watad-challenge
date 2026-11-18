@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Role } from "@/domain/types";
 import { ResetDemoButton } from "./reset-demo-button";
+import { RoleLink } from "./role-link";
 
 export const ROLES: { role: Role; href: string; label: string; persona: string; blurb: string }[] = [
   { role: "contractor", href: "/contractor", label: "Contractor", persona: "Najd Horizon Contracting Co.", blurb: "Upload an RFQ or order from the catalog, compare offers, place a PO and apply for a credit cap." },
@@ -24,7 +25,7 @@ export function RoleNav({ current }: { current: Role }) {
           {ROLES.map((r) => {
             const active = r.role === current;
             return (
-              <Link
+              <RoleLink role={r.role} source="switcher"
                 key={r.role}
                 href={r.href}
                 data-testid={`role-switcher-${r.role}`}
@@ -34,7 +35,7 @@ export function RoleNav({ current }: { current: Role }) {
                 }`}
               >
                 {r.label}
-              </Link>
+              </RoleLink>
             );
           })}
         </nav>

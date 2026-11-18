@@ -52,4 +52,4 @@ Vercel, imported by Malik through Vercel's GitHub integration (limited to this r
 - `main` deploys to production; every PR gets a preview deployment.
 - Default Next.js settings: build `next build`, install `pnpm install`. Vercel picks pnpm 10 from the lockfile (`lockfileVersion: '9.0'`); install and build with pnpm 10 are verified. Node is pinned to `22.x` in `package.json`, matching CI.
 - Deployment status and URLs: the PR checks, the Vercel bot comment, or `gh api repos/malikmmoaz/watad-challenge/deployments`.
-- The app runs with no environment variables. Optional ones are listed in `.env.example`.
+- The app runs with no environment variables. Optional: `NEXT_PUBLIC_POSTHOG_KEY` turns on product analytics (see `.env.example` and `docs/analytics.md`).
