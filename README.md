@@ -24,7 +24,7 @@ Open **https://watad-challenge.vercel.app**. No login: pick a role on the landin
 - **Credit applications**: the queue. Open **Hijaz Peaks Building Est.** (`cc_502`): gated checks (CR, VAT, bank, financials, SIMAH last), extracted fields with the page they came from, the scorecard with top factors, and the simulated AI credit memo.
 - **Record decision**: approve, request more information or decline, with reasons. The contractor sees the outcome on their credit page.
 
-Then read **About** and **How we built it** (top bar).
+Then read **About** and **How we built it** (top bar). The full reviewer path, with what to notice at each step, is in [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md).
 
 ## Run
 
