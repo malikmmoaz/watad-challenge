@@ -7,7 +7,7 @@ export default function Layout({ children }: LayoutProps<"/supplier">) {
   return (
     <>
       <RoleNav current="supplier" />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-8">{children}</main>
     </>
   );
 }
