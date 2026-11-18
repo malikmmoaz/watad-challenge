@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
-import { Alert, Button, CreditCapMeter, Panel } from "@/components/ui";
+import { Alert, Badge, Button, CellNote, CreditCapMeter, Facts, Icon, Panel, StatusTimeline, Table, Td, Th, THead, Tr, buttonClass } from "@/components/ui";
+import { formatDate } from "@/lib/format";
+import { PO_STATUS } from "@/lib/status";
 import { OfferComparisonTable } from "./offer-comparison-table";
 import { reference } from "@/data";
 import { add, formatSar } from "@/domain/money";
@@ -269,57 +271,63 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
     heading.current?.focus();
   }, []);
   return (
-    <div data-testid="po-confirmation" className="space-y-4">
-      <h2 ref={heading} tabIndex={-1} data-testid="po-confirmation-heading" className="text-xl font-semibold text-ink focus:outline-none">
-        {title}
-      </h2>
-      <Alert tone="positive" title={`Total ${formatSar(total)} incl. 15% VAT`}>
-        {methodLabel(pos[0]!)}
-      </Alert>
+    <div data-testid="po-confirmation" className="space-y-4 motion-safe:animate-rise">
+      <section className="rounded-[22px] bg-positive-soft p-6 shadow-card sm:p-8">
+        <p className="flex items-center gap-2 text-sm font-medium text-positive">
+          <Icon name="check" size={16} strokeWidth={2.25} />
+          {methodLabel(pos[0]!)}
+        </p>
+        <h2 ref={heading} tabIndex={-1} data-testid="po-confirmation-heading" className="mt-2 text-3xl font-semibold tracking-[var(--tracking-heading)] text-ink focus:outline-none">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Total <span className="font-semibold tabular-nums text-ink">{formatSar(total)}</span> incl. 15% VAT
+        </p>
+      </section>
       {pos.map((po) => {
         const supplier = supplierOf(po.supplierId);
         return (
-          <Panel key={po.id} title={`PO ${po.id}`}>
-            <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-ink-muted">PO number</dt>
-                <dd className="font-mono text-ink" data-testid="po-number">{po.id}</dd>
-              </div>
-              <div>
-                <dt className="text-ink-muted">Supplier</dt>
-                <dd className="text-ink">{supplier?.name ?? po.supplierId}</dd>
-              </div>
-              <div>
-                <dt className="text-ink-muted">Total incl. 15% VAT</dt>
-                <dd className="tabular-nums text-ink">{formatSar(po.totalInclVat)}</dd>
-              </div>
-              <div>
-                <dt className="text-ink-muted">Payment</dt>
-                <dd className="text-ink">
-                  {methodLabel(po)}
-                  {po.creditDraw && (
-                    <span className="block text-ink-muted">
-                      Repay {formatSar(po.creditDraw.totalRepayable)} by {po.creditDraw.dueDate} (markup {formatSar(po.creditDraw.markup)}, {(po.creditDraw.apr * 100).toFixed(1)}% APR)
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-ink-muted">Status</dt>
-                <dd className="text-ink" data-testid="po-status" data-status={po.status}>
+          <Panel key={po.id} title={supplier?.name ?? po.supplierId} aside={<Badge tone={PO_STATUS[po.status].tone}>{PO_STATUS[po.status].label}</Badge>}>
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-4 lg:col-span-2">
+                <div>
+                  <p className="text-xs text-ink-muted">PO number</p>
+                  <p className="font-mono text-2xl font-semibold text-ink" data-testid="po-number">
+                    {po.id}
+                  </p>
+                </div>
+                <Facts
+                  items={[
+                    { label: "Total incl. 15% VAT", value: <span className="tabular-nums">{formatSar(po.totalInclVat)}</span> },
+                    { label: "Expected on site", value: formatDate(po.expectedDelivery) },
+                    {
+                      label: "Payment",
+                      value: po.creditDraw ? `Credit draw: repay ${formatSar(po.creditDraw.totalRepayable)} by ${formatDate(po.creditDraw.dueDate)}` : "Bank transfer on the supplier's terms",
+                    },
+                    { label: "Murabaha", value: po.creditDraw ? `Markup ${formatSar(po.creditDraw.markup)} (${(po.creditDraw.apr * 100).toFixed(1)}% APR)` : "Not used" },
+                  ]}
+                />
+                <span className="sr-only" data-testid="po-status" data-status={po.status}>
                   {PO_STEPS[0]!.label}
-                </dd>
+                </span>
               </div>
-              <div>
-                <dt className="text-ink-muted">What happens next</dt>
-                <dd className="text-ink">
-                  {supplier?.name ?? "The supplier"} accepts the PO and confirms the delivery slot, then dispatches to site (expected {po.expectedDelivery}).
-                </dd>
+              <div className="rounded-xl bg-paper p-4">
+                <p className="mb-3 text-sm font-semibold text-ink">What happens next</p>
+                <StatusTimeline
+                  label={`Next steps for ${po.id}`}
+                  steps={[
+                    { label: "Issued", state: "done" },
+                    { label: "Accepted by supplier", state: "current", note: `${supplier?.name ?? "The supplier"} accepts and confirms the delivery slot.` },
+                    { label: "Dispatched to site", state: "upcoming" },
+                  ]}
+                />
               </div>
-            </dl>
-            <Link href={`/contractor/po/${po.id}`} data-testid="po-timeline-link" className="mt-3 inline-block text-sm font-medium text-ink underline">
-              Follow the PO timeline
-            </Link>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3 border-t border-line pt-4">
+              <Link href={`/contractor/po/${po.id}`} data-testid="po-timeline-link" className={buttonClass("primary")}>
+                Follow the PO timeline
+              </Link>
+            </div>
           </Panel>
         );
       })}
@@ -329,17 +337,34 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
 
 function PoList({ pos }: { pos: PurchaseOrder[] }) {
   return (
-    <Panel title="Purchase orders">
-      <ul className="space-y-1 text-sm">
-        {pos.map((po) => (
-          <li key={po.id} data-testid="po-row" className="flex flex-wrap justify-between gap-2">
-            <Link href={`/contractor/po/${po.id}`} className="font-mono text-ink underline">{po.id}</Link>
-            <span className="text-ink-muted">
-              {supplierOf(po.supplierId)?.name} · {formatSar(po.totalInclVat)} · {PO_STEPS.find((s) => s.status === po.status)?.label ?? po.status}
-            </span>
-          </li>
-        ))}
-      </ul>
+    <Panel title="Purchase orders" flush>
+      <Table caption="Purchase orders for this RFQ" minWidth={560}>
+        <THead>
+          <tr>
+            <Th>Purchase order</Th>
+            <Th>Status</Th>
+            <Th align="end">Total incl. VAT</Th>
+          </tr>
+        </THead>
+        <tbody>
+          {pos.map((po) => (
+            <Tr key={po.id} data-testid="po-row">
+              <Td>
+                <Link href={`/contractor/po/${po.id}`} className="font-mono text-sm text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
+                  {po.id}
+                </Link>
+                <CellNote>{supplierOf(po.supplierId)?.name}</CellNote>
+              </Td>
+              <Td>
+                <Badge tone={PO_STATUS[po.status].tone}>{PO_STATUS[po.status].label}</Badge>
+              </Td>
+              <Td align="end">
+                <span className="tabular-nums text-ink">{formatSar(po.totalInclVat)}</span>
+              </Td>
+            </Tr>
+          ))}
+        </tbody>
+      </Table>
     </Panel>
   );
 }

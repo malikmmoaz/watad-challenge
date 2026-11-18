@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Button, Facts, PageHeader, Panel, StatusTimeline, type TimelineStep } from "@/components/ui";
+import { useState } from "react";
+import { Alert, Badge, Button, EmptyState, Facts, PageHeader, Panel, StatusTimeline, buttonClass, type TimelineStep } from "@/components/ui";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { PO_STATUS } from "@/lib/status";
 import { reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { PurchaseOrder } from "@/domain/types";
@@ -12,7 +15,7 @@ import { track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 
 const ACTOR: Record<string, string> = { contractor: "You", supplier: "Supplier", platform: "Platform", credit: "Credit manager" };
-const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" });
+const when = (iso: string) => formatDateTime(iso);
 
 export function timelineSteps(po: PurchaseOrder): TimelineStep[] {
   const at = stepIndex(po.status);
@@ -32,13 +35,15 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
   const po = pos.find((p) => p.id === poId);
+  const [justDone, setJustDone] = useState<{ status: string; label: string; by: string } | null>(null);
 
   if (!po) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold text-ink">Purchase order not found</h1>
-        <p className="text-sm text-ink-muted">It may have been placed in another browser, or the demo data was reset.</p>
-        <Link href={`/${viewer}`} className="text-ink underline">Back</Link>
+      <div className="space-y-6">
+        <PageHeader eyebrow={viewer === "supplier" ? "Supplier" : "Contractor"} title="Purchase order not found" />
+        <EmptyState title="This purchase order is not in this browser" action={<Link href={`/${viewer}`} className={buttonClass("secondary", "sm")}>Back</Link>}>
+          It may have been placed in another browser, or the demo data was reset.
+        </EmptyState>
       </div>
     );
   }
@@ -46,7 +51,6 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const rfq = rfqs.find((r) => r.id === po.rfqId);
   const offer = offers.find((o) => o.id === po.offerId);
   const supplier = reference.suppliers.find((s) => s.id === po.supplierId);
-  const step = PO_STEPS[stepIndex(po.status)];
   const other = viewer === "supplier" ? "contractor" : "supplier";
   const mine = poActionFor(po, viewer);
   const theirs = poActionFor(po, other);
@@ -58,23 +62,34 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
       ),
     }));
     const after = getState().purchaseOrders.find((p) => p.id === po.id);
-    if (after && after.status !== po.status) track("po_status_changed", { po_id: po.id, status: after.status });
+    if (after && after.status !== po.status) {
+      track("po_status_changed", { po_id: po.id, status: after.status });
+      setJustDone({ status: after.status, label: PO_STATUS[after.status].label, by: role });
+    }
   };
   const d = po.creditDraw;
+  const nextStep = PO_STEPS[stepIndex(po.status)]?.next;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Purchase order"
+        eyebrow={viewer === "supplier" ? "Supplier · purchase order" : "Contractor · purchase order"}
+        title={supplier?.name ?? "Purchase order"}
         serial={po.id}
         status={
           <span data-testid="po-status" data-status={po.status}>
-            <Badge tone={po.status === "delivered" || po.status === "invoiced" || po.status === "paid" ? "positive" : "info"}>{step?.label ?? po.status}</Badge>
+            <Badge tone={PO_STATUS[po.status].tone}>{PO_STATUS[po.status].label}</Badge>
           </span>
         }
         meta={
           <>
-            {supplier?.name} · placed {when(po.placedAt)} · {rfq ? <Link href={`/${viewer}/rfq/${rfq.id}`} className="underline">{rfq.title}</Link> : po.rfqId}
+            <span>Placed {when(po.placedAt)}</span>
+            {rfq ? (
+              <Link href={`/${viewer}/rfq/${rfq.id}`} className="underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
+                {rfq.title}
+              </Link>
+            ) : null}
+            <span className="font-semibold tabular-nums text-ink">{formatSar(po.totalInclVat)}</span>
           </>
         }
         actions={
@@ -92,6 +107,13 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
           ) : null
         }
       />
+      {justDone && justDone.status === po.status ? (
+        <div key={po.status} className="motion-safe:animate-rise" data-testid="po-step-done">
+          <Alert tone="positive" title={justDone.label}>
+            {nextStep ? `Next: ${nextStep}` : "This order is complete."}
+          </Alert>
+        </div>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="Status" className="lg:col-span-1">
           <StatusTimeline label="Purchase order status" steps={timelineSteps(po)} />
@@ -101,8 +123,8 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
             <Facts
               items={[
                 { label: "Supplier", value: supplier?.name ?? po.supplierId },
-                { label: "Deliver to", value: rfq ? `${rfq.deliverySite}, ${rfq.deliveryCity}` : "" },
-                { label: "Expected delivery", value: po.expectedDelivery },
+                { label: "Deliver to", value: rfq ? (rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${rfq.deliveryCity}`) : "" },
+                { label: "Expected delivery", value: formatDate(po.expectedDelivery) },
                 { label: "Goods", value: formatSar(po.subtotal) },
                 { label: "Delivery", value: formatSar(po.deliveryFee) },
                 { label: "VAT 15%", value: formatSar(po.vat) },
@@ -137,7 +159,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                   { label: "Drawn from credit cap", value: formatSar(d.principal) },
                   { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% profit rate for ${d.tenorDays} days, ${(d.apr * 100).toFixed(1)}% APR)` },
                   { label: "You repay", value: formatSar(d.totalRepayable) },
-                  { label: "Due", value: d.dueDate },
+                  { label: "Due", value: formatDate(d.dueDate) },
                   { label: "Supplier paid", value: d.supplierPaidAt ? `Directly by the financier, ${when(d.supplierPaidAt)}` : "Directly by the financier once invoiced" },
                 ]}
               />

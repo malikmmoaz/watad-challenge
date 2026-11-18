@@ -30,14 +30,16 @@ async function tabTo(page: Page, target: Locator, label: string, { checkFocusRin
   throw new Error(`Could not reach "${label}" with Tab`);
 }
 
-test("keyboard only: create an RFQ from the catalog", async ({ page, browserName }) => {
-  test.fixme(browserName === "webkit", "#81: RFQ builder tabs are not reachable with Tab in WebKit");
+test("keyboard only: create an RFQ from the catalog", async ({ page }) => {
   await page.goto("/contractor");
   await tabTo(page, tid(page, "rfq-new"), "New RFQ");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/contractor\/rfq\/new$/);
-  await tabTo(page, tid(page, "rfq-tab-catalog"), "Pick from catalog");
-  await page.keyboard.press("Enter");
+  // ARIA tabs: Tab reaches the selected tab, the arrow keys switch (#81).
+  await tabTo(page, tid(page, "rfq-tab-upload"), "Upload RFQ / BOQ (selected tab)");
+  await page.keyboard.press("ArrowRight");
+  await expect(tid(page, "rfq-tab-catalog")).toBeFocused();
+  await expect(tid(page, "rfq-tab-catalog")).toHaveAttribute("aria-selected", "true");
   await tabTo(page, tid(page, "rfq-catalog-add").first(), "Add from catalog");
   await page.keyboard.press("Enter");
   await tabTo(page, tid(page, "rfq-site"), "Delivery site");
