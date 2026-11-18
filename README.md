@@ -59,6 +59,7 @@ src/store           browser demo store (useDemo, update, resetDemo)
 src/components      shared UI
 docs/adr            lasting decisions
 docs/handoff        per-agent handoff notes
+docs/incidents.md   what went wrong while building and how we handled it
 ```
 
 ## Working agreement

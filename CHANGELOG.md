@@ -27,3 +27,4 @@
 - Contractor and supplier home screens open on their key figures (open RFQs, offers to compare, POs on the way, credit cap left; requests waiting, offers submitted, POs to fulfil, on-time rate) (#7).
 - Reviewer guide on each role: three steps with links, Hide guide, and Restart tour in the app bar (#16).
 - Production hardening: security headers on every page (CSP limited to our origin and PostHog EU, no framing, strict referrer and permissions), a designed not-found page, and error pages that report to PostHog and offer to reset the demo data.
+- Docs: `docs/incidents.md`, blameless notes on build incidents (stacked PRs closed by a branch deletion, a mid-animation accessibility false failure, stale available credit) and what we changed.
