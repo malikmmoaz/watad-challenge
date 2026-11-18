@@ -12,7 +12,7 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 - Each row is checked at desktop (1440) and mobile (390) widths. A row passes only if both do.
 - E2E column: the Playwright smoke test that covers it (`e2e/*.spec.ts`), if any.
 
-Last full pass: 18 Nov 16:25 UTC, pass 2 (84/90 rows) · Live link: https://watad-challenge.vercel.app
+Last full pass: 18 Nov 16:25 UTC, pass 2 (85/90 rows) · Live link: https://watad-challenge.vercel.app
 
 ## A. Platform and access
 
@@ -54,7 +54,7 @@ Last full pass: 18 Nov 16:25 UTC, pass 2 (84/90 rows) · Live link: https://wata
 | B15 | Ours | Shortlist reserves a slot for a new supplier; contractor picks the invitees | Omar | #9 | – | ✅ |
 | B16 | Ours | Multi-factor comparison: landed cost incl. delivery and 15% VAT, lead time, terms, reliability, local content, benchmark flag | Omar | #11 | contractor | ✅ |
 | B17 | Ours | Blind comparison toggle hides supplier names | Omar | #11 | – | ✅ |
-| B18 | Ours | Basket split: award lines to different suppliers | Omar | #11 | – | ⚠️ #47 |
+| B18 | Ours | Basket split: award lines to different suppliers | Omar | #11 | – | ✅ |
 | B19 | Ours | Totals are arithmetically right: lines + delivery = subtotal, VAT = 15% of subtotal, total = subtotal + VAT (checked by hand on two offers) | Omar | #11 | – | ✅ |
 
 ## C. Supplier: inbox → offer
@@ -165,7 +165,7 @@ Not pass/fail; judged at each full pass and reported to Safina with examples.
 | When (UTC) | Build / commit | Result | Notes |
 |------------|----------------|--------|-------|
 | 18 Nov 16:05 | production, main `ad5fec5` | 73/90 pass · 4 partial · 11 fail · 2 not checked | Fails: in-app explanation pages (#17) and the walkthrough (#16, scheduled). Partial: supplier form wording and "quote" (#46, rows C3 and H1), basket split not visible with seed data (#47), comparison table at 412 (#48). Not checked: E9 decline by hand, F5 PO above the cap. Every page clean at 1440 and 412: no sideways page scroll, no console errors, no failed requests; "interest" never appears. |
-| 18 Nov 16:25 | production, after #41 and #49 | 84/90 pass · 3 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1), #47 (B18). Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
+| 18 Nov 16:25 | production, after #41 and #49 | 85/90 pass · 2 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1; fix in #58). Re-checked 16:30: basket split passes (#47 closed, B18), and the full #14 credit path including repayment restores the cap. Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
 
 ## Brief text and traceability
 
