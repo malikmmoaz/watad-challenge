@@ -9,3 +9,4 @@
 - Design system: the "attested document" look (green-tinted paper, pine bar, one action green, stamp-ink blue for evidence), shared UI components, and a live reference at `/design-system`.
 - Product analytics with PostHog (EU): anonymous, typed event catalog, off when no key is set.
 - Contractor: explainable, credit-aware supplier shortlist on each RFQ, with why / why not per supplier, a reserved slot for a vetted new supplier, the available credit cap, a blind-comparison option, and sending the RFQ to the suppliers you pick (#9).
+- Contractor: compare offers (bids) side by side on landed cost incl. delivery and 15% VAT, price vs benchmark, coverage, lead time, terms, reliability and local content, with a score breakdown, blind mode and a suggested basket split; place the PO by bank transfer or pay with credit (Murabaha draw, supplier paid directly), with a confirmation and a status timeline (#11).
