@@ -5,19 +5,23 @@ import { applicantName, creditProfiles, reference } from "@/data";
 import { checkConsistency } from "@/domain/credit/checks";
 import type { FactorImpact, Outcome } from "@/domain/credit/impact";
 import { formatSar, sar } from "@/domain/money";
-import type { CreditDocument, EvidenceRef, GateResult } from "@/domain/types";
+import type { CreditDocument, EvidenceRef } from "@/domain/types";
 import { factorImpacts } from "@/domain/credit/impact";
 import { runChecks } from "@/domain/credit/workflow";
 import { useState } from "react";
 import { update, useDemo } from "@/store";
 import { useHydrated, useReducedMotion } from "../client-state";
-import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
+import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
 import { UtilisationPanel } from "./utilisation-panel";
-import { CaseStatus, shortDate } from "./shared";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { GATE_RESULT } from "@/lib/status";
+import { ScoreReveal } from "./score-reveal";
+import { CaseStatus } from "./shared";
 
-const GATE: Record<GateResult, Tone> = { pass: "positive", flag: "caution", fail: "negative", pending: "neutral" };
-const GATE_WORD: Record<GateResult, string> = { pass: "Pass", flag: "Flag", fail: "Fail", pending: "Not run" };
+/** Cases whose checks ran in this tab: their score is revealed once. */
+const justScored = new Set<string>();
+
 const POLICY: Record<"pass" | "refer" | "fail", Tone> = { pass: "positive", refer: "caution", fail: "negative" };
 const pct = (n: number | null) => (n === null ? "n/a" : `${(n * 100).toFixed(1)}%`);
 
@@ -122,6 +126,7 @@ export function CaseFile({ id }: { id: string }) {
     if (!profile) return;
     const next = runChecks(c, profile, new Date().toISOString()).case;
     update((s) => ({ ...s, creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)) }));
+    justScored.add(c.id);
     setStep(null);
   };
   // Steps through the preparation, then records the result; instant with reduced motion.
@@ -142,10 +147,11 @@ export function CaseFile({ id }: { id: string }) {
         Back to the queue
       </Link>
       <PageHeader
+        eyebrow="Credit file"
         title={applicantName(c.contractorId, reference.contractors)}
         serial={c.id}
         status={<CaseStatus status={c.status} />}
-        meta={`Requests ${formatSar(c.requestedCap)} for ${c.requestedTenorDays} days · ${c.purpose} · submitted ${shortDate(c.submittedAt)}`}
+        meta={`Requests ${formatSar(c.requestedCap)} for ${c.requestedTenorDays} days · ${c.purpose} · submitted ${c.submittedAt ? formatDate(c.submittedAt) : "not yet"}`}
         actions={
           canRun ? (
             <Button variant="primary" onClick={run} disabled={!profile} loading={step !== null} data-testid="credit-run-checks">
@@ -161,8 +167,8 @@ export function CaseFile({ id }: { id: string }) {
         </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-4">
           <Panel title="Gated checks, cheapest first" aside={<SampleDataLabel />}>
             <ol className="space-y-3" data-testid="credit-gates">
               {[...c.gates]
@@ -173,7 +179,7 @@ export function CaseFile({ id }: { id: string }) {
                       <span className="font-medium text-ink">
                         {g.order}. {g.label}
                       </span>
-                      <Badge tone={GATE[g.result]}>{GATE_WORD[g.result]}</Badge>
+                      <Badge tone={GATE_RESULT[g.result].tone}>{g.result === "pending" && card ? "Not run" : GATE_RESULT[g.result].label}</Badge>
                     </div>
                     <p className="text-sm text-ink-muted">{g.detail}</p>
                     {g.evidence.length > 0 && <Evidence refs={g.evidence} docs={c.documents} />}
@@ -185,7 +191,7 @@ export function CaseFile({ id }: { id: string }) {
           {card && (
             <Panel title="Scorecard" aside={<span className="text-sm text-ink-muted">10 factors, weights sum to 100</span>}>
               <div className="space-y-6">
-                <ScoreScale score={card.total} />
+                <ScoreReveal score={card.total} animate={justScored.has(c.id)} />
                 <ul className="space-y-5" data-testid="credit-factors">
                   {card.factors.map((f) => (
                     <li key={f.id} className="space-y-1.5">
@@ -206,12 +212,12 @@ export function CaseFile({ id }: { id: string }) {
             <Panel title="Policy rules">
               <ul className="space-y-2 text-sm">
                 {card.policyChecks.map((p) => (
-                  <li key={p.id} className="flex items-start justify-between gap-3">
+                  <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                     <span>
                       <span className="font-medium text-ink">{p.rule}</span>
                       <span className="block text-ink-muted">{p.observed}</span>
                     </span>
-                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? "Met" : p.result === "fail" ? "Breached: decline" : "Breached: more information or a condition"}</Badge>
+                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? "Met" : p.result === "fail" ? "Breached · declines" : "Breached · review"}</Badge>
                   </li>
                 ))}
               </ul>
@@ -250,7 +256,7 @@ export function CaseFile({ id }: { id: string }) {
           </Panel>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-4">
           {card && (
             <Panel title="Proposed limit">
               <div className="space-y-3">
@@ -279,8 +285,14 @@ export function CaseFile({ id }: { id: string }) {
                 )}
                 {c.aiProposal && (
                   <section className="space-y-2">
-                    <h3 className="text-sm font-medium text-ink">Drafted credit memo</h3>
-                    <Memo text={c.aiProposal.memo} />
+                    <div className="rounded-xl border border-dashed border-ai-line bg-ai-soft p-4" data-testid="credit-ai-memo">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-semibold text-ink">Drafted credit memo</h3>
+                        <AiLabel agent="Credit memo drafter" confidence={c.aiProposal.ai.confidence} />
+                      </div>
+                      <Memo text={c.aiProposal.memo} />
+                      <p className="mt-3 border-t border-ai-line pt-2 text-xs text-ai">A proposal, not a decision. The credit manager decides below.</p>
+                    </div>
                   </section>
                 )}
               </div>
@@ -296,7 +308,7 @@ export function CaseFile({ id }: { id: string }) {
             <ol className="space-y-2 text-sm" data-testid="credit-decision-log">
               {[...c.log].reverse().map((l, i) => (
                 <li key={i}>
-                  <span className="font-mono text-xs text-ink-muted">{l.at.replace("T", " ").slice(0, 16)}</span>{" "}
+                  <span className="text-xs tabular-nums text-ink-muted">{formatDateTime(l.at)}</span>{" "}
                   <span className="text-ink-muted">{l.actor.replace("_", " ")}</span> · <span className="text-ink">{l.action}</span>
                   {l.detail ? <span className="block text-xs text-ink-muted">{l.detail}</span> : null}
                 </li>

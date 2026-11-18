@@ -7,7 +7,7 @@ import { availableCredit } from "@/domain/credit/facility";
 import { formatSar, murabaha } from "@/domain/money";
 import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
-import { Alert, CreditCapMeter, EmptyState, Facts, LoadingRows, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
+import { Alert, buttonClass, CreditCapMeter, EmptyState, Facts, LoadingRows, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
 import { useHash, useHydrated } from "./client-state";
 import { ApplicationTracker } from "./application-tracker";
 import { DrawLedger } from "./draw-ledger";
@@ -33,6 +33,7 @@ export function ContractorCredit() {
   return (
     <div className="space-y-6">
       <PageHeader
+        eyebrow="Contractor"
         title="Credit"
         status={<SampleDataLabel />}
         meta="Buy materials now and pay in 30 to 90 days. The platform pays the supplier directly; you repay the order total plus a fixed Murabaha markup."
@@ -41,7 +42,7 @@ export function ContractorCredit() {
             <Link
               href="/contractor/credit/apply"
               data-testid="credit-apply-start"
-              className="inline-flex h-10 items-center rounded-md bg-action px-4 text-sm font-medium text-on-action hover:bg-action-hover"
+              className={buttonClass("primary")}
             >
               {facility ? "Apply for a higher cap" : "Apply for a credit cap"}
             </Link>

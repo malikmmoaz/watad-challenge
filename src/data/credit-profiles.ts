@@ -98,7 +98,7 @@ const SAMPLE_ORG: Record<string, string> = {
 /** The four engine sample cases, submitted and waiting in the credit manager's queue. */
 export const sampleQueueCases: CreditCase[] = SAMPLE_CASES.map((p, i) => {
   const id = `cc_${511 + i}` as CreditCaseId;
-  const at = `2026-11-1${7 + (i % 2)}T0${7 + i}:30:00Z`;
+  const at = `2026-11-1${7 + (i % 2)}T${String(7 + i).padStart(2, "0")}:30:00Z`;
   return {
     id,
     contractorId: (SAMPLE_ORG[p.id] ?? p.id) as OrgId,

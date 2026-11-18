@@ -6,7 +6,7 @@ import { applicantName, reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { CreditCase } from "@/domain/types";
 import { useDemo } from "@/store";
-import { EmptyState, LoadingRows, Table, Td, Th, THead, Tr } from "@/components/ui";
+import { CellNote, EmptyState, LoadingRows, Table, Td, Th, THead, Tr } from "@/components/ui";
 import { useHydrated } from "../client-state";
 import { CaseStatus, shortDate } from "./shared";
 
@@ -52,7 +52,7 @@ export function CreditQueue() {
             <Td>{applicantName(c.contractorId, reference.contractors)}</Td>
             <Td align="end">{formatSar(c.requestedCap)}</Td>
             <Td align="end">{c.requestedTenorDays} days</Td>
-            <Td align="end">{c.scorecard ? `${Math.round(c.scorecard.total)} · ${c.scorecard.band}` : "Not scored"}</Td>
+            <Td align="end">{c.scorecard ? <span className="font-semibold tabular-nums text-ink">{Math.round(c.scorecard.total)}<span className="font-normal text-ink-muted"> · band {c.scorecard.band}</span></span> : <CellNote>Not scored</CellNote>}</Td>
             <Td>
               <CaseStatus status={c.status} />
             </Td>
