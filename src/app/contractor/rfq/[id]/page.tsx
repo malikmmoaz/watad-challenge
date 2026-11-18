@@ -12,7 +12,7 @@ async function Content({ params }: { params: PageProps<"/contractor/rfq/[id]">["
 
 export default function Page({ params }: PageProps<"/contractor/rfq/[id]">) {
   return (
-    <Suspense fallback={<p className="text-sm text-neutral-600">Loading RFQ…</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-muted">Loading RFQ…</p>}>
       <Content params={params} />
     </Suspense>
   );
