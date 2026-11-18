@@ -12,9 +12,9 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 - Each row is checked at desktop (1440) and mobile (390) widths. A row passes only if both do.
 - E2E column: the Playwright smoke test that covers it (`e2e/*.spec.ts`), if any.
 
-Last full pass: 18 Nov 16:42 UTC, pass 3 (88/90 rows) · Live link: https://watad-challenge.vercel.app
+Last full pass: 18 Nov 19:35 UTC, pass 4 after the redesign (89/90 rows) · Live link: https://watad-challenge.vercel.app
 
-Browsers tested (18 Nov, production, full e2e suite): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 30/30; WebKit (Safari engine) desktop 29/30 and iPhone 14 26/27, the misses tracked in #81 (RFQ tabs not keyboard-reachable in Safari) and #80 (landing scrolls sideways on narrow phones). Re-run: Actions → "Cross-browser e2e" → Run workflow.
+Browsers tested (18 Nov 19:30, production after the redesign, full e2e suite incl. axe and keyboard): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 37/37; WebKit (Safari engine) desktop 37/37 and iPhone 14 34/34 (+3 desktop-only keyboard tests skipped). #80 and #81 verified fixed. Re-run: Actions → "Cross-browser e2e" → Run workflow.
 
 ## A. Platform and access
 
@@ -134,7 +134,7 @@ Browsers tested (18 Nov, production, full e2e suite): Chromium desktop 1440 + Pi
 | G8 | Brief | These pages are in the app and linked from the landing page | Safina | #17 | smoke | ✅ |
 | G10 | Brief | Research shown: what we learned about construction procurement and credit in Saudi Arabia, and how it shaped the product | Safina | #17 | – | ✅ |
 | G11 | Brief | Explanations are brief: each topic readable in under a minute | Safina | #17 | – | ✅ |
-| G9 | Ours | Reviewer walkthrough: `docs/WALKTHROUGH.md` and in-app tour, 3 minutes per role | Noor | #16 | – | ⚠️ #64 |
+| G9 | Ours | Reviewer walkthrough: `docs/WALKTHROUGH.md` and in-app tour, 3 minutes per role | Noor | #16 | – | ✅ |
 
 ## H. Language and tone
 
@@ -169,6 +169,7 @@ Not pass/fail; judged at each full pass and reported to Safina with examples.
 | 18 Nov 16:05 | production, main `ad5fec5` | 73/90 pass · 4 partial · 11 fail · 2 not checked | Fails: in-app explanation pages (#17) and the walkthrough (#16, scheduled). Partial: supplier form wording and "quote" (#46, rows C3 and H1), basket split not visible with seed data (#47), comparison table at 412 (#48). Not checked: E9 decline by hand, F5 PO above the cap. Every page clean at 1440 and 412: no sideways page scroll, no console errors, no failed requests; "interest" never appears. |
 | 18 Nov 16:25 | production, after #41 and #49 | 85/90 pass · 2 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1; fix in #58). Re-checked 16:30: basket split passes (#47 closed, B18), and the full #14 credit path including repayment restores the cap. Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
 | 18 Nov 16:42 | production, after #58 and #59 | 88/90 pass · 1 partial · 1 fail | Wording fixed and verified: "Your offer (bid)", "Price the lines…", "Enter a unit price…", "Usually prices…", "Thank you for your offer" (#46 and #10 closed; C3, H1). Walkthrough merged (#61); G9 stays partial until the in-app guide ships (copy in #64, panel by Layla). F5 re-checked 16:50: Pay with credit is disabled above the available cap, with the reason; the PO goes by bank transfer (#55 closed, via #57/#63). Supplier home now lists purchase orders (#65, closes #62). Still failing: G7 dashboards for reviewers (waiting on Better Stack approval). |
+| 18 Nov 19:35 | production, main `5044548` (after the redesign #60/#68/#69/#78/#79) | 89/90 pass · 0 partial · 1 fail | Full e2e suite on production at 1440 + 412: all green (smoke, RFQ, credit, credit loop, procurement, analytics, system, keyboard; axe 0 serious/critical on 11 pages at both widths). Reviewer guide live on all three roles: 3 steps, links resolve, Hide persists, Restart tour works (G9 ✅). Walkthrough labels all present; one drift fixed: `cc_502` now needs **Run checks** first. Cross-browser: Firefox, WebKit desktop and iPhone 14 all green; #80 (narrow phones) and #81 (Safari keyboard tabs) verified fixed. Still failing: G7 dashboard links for reviewers (Better Stack approval). |
 
 ## Brief text and traceability
 
