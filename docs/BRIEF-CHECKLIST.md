@@ -12,7 +12,7 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 - Each row is checked at desktop (1440) and mobile (390) widths. A row passes only if both do.
 - E2E column: the Playwright smoke test that covers it (`e2e/*.spec.ts`), if any.
 
-Last full pass: 18 Nov 16:05 UTC, pass 1 (73/90 rows) · Live link: https://watad-challenge.vercel.app
+Last full pass: 18 Nov 16:25 UTC, pass 2 (84/90 rows) · Live link: https://watad-challenge.vercel.app
 
 ## A. Platform and access
 
@@ -27,7 +27,7 @@ Last full pass: 18 Nov 16:05 UTC, pass 1 (73/90 rows) · Live link: https://wata
 | A7 | Ours | Money shown in SAR, with 15% VAT shown explicitly wherever a total appears | Omar | #11 | contractor | ✅ |
 | A8 | Brief | Every simulated AI output is clearly labelled as simulated, at the place it appears | Omar, Hana | #8 #13 | contractor, credit | ✅ |
 | A9 | Ours | No dead ends: every page has a next step or a way back; no 404 or error page reachable from the UI | all | – | all | ✅ |
-| A10 | Ours | Usable at 390 px wide: no horizontal scroll, tables readable, primary actions reachable | Layla | #7 | mobile project | ⚠️ #48 |
+| A10 | Ours | Usable at 390 px wide: no horizontal scroll, tables readable, primary actions reachable | Layla | #7 | mobile project | ✅ |
 | A11 | Ours | No console errors or failed requests on any journey page | all | – | all | ✅ |
 | A12 | Brief | State created in one role is visible in the others within the same session (RFQ → supplier inbox, offer → contractor, application → credit queue) | Tariq | #1 | all | ✅ |
 | A13 | Brief | Useful from the first visit: the landing page says what the platform is and each role opens on live work (open RFQs, an inbox with requests, a queue with cases), never an empty state | Layla, Tariq | #1 #7 | smoke | ✅ |
@@ -99,7 +99,7 @@ Last full pass: 18 Nov 16:05 UTC, pass 1 (73/90 rows) · Live link: https://wata
 | E6b | Brief | Every factor shows how it affects the outcome (weight, points contributed, effect on score/band/limit) | Hana | #13 | credit | ✅ |
 | E7 | Brief | Shows how AI would assist with document review and with the assessment; labelled simulated | Hana | #13 | credit | ✅ |
 | E8 | Brief | Can approve, with clear reasons | Hana | #13 | credit | ✅ |
-| E9 | Brief | Can decline, with clear reasons | Hana | #13 | – | ☐ |
+| E9 | Brief | Can decline, with clear reasons | Hana | #13 | – | ✅ |
 | E10 | Brief | Can request more information, with clear reasons | Hana | #13 | – | ✅ |
 | E11 | Ours | The human decides: the proposed decision can be overridden, and the decision is recorded with who/when/why | Hana | #13 | – | ✅ |
 | E12 | Ours | Gated checks and policy rules run before scoring | Hana | #13 | – | ✅ |
@@ -116,22 +116,22 @@ Last full pass: 18 Nov 16:05 UTC, pass 1 (73/90 rows) · Live link: https://wata
 | F2 | Ours | PO can be paid with credit; the draw reduces the available cap | Hana, Omar | #14 | contractor | ✅ |
 | F3 | Ours | Supplier is paid directly by the credit provider | Hana | #14 | – | ✅ |
 | F4 | Ours | Cost of credit shown as profit rate / Murabaha markup with APR | Hana | #14 | – | ✅ |
-| F5 | Ours | A PO larger than the available cap is handled (blocked or part-paid), not silently accepted | Hana | #14 | – | ☐ |
+| F5 | Ours | A PO larger than the available cap is handled (blocked or part-paid), not silently accepted | Hana | #14 | – | ❌ #55 |
 
 ## G. In-app explanation pages
 
 | ID | Type | Requirement | Owner | Issue | E2E | Status |
 |----|------|-------------|-------|-------|-----|--------|
-| G1 | Brief | Business model explained in the app, briefly: who pays and why | Safina | #17 | – | ❌ #17 |
-| G2 | Brief | Priorities explained (what we built first and why, what we cut) | Safina | #17 | – | ❌ #17 |
-| G3 | Brief | Stack choices explained (what and why) | Safina | #17 | – | ❌ #17 |
-| G4 | Brief | Use of AI tools explained: how AI tools were used to build this, plus what AI in the product is simulated vs would be real | Safina | #17 | – | ❌ #17 |
-| G5 | Brief | Key assumptions listed | Safina | #17 | – | ❌ #17 |
-| G6 | Ours | How the team built it: team, timeline, links to issues, PRs, CI runs, ADRs | Safina | #17 | – | ❌ #17 |
+| G1 | Brief | Business model explained in the app, briefly: who pays and why | Safina | #17 | – | ✅ |
+| G2 | Brief | Priorities explained (what we built first and why, what we cut) | Safina | #17 | – | ✅ |
+| G3 | Brief | Stack choices explained (what and why) | Safina | #17 | – | ✅ |
+| G4 | Brief | Use of AI tools explained: how AI tools were used to build this, plus what AI in the product is simulated vs would be real | Safina | #17 | – | ✅ |
+| G5 | Brief | Key assumptions listed | Safina | #17 | – | ✅ |
+| G6 | Ours | How the team built it: team, timeline, links to issues, PRs, CI runs, ADRs | Safina | #17 | – | ✅ |
 | G7 | Ours | Links to analytics and uptime dashboards / status page work for a logged-out reviewer | Tariq | #4 #5 | – | ❌ #17 |
-| G8 | Brief | These pages are in the app and linked from the landing page | Safina | #17 | smoke | ❌ #17 |
-| G10 | Brief | Research shown: what we learned about construction procurement and credit in Saudi Arabia, and how it shaped the product | Safina | #17 | – | ❌ #17 |
-| G11 | Brief | Explanations are brief: each topic readable in under a minute | Safina | #17 | – | ❌ #17 |
+| G8 | Brief | These pages are in the app and linked from the landing page | Safina | #17 | smoke | ✅ |
+| G10 | Brief | Research shown: what we learned about construction procurement and credit in Saudi Arabia, and how it shaped the product | Safina | #17 | – | ✅ |
+| G11 | Brief | Explanations are brief: each topic readable in under a minute | Safina | #17 | – | ✅ |
 | G9 | Ours | Reviewer walkthrough: `docs/WALKTHROUGH.md` and in-app tour, 3 minutes per role | Noor | #16 | – | ❌ #16 |
 
 ## H. Language and tone
@@ -165,6 +165,7 @@ Not pass/fail; judged at each full pass and reported to Safina with examples.
 | When (UTC) | Build / commit | Result | Notes |
 |------------|----------------|--------|-------|
 | 18 Nov 16:05 | production, main `ad5fec5` | 73/90 pass · 4 partial · 11 fail · 2 not checked | Fails: in-app explanation pages (#17) and the walkthrough (#16, scheduled). Partial: supplier form wording and "quote" (#46, rows C3 and H1), basket split not visible with seed data (#47), comparison table at 412 (#48). Not checked: E9 decline by hand, F5 PO above the cap. Every page clean at 1440 and 412: no sideways page scroll, no console errors, no failed requests; "interest" never appears. |
+| 18 Nov 16:25 | production, after #41 and #49 | 84/90 pass · 3 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1), #47 (B18). Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
 
 ## Brief text and traceability
 
