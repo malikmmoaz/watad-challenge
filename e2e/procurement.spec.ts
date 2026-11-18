@@ -68,6 +68,9 @@ test("end to end: supplier offer, contractor PO paid with credit, supplier paid 
   await expect(tid(page, "po-pay-credit")).toBeChecked();
   await expect(tid(page, "po-murabaha")).toContainText(/profit rate/);
   await tid(page, "po-place").click();
+  // Keyboard and screen-reader users land on the result, not on <body> (#75).
+  await expect(tid(page, "po-confirmation-heading")).toBeFocused();
+  await expect(page.getByTestId("po-announcement")).toHaveText(/Purchase order issued: po_.*SAR 128,041\.00/);
   await expect(tid(page, "po-confirmation")).toContainText("SAR 128,041.00");
   await expect(tid(page, "po-confirmation")).toContainText(/supplier paid directly/i);
   await expect(tid(page, "po-status")).toHaveAttribute("data-status", "placed");
