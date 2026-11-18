@@ -6,6 +6,7 @@ import { reference } from "@/data";
 import { formatSar, murabaha } from "@/domain/money";
 import type { OrgId, ShortlistReason } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
+import { OfferComparison } from "./offer-comparison";
 import { UNIT_LABELS } from "@/lib/procurement/labels";
 import { buildShortlist, estimateRfqValue, priceIndexFromOffers, type ShortlistRow } from "@/lib/procurement/shortlist";
 import { update, useDemo } from "@/store";
@@ -186,6 +187,8 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           <p className="mt-2 text-sm">{rfq.wantsCredit ? "You plan to pay this order from your credit cap." : "You plan to pay this order directly."}</p>
         </section>
       </div>
+
+      {!isDraft && <OfferComparison rfq={rfq} />}
 
       <section className={card} aria-label="Supplier shortlist">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

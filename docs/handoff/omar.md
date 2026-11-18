@@ -35,12 +35,22 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
   Run: LD_LIBRARY_PATH=~/watad-team/tools/chromium-libs/root/usr/lib/x86_64-linux-gnu node <script>,
   requiring ~/watad-team/wt/noor/node_modules/@playwright/test.
 
+## #11 offers comparison + PO (branch `feat/11-offers-po`, stacked on `feat/9-shortlist-ui`)
+- `src/lib/procurement/po.ts` (pure, 13 tests): quote, credit eligibility, place POs (single offer or
+  basket split, Murabaha credit draw reduces the cap), advance status issued -> paid.
+- `offer-comparison.tsx` on the RFQ page once sent; `po-detail.tsx` at `/contractor/po/[id]`.
+- "Demo: next step" on the PO page moves the status until the supplier side (#10) does it for real.
+- Browser-verified on rfq_1042: compare, blind, breakdown, choose, pay with credit, confirmation,
+  timeline to paid, RFQ awarded. No console errors on any contractor page (fixed a thead hydration bug).
+
 ## Next
 - #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
   #10 supplier inbox and offer form.
 - Test ids: `shortlist-row`, `shortlist-excluded` (both with `data-supplier`), `shortlist-select`,
   `shortlist-new-slot`, `shortlist-score`, `shortlist-why`, `shortlist-why-not`, `rfq-blind-toggle`,
-  `shortlist-send`, `shortlist-sent`, `rfq-status`, `credit-cap-available`, `rfq-choose-suppliers`, `rfq-new`, `rfq-tab-upload|catalog`, `rfq-upload`, `rfq-upload-sample`, `rfq-catalog-add`,
+  `shortlist-send`, `shortlist-sent`, `offer-row`, `offer-supplier`, `offer-landed`, `offer-score`,
+  `offer-choose`, `offers-blind-toggle`, `offer-split-choose`, `po-draft`, `po-draft-total`, `po-pay-credit`,
+  `po-pay-bank`, `po-murabaha`, `po-place`, `po-confirmation`, `po-number`, `po-status` (data-status),
+  `po-timeline-link`, `po-row`, `po-advance`, `po-total`, `rfq-status`, `credit-cap-available`, `rfq-choose-suppliers`, `rfq-new`, `rfq-tab-upload|catalog`, `rfq-upload`, `rfq-upload-sample`, `rfq-catalog-add`,
   `rfq-line`, `rfq-line-qty`, `rfq-site`, `rfq-city`, `rfq-required-by`, `rfq-required-in-7|14|30`,
-  `rfq-wants-credit`, `rfq-confirm`, `rfq-confirmed`, `rfq-id`, `rfq-row`. Still to come: `offer-row`,
-  `offer-choose`, `po-place`, `po-confirmation`, `po-number`, `po-status`, `inbox-row`, `offer-submit`.
+  `rfq-wants-credit`, `rfq-confirm`, `rfq-confirmed`, `rfq-id`, `rfq-row`. Still to come: `inbox-row`, `offer-submit`.
