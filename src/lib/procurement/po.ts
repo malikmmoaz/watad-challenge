@@ -4,7 +4,7 @@
  * PO along its status timeline. Every function returns new state.
  */
 import type { DemoState } from "@/data";
-import { add, halalas, murabaha, vatOn } from "@/domain/money";
+import { add, formatSar, halalas, murabaha, vatOn } from "@/domain/money";
 import type { CreditFacility, Halalas, Offer, OfferId, PaymentMethod, PoId, PoStatus, PurchaseOrder, Rfq, Supplier } from "@/domain/types";
 
 const DAY_MS = 86_400_000;
@@ -45,6 +45,13 @@ export function quoteOrder(rfq: Rfq, offer: Offer, rfqLineIds?: string[]): PoQuo
   return { offer, rfqLineIds: lines.map((l) => l.rfqLineId), subtotal, deliveryFee: offer.deliveryFee, vat, totalInclVat: add(subtotal, offer.deliveryFee, vat) };
 }
 
+/**
+ * What is left of the credit cap: always cap minus drawn. The stored
+ * `available` field is a cache that can go stale, so procurement never
+ * reads it; every check and every screen goes through this one function.
+ */
+export const availableCredit = (facility: Pick<CreditFacility, "cap" | "drawn">): Halalas => halalas(Math.max(0, facility.cap - facility.drawn));
+
 export type CreditEligibility = { ok: true; tenorDays: CreditFacility["maxTenorDays"] } | { ok: false; reason: string };
 
 /** Whether these orders can be paid from the credit cap, and if not, why. */
@@ -52,7 +59,10 @@ export function creditEligibility(total: Halalas, facility: CreditFacility | nul
   if (!facility) return { ok: false, reason: "You have no approved credit cap yet." };
   const refusing = suppliers.filter((s) => !s.acceptsPlatformCredit);
   if (refusing.length > 0) return { ok: false, reason: `${refusing.map((s) => s.name).join(", ")} does not accept platform credit.` };
-  if (total > facility.available) return { ok: false, reason: "This order is above your available credit cap." };
+  const available = availableCredit(facility);
+  if (total > available) {
+    return { ok: false, reason: `This order is ${formatSar(halalas(total - available))} above what is left of your credit cap (${formatSar(available)} of ${formatSar(facility.cap)}).` };
+  }
   return { ok: true, tenorDays: facility.maxTenorDays };
 }
 
@@ -150,7 +160,7 @@ export function placePurchaseOrders(state: DemoState, args: PlaceArgs): PlaceRes
       purchaseOrders: [...pos, ...state.purchaseOrders],
       creditFacilities:
         args.method === "platform_credit" && facility
-          ? state.creditFacilities.map((f) => (f === facility ? { ...f, drawn: add(f.drawn, total), available: halalas(f.available - total) } : f))
+          ? state.creditFacilities.map((f) => (f === facility ? { ...f, drawn: add(f.drawn, total), available: availableCredit({ cap: f.cap, drawn: add(f.drawn, total) }) } : f))
           : state.creditFacilities,
     },
   };
@@ -185,7 +195,7 @@ export type CreditFit =
  */
 export function creditFit(totalInclVat: Halalas, facility: Pick<CreditFacility, "cap" | "drawn"> | null): CreditFit {
   if (!facility) return { status: "no_cap" };
-  const available = facility.cap - facility.drawn;
+  const available = availableCredit(facility);
   return totalInclVat <= available
     ? { status: "fits", leftAfter: halalas(available - totalInclVat) }
     : { status: "over", overBy: halalas(totalInclVat - available) };

@@ -3,7 +3,7 @@ import type { DemoState } from "@/data";
 import { sar } from "@/domain/money";
 import type { CreditCaseId, CreditFacility, OfferId, OrgId } from "@/domain/types";
 import { offer, rfq, supplier } from "./fixtures.test-util";
-import { PO_STEPS, advancePurchaseOrder, creditEligibility, creditFit, placePurchaseOrders, quoteOrder } from "./po";
+import { PO_STEPS, advancePurchaseOrder, availableCredit, creditEligibility, creditFit, placePurchaseOrders, quoteOrder } from "./po";
 
 const facility: CreditFacility = {
   creditCaseId: "cc_1" as CreditCaseId,
@@ -50,7 +50,7 @@ describe("creditEligibility", () => {
   it("explains each refusal", () => {
     expect(creditEligibility(sar(1), null, [])).toMatchObject({ ok: false, reason: expect.stringContaining("no approved credit cap") });
     expect(creditEligibility(sar(1), facility, [suppliers[2]!])).toMatchObject({ ok: false, reason: expect.stringContaining("does not accept platform credit") });
-    expect(creditEligibility(sar(400_000.01), facility, [suppliers[0]!])).toMatchObject({ ok: false, reason: expect.stringContaining("above your available credit cap") });
+    expect(creditEligibility(sar(400_000.01), facility, [suppliers[0]!])).toMatchObject({ ok: false, reason: expect.stringContaining("above what is left of your credit cap") });
   });
 });
 
@@ -85,8 +85,8 @@ describe("placePurchaseOrders", () => {
   });
 
   it("refuses credit above the available cap and leaves state untouched", () => {
-    const s = state({ creditFacilities: [{ ...facility, available: sar(10_000) }] });
-    expect(place(s, [{ offerId: "a" }], "platform_credit")).toEqual({ ok: false, error: "This order is above your available credit cap." });
+    const s = state({ creditFacilities: [{ ...facility, drawn: sar(490_000), available: sar(10_000) }] });
+    expect(place(s, [{ offerId: "a" }], "platform_credit")).toEqual({ ok: false, error: "This order is SAR 42,900.00 above what is left of your credit cap (SAR 10,000.00 of SAR 500,000.00)." });
   });
 
   it("refuses credit when a supplier does not accept it", () => {
@@ -153,5 +153,39 @@ describe("creditFit", () => {
     expect(creditFit(sar(400_000), { cap: sar(500_000), drawn: sar(100_000) })).toEqual({ status: "fits", leftAfter: sar(0) });
     expect(creditFit(sar(450_000), { cap: sar(500_000), drawn: sar(100_000) })).toEqual({ status: "over", overBy: sar(50_000) });
     expect(creditFit(sar(1), null)).toEqual({ status: "no_cap" });
+  });
+});
+
+describe("never overdraws the credit cap (#55)", () => {
+  // The stored `available` says plenty is left, but drawn has grown: only cap - drawn counts.
+  const stale: CreditFacility = { ...facility, cap: sar(1_500_000), drawn: sar(1_450_000), available: sar(1_316_046) };
+
+  it("derives available from cap minus drawn", () => {
+    expect(availableCredit(stale)).toBe(sar(50_000));
+    expect(availableCredit({ cap: sar(100), drawn: sar(150) })).toBe(sar(0));
+  });
+
+  it("refuses credit above cap minus drawn, whatever the stored available says", () => {
+    const e = creditEligibility(sar(52_900), stale, [suppliers[0]!]);
+    expect(e).toMatchObject({ ok: false, reason: expect.stringContaining("SAR 2,900.00 above what is left") });
+    expect(place(state({ creditFacilities: [stale] }), [{ offerId: "a" }], "platform_credit")).toMatchObject({ ok: false });
+  });
+
+  it("still lets the same order go by bank transfer, leaving the cap untouched", () => {
+    const r = place(state({ creditFacilities: [stale] }), [{ offerId: "a" }], "bank_transfer");
+    if (!r.ok) throw new Error(r.error);
+    expect(r.state.creditFacilities[0]).toBe(stale);
+  });
+
+  it("keeps the stored available in step after a draw", () => {
+    const r = place(state(), [{ offerId: "a" }], "platform_credit");
+    if (!r.ok) throw new Error(r.error);
+    const f = r.state.creditFacilities[0]!;
+    expect(f.available).toBe(availableCredit(f));
+  });
+
+  it("allows an order that uses the cap exactly", () => {
+    const exact = { ...facility, cap: sar(152_900), drawn: sar(100_000), available: sar(0) };
+    expect(place(state({ creditFacilities: [exact] }), [{ offerId: "a" }], "platform_credit")).toMatchObject({ ok: true });
   });
 });

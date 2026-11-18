@@ -9,6 +9,7 @@ import type { OrgId, ShortlistReason } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
 import { OfferComparison } from "./offer-comparison";
 import { UNIT_LABELS } from "@/lib/procurement/labels";
+import { availableCredit } from "@/lib/procurement/po";
 import { buildShortlist, estimateRfqValue, priceIndexFromOffers, type ShortlistRow } from "@/lib/procurement/shortlist";
 import { Badge, buttonClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
@@ -109,7 +110,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
   const shortlist = useMemo(() => {
     if (!rfq) return null;
     const priceIndex = priceIndexFromOffers(rfqs, offers, reference.materials);
-    return buildShortlist(reference.suppliers, rfq, { materials: reference.materials, facility, priceIndex });
+    return buildShortlist(reference.suppliers, rfq, { materials: reference.materials, facility: facility ? { available: availableCredit(facility) } : null, priceIndex });
   }, [rfq, rfqs, offers, facility]);
 
   const shortlistSize = shortlist?.shortlisted.length ?? 0;
@@ -187,10 +188,10 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           {facility ? (
             <div className="space-y-1.5 text-sm">
               <p>
-                Available <strong data-testid="credit-cap-available" className="tabular-nums text-ink">{formatSar(facility.available)}</strong> of {formatSar(facility.cap)}
+                Available <strong data-testid="credit-cap-available" className="tabular-nums text-ink">{formatSar(availableCredit(facility))}</strong> of {formatSar(facility.cap)}
               </p>
               <p className="text-ink-muted">
-                {estimate <= facility.available ? "This RFQ fits within your available cap." : "This RFQ is above your available cap; part would need another payment method."}
+                {estimate <= availableCredit(facility) ? "This RFQ fits within your available cap." : "This RFQ is above your available cap; part would need another payment method."}
               </p>
               <p className="text-ink-muted">
                 Murabaha: {(facility.profitRate * 100).toFixed(1)}% profit rate for {facility.maxTenorDays} days (
