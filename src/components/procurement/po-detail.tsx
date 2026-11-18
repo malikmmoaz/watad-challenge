@@ -8,7 +8,8 @@ import type { PurchaseOrder } from "@/domain/types";
 import { UNIT_LABELS } from "@/lib/procurement/labels";
 import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
 import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
-import { update, useDemo } from "@/store";
+import { track } from "@/lib/analytics";
+import { getState, update, useDemo } from "@/store";
 
 const ACTOR: Record<string, string> = { contractor: "You", supplier: "Supplier", platform: "Platform", credit: "Credit manager" };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" });
@@ -46,17 +47,19 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const offer = offers.find((o) => o.id === po.offerId);
   const supplier = reference.suppliers.find((s) => s.id === po.supplierId);
   const step = PO_STEPS[stepIndex(po.status)];
-  const last = po.status === "paid" || po.status === "cancelled";
   const other = viewer === "supplier" ? "contractor" : "supplier";
   const mine = poActionFor(po, viewer);
   const theirs = poActionFor(po, other);
-  const act = (role: "contractor" | "supplier") =>
+  const act = (role: "contractor" | "supplier") => {
     update((prev) => ({
       ...prev,
       purchaseOrders: prev.purchaseOrders.map((p) =>
         p.id === po.id ? actOnPurchaseOrder(p, role, new Date().toISOString(), p.status === "delivered" ? `ZATCA e-invoice ${p.id.replace("po_", "INV-")}` : undefined) : p,
       ),
     }));
+    const after = getState().purchaseOrders.find((p) => p.id === po.id);
+    if (after && after.status !== po.status) track("po_status_changed", { po_id: po.id, status: after.status });
+  };
   const d = po.creditDraw;
 
   return (

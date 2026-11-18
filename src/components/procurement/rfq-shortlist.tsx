@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { reference } from "@/data";
 import { formatSar, murabaha } from "@/domain/money";
 import type { OrgId, ShortlistReason } from "@/domain/types";
@@ -105,6 +106,12 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
     return buildShortlist(reference.suppliers, rfq, { materials: reference.materials, facility, priceIndex });
   }, [rfq, rfqs, offers, facility]);
 
+  const shortlistSize = shortlist?.shortlisted.length ?? 0;
+  const viewedDraft = rfq?.status === "draft";
+  useEffect(() => {
+    if (viewedDraft) track("shortlist_viewed", { rfq_id: rfqId, supplier_count: shortlistSize });
+  }, [rfqId, viewedDraft, shortlistSize]);
+
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [blind, setBlind] = useState<boolean | null>(null);
 
@@ -134,6 +141,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
       ...prev,
       rfqs: prev.rfqs.map((r) => (r.id === rfq.id ? { ...r, status: "sent", invitedSupplierIds: invited, blindComparison: isBlind } : r)),
     }));
+    track("rfq_sent", { rfq_id: rfq.id, line_count: rfq.lines.length, invited_suppliers: invited.length, wants_credit: rfq.wantsCredit });
   };
   const material = (id: string) => reference.materials.find((m) => m.id === id);
   // Once sent, show who was actually invited (the ranking may have moved since), not today's shortlist.
