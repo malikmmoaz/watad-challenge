@@ -1,17 +1,31 @@
 # Watad challenge: construction materials procurement demo
 
-A three-role demo for Saudi construction materials procurement: **contractor**, **supplier** and **independent credit manager**, in one app with a role switcher and no login. RFQ → offers → purchase order, with a credit cap drawn per PO.
+[![CI](https://github.com/malikmmoaz/watad-challenge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/malikmmoaz/watad-challenge/actions/workflows/ci.yml?query=branch%3Amain)
+[![Live on Vercel](https://img.shields.io/badge/live-watad--challenge.vercel.app-0b3d2e)](https://watad-challenge.vercel.app)
 
-All companies, prices and credit files are **sample data**. AI features are **simulated** and labelled.
+A three-role demo for Saudi construction materials procurement: **contractor**, **supplier** and **independent credit manager**, in one app with a role switcher and no login. RFQ → offers → purchase order, with a credit cap drawn per PO and paid to the supplier directly.
 
-Live link: **https://watad-challenge.vercel.app** (production, deploys from `main`).
+All companies, prices and credit files are **sample data**. AI features are **simulated** and labelled where they appear.
+
+**Live: https://watad-challenge.vercel.app** (production, deploys from `main` after every merge).
+
+## For reviewers
+
+| | |
+|---|---|
+| Try it | [5-minute tour](#explore-the-three-roles-in-5-minutes) below · each role also has a **reviewer guide** panel at the top · full path with what to notice: [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) |
+| Why and how | In the app: [About](https://watad-challenge.vercel.app/about) (business model, priorities, stack, use of AI, assumptions, research) · [How we built it](https://watad-challenge.vercel.app/how-we-built) (team of agents, timeline, process) |
+| Decisions | [ADR 0001 stack](docs/adr/0001-stack.md) · [0002 procurement ranking](docs/adr/0002-procurement-ranking.md) · [0003 credit assessment](docs/adr/0003-credit-assessment.md) · [0004 browser state and observability](docs/adr/0004-browser-state-and-observability.md) |
+| Quality | Every PR needs green **verify** (lint, types, unit tests, build), **e2e** (Playwright on desktop and phone, axe WCAG 2.2 AA, keyboard-only journeys) and **Lighthouse** budgets, plus a recorded review · [brief checklist](docs/BRIEF-CHECKLIST.md) · [incidents and how we handled them](docs/incidents.md) |
+| Analytics | Anonymous, typed events and funnels: [docs/analytics.md](docs/analytics.md) |
+| Work log | [Issues](https://github.com/malikmmoaz/watad-challenge/issues?q=is%3Aissue) · [Pull requests](https://github.com/malikmmoaz/watad-challenge/pulls?q=is%3Apr) · [CHANGELOG](CHANGELOG.md) · [PLAN](PLAN.md) · [handoff notes](docs/handoff/) |
 
 ## Explore the three roles in 5 minutes
 
 Open **https://watad-challenge.vercel.app**. No login: pick a role on the landing page, and switch at any time from the bar at the top. Everything you do is saved in your browser, so an action in one role shows up in the others. **Reset demo data** (top bar) restores the samples.
 
 **1. Contractor (about 2 minutes), as Najd Horizon Contracting Co.**
-- **New RFQ**: upload a BOQ (or use the sample file) and watch the simulated BOQ reader fill editable line items, or pick from the catalog. Confirm quantities, site and date.
+- **New RFQ**: upload a BOQ (or **Try the sample BOQ**) and watch the simulated BOQ reader fill editable line items, or pick from the catalog. Confirm quantities, site and date.
 - **Choose suppliers**: the shortlist explains why each distributor is in or out, and whether the order fits your credit cap.
 - Open **Structure package — Block C** (`rfq_1042`): compare 3 offers on landed cost incl. 15% VAT, lead time, terms and reliability, then **Choose offer** and place the purchase order, **paying with credit**. The supplier is paid directly; you see the Murabaha markup, APR and due date.
 - **Credit cap, applications and progress**: the cap, the draws on it, **Repay**, and **Apply for a higher cap** with the Saudi document set.
@@ -42,9 +56,10 @@ pnpm lint
 pnpm typecheck
 pnpm test       # Vitest unit tests
 pnpm build
+pnpm e2e        # Playwright: smoke, journeys, axe a11y, keyboard, headers (builds and serves on :3110)
 ```
 
-CI runs the same four on every PR and on main (`.github/workflows/ci.yml`).
+CI (`.github/workflows/ci.yml`) runs three required checks on every PR and on `main`: **verify** (the first four), **e2e**, and **lighthouse** (budgets in `lighthouserc.cjs` on `/` and `/contractor`).
 
 ## Structure
 
