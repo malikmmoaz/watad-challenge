@@ -6,6 +6,26 @@ All companies, prices and credit files are **sample data**. AI features are **si
 
 Live link: **https://watad-challenge.vercel.app** (production, deploys from `main`).
 
+## Explore the three roles in 5 minutes
+
+Open **https://watad-challenge.vercel.app**. No login: pick a role on the landing page, and switch at any time from the bar at the top. Everything you do is saved in your browser, so an action in one role shows up in the others. **Reset demo data** (top bar) restores the samples.
+
+**1. Contractor (about 2 minutes), as Najd Horizon Contracting Co.**
+- **New RFQ**: upload a BOQ (or use the sample file) and watch the simulated BOQ reader fill editable line items, or pick from the catalog. Confirm quantities, site and date.
+- **Choose suppliers**: the shortlist explains why each distributor is in or out, and whether the order fits your credit cap.
+- Open **Structure package — Block C** (`rfq_1042`): compare 3 offers on landed cost incl. 15% VAT, lead time, terms and reliability, then **Choose offer** and place the purchase order, **paying with credit**. The supplier is paid directly; you see the Murabaha markup, APR and due date.
+- **Credit cap, applications and progress**: the cap, the draws on it, **Repay**, and **Apply for a higher cap** with the Saudi document set.
+
+**2. Supplier (about 1 minute), as Rawasi Building Materials Trading**
+- The inbox shows only requests you were matched to, with why. Open **Villas 13 to 24** (`rfq_1044`) and **Submit offer**: price, stock, lead time, payment terms, local content.
+- Awarded orders: move the PO through accepted, dispatched and invoiced.
+
+**3. Credit manager (about 2 minutes), independent of buyer and seller**
+- **Credit applications**: the queue. Open **Hijaz Peaks Building Est.** (`cc_502`): gated checks (CR, VAT, bank, financials, SIMAH last), extracted fields with the page they came from, the scorecard with top factors, and the simulated AI credit memo.
+- **Record decision**: approve, request more information or decline, with reasons. The contractor sees the outcome on their credit page.
+
+Then read **About** and **How we built it** (top bar).
+
 ## Run
 
 ```bash
