@@ -4,6 +4,7 @@ import Link from "next/link";
 import { demoPersona, reference } from "@/data";
 import { RfqList } from "@/components/procurement/rfq-list";
 import { Badge, buttonClass, CreditCapMeter, Facts, Icon, PageHeader, Panel, SampleDataLabel, StatStrip, StatusTimeline, type TimelineStep } from "@/components/ui";
+import { availableCredit } from "@/domain/credit/facility";
 import { formatSar, halalas } from "@/domain/money";
 import type { PoStatus, PurchaseOrder } from "@/domain/types";
 import { formatDate, formatDateTime, formatPercent } from "@/lib/format";
@@ -73,7 +74,7 @@ export function ContractorHome() {
           { label: "Open RFQs", value: openRfqs.length, note: "drafts, sent and with offers" },
           { label: "Offers to compare", value: toCompare },
           { label: "POs on the way", value: posInProgress, note: "placed, confirmed or out for delivery" },
-          { label: "Credit cap left", value: facility ? formatSar(facility.available) : "Not applied", compact: true, note: facility ? `of ${formatSar(facility.cap)}` : undefined },
+          { label: "Credit cap left", value: facility ? formatSar(availableCredit(facility)) : "Not applied", compact: true, note: facility ? `of ${formatSar(facility.cap)}` : undefined },
         ]}
       />
 
