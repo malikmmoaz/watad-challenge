@@ -32,9 +32,8 @@ export function CreditQueue() {
     <Table caption="Credit applications" minWidth={760}>
       <THead>
         <tr>
-          <Th>Application</Th>
           <Th>Applicant</Th>
-          <Th align="end">Requested cap</Th>
+          <Th align="end">Requested credit cap</Th>
           <Th align="end">Term</Th>
           <Th align="end">Score</Th>
           <Th>Status</Th>
@@ -45,11 +44,13 @@ export function CreditQueue() {
         {cases.map((c) => (
           <Tr key={c.id} data-testid={`credit-queue-row-${c.id}`}>
             <Td>
-              <Link href={`/credit/cases/${c.id}`} className="font-mono text-xs text-stamp underline underline-offset-[3px]">
-                {c.id}
+              <Link href={`/credit/cases/${c.id}`} className="font-medium text-stamp underline underline-offset-[3px]">
+                {applicantName(c.contractorId, reference.contractors)}
               </Link>
+              <CellNote>
+                <span className="font-mono">{c.id}</span>
+              </CellNote>
             </Td>
-            <Td>{applicantName(c.contractorId, reference.contractors)}</Td>
             <Td align="end">{formatSar(c.requestedCap)}</Td>
             <Td align="end">{c.requestedTenorDays} days</Td>
             <Td align="end">{c.scorecard ? <span className="font-semibold tabular-nums text-ink">{Math.round(c.scorecard.total)}<span className="font-normal text-ink-muted"> · band {c.scorecard.band}</span></span> : <CellNote>Not scored</CellNote>}</Td>

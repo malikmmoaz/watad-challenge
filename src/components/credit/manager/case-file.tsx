@@ -5,7 +5,8 @@ import { applicantName, creditProfiles, reference } from "@/data";
 import { checkConsistency } from "@/domain/credit/checks";
 import type { FactorImpact, Outcome } from "@/domain/credit/impact";
 import { formatSar, sar } from "@/domain/money";
-import type { CreditDocument, EvidenceRef } from "@/domain/types";
+import { DOCUMENT_REQUIREMENTS } from "@/domain/credit-application";
+import type { CreditCase, CreditDocument, EvidenceRef } from "@/domain/types";
 import { factorImpacts } from "@/domain/credit/impact";
 import { runChecks } from "@/domain/credit/workflow";
 import { useState } from "react";
@@ -18,6 +19,23 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { GATE_RESULT } from "@/lib/status";
 import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
+
+/** Document names for files not uploaded yet, as the application form names them. */
+const DOC_NAME = Object.fromEntries(DOCUMENT_REQUIREMENTS.map((r) => [r.type, r.label])) as Record<CreditDocument["type"], string>;
+const DOC_STATUS: Record<CreditDocument["status"], string> = {
+  missing: "Missing",
+  uploaded: "Uploaded",
+  parsed: "Parsed",
+  verified: "Verified",
+  flagged: "Flagged",
+  rejected: "Rejected",
+};
+const ACTOR: Record<CreditCase["log"][number]["actor"], string> = {
+  contractor: "Contractor",
+  credit_manager: "Credit manager",
+  ai_agent: "AI agent (simulated)",
+  platform: "Platform",
+};
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
 const justScored = new Set<string>();
@@ -121,7 +139,8 @@ export function CaseFile({ id }: { id: string }) {
     );
   }
   const profile = creditProfiles[c.contractorId];
-  const canRun = c.status === "submitted" || c.status === "documents_review";
+  // A case can be scored if it has not been yet, including a seeded one already in assessment.
+  const canRun = c.status === "submitted" || c.status === "documents_review" || (c.status === "in_assessment" && !c.scorecard);
   const commit = () => {
     if (!profile) return;
     const next = runChecks(c, profile, new Date().toISOString()).case;
@@ -229,8 +248,8 @@ export function CaseFile({ id }: { id: string }) {
               {c.documents.map((d) => (
                 <li key={d.id} className="space-y-2 py-3 first:pt-0">
                   <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-ink">{d.fileName || d.type.replaceAll("_", " ")}</span>
-                    <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{d.status}</Badge>
+                    <span className="font-medium text-ink">{d.fileName || DOC_NAME[d.type]}</span>
+                    <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{DOC_STATUS[d.status]}</Badge>
                   </div>
                   {d.extracted.length > 0 && (
                     <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
@@ -309,7 +328,7 @@ export function CaseFile({ id }: { id: string }) {
               {[...c.log].reverse().map((l, i) => (
                 <li key={i}>
                   <span className="text-xs tabular-nums text-ink-muted">{formatDateTime(l.at)}</span>{" "}
-                  <span className="text-ink-muted">{l.actor.replace("_", " ")}</span> · <span className="text-ink">{l.action}</span>
+                  <span className="text-ink-muted">{ACTOR[l.actor]}</span> · <span className="text-ink">{l.action}</span>
                   {l.detail ? <span className="block text-xs text-ink-muted">{l.detail}</span> : null}
                 </li>
               ))}

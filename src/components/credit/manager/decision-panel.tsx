@@ -22,7 +22,9 @@ const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 export function DecisionPanel({ c }: { c: CreditCase }) {
   const ai = c.aiProposal;
   const [outcome, setOutcome] = useState<CreditDecisionOutcome>(ai?.outcome ?? "approve");
-  const [cap, setCap] = useState<number>(ai?.proposedCap ? ai.proposedCap / 100 : c.scorecard ? c.scorecard.proposedCap / 100 : 0);
+  const proposedCap = ai?.proposedCap ?? c.scorecard?.proposedCap;
+  // Prefilled with the proposed cap; empty (never 0) when there is no proposal yet.
+  const [cap, setCap] = useState<number>(proposedCap ? proposedCap / 100 : Number.NaN);
   const [reason, setReason] = useState("");
   const [conditions, setConditions] = useState("");
   const [items, setItems] = useState("");
@@ -111,7 +113,15 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
         </fieldset>
         {outcome === "approve" && (
           <>
-            <Input label="Approved credit cap" suffix="SAR" type="number" value={Number.isNaN(cap) ? "" : cap} onChange={(e) => setCap(e.target.valueAsNumber)} data-testid="credit-decision-cap" />
+            <Input
+              label="Approved credit cap"
+              suffix="SAR"
+              type="number"
+              value={Number.isNaN(cap) ? "" : cap}
+              onChange={(e) => setCap(e.target.valueAsNumber)}
+              hint={proposedCap ? `Proposed: ${formatSar(proposedCap)}, never above the ${formatSar(c.requestedCap)} requested.` : `No proposed cap yet: run the checks, or enter one up to ${formatSar(c.requestedCap)}.`}
+              data-testid="credit-decision-cap"
+            />
             <Textarea label="Conditions, one per line" optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
           </>
         )}
