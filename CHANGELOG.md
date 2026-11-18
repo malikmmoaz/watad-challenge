@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: the new RFQ page no longer scrolls sideways on phones; line items stack as cards below the small breakpoint (#29).
 - Contractor credit application: requested cap and term, contracts in hand, Saudi documents each with a one-line reason, SIMAH consent; progress tracker (submitted, checks running, under review, more info requested, decided) with outcome, reasons, conditions and Murabaha markup with APR.
 - Landing page with a role switcher for contractor, supplier and credit manager; no login.
 - Seeded Saudi sample data: fictional contractors and distributors, materials with benchmark prices, RFQs, offers, a purchase order paid with credit, and three credit cases.
