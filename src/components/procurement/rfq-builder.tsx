@@ -7,7 +7,7 @@ import { demoPersona, reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { City, MaterialCategory, OrgId, PaymentTerms, Rfq, RfqId, RfqLine } from "@/domain/types";
 import { SAMPLE_BOQ_FILE, lineIdFor, simulateBoqExtraction, type BoqExtraction } from "@/lib/procurement/boq";
-import { CATEGORY_LABELS, CITIES, UNIT_LABELS } from "@/lib/procurement/labels";
+import { CATEGORY_LABELS, CITIES, UNIT_SINGULAR, unitLabel } from "@/lib/procurement/labels";
 import { estimateRfqValue } from "@/lib/procurement/shortlist";
 import { AiLabel, Badge, Facts, PageHeader, Panel, buttonClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
@@ -242,7 +242,7 @@ export function RfqBuilder() {
                     <div className="text-sm">
                       <p className="font-medium text-ink">{m.name}</p>
                       <p className="text-ink-muted">{m.spec}</p>
-                      <p className="text-ink-muted">Benchmark {formatSar(m.benchmarkUnitPrice)} per {UNIT_LABELS[m.unit]} excl. VAT (sample data)</p>
+                      <p className="text-ink-muted">Benchmark {formatSar(m.benchmarkUnitPrice)} per {UNIT_SINGULAR[m.unit]} excl. VAT (sample data)</p>
                     </div>
                     <button
                       type="button"
@@ -305,7 +305,7 @@ export function RfqBuilder() {
                           value={Number.isNaN(l.quantity) ? "" : l.quantity}
                           onChange={(e) => patch(l.id, { quantity: e.target.valueAsNumber })}
                         />
-                        {UNIT_LABELS[l.unit]}
+                        {unitLabel(l.unit, l.quantity)}
                       </span>
                     </label>
                     <button type="button" className="py-1.5 text-left text-ink-muted underline decoration-line-strong underline-offset-[3px] hover:text-negative hover:decoration-negative" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>

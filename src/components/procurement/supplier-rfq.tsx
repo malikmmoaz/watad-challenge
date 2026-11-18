@@ -8,7 +8,7 @@ import { demoPersona, reference } from "@/data";
 import { add, formatSar, halalas, sar, vatOn } from "@/domain/money";
 import type { OrgId, PaymentTerms, StockStatus } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
-import { CATEGORY_LABELS, UNIT_LABELS } from "@/lib/procurement/labels";
+import { CATEGORY_LABELS, formatQuantity } from "@/lib/procurement/labels";
 import { canOffer, submitOffer, withdrawOffer, type OfferDraft, type OfferErrors } from "@/lib/procurement/supplier-offer";
 import { termsKey, track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
@@ -86,7 +86,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
                   <span className="block text-ink-muted">{l.spec}</span>
                 </span>
                 <span className="tabular-nums text-ink">
-                  {l.quantity.toLocaleString("en-US")} {UNIT_LABELS[l.unit]}
+                  {formatQuantity(l.quantity, l.unit)}
                 </span>
               </li>
             ))}
@@ -253,7 +253,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
             return (
               <li key={l.rfqLineId} data-testid="offer-line" className="border-t border-line pt-4 first:border-t-0 first:pt-0">
                 <p className="text-sm font-medium text-ink">
-                  {m?.name ?? line.description} · {line.quantity.toLocaleString("en-US")} {UNIT_LABELS[line.unit]}
+                  {m?.name ?? line.description} · {formatQuantity(line.quantity, line.unit)}
                 </p>
                 <p className="mb-3 text-xs text-ink-muted">
                   {line.spec} · 90-day benchmark {m ? formatSar(m.benchmarkUnitPrice) : "n/a"} per unit (sample data)

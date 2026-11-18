@@ -8,7 +8,7 @@ import { formatSar, murabaha } from "@/domain/money";
 import type { Halalas, OrgId, ShortlistReason } from "@/domain/types";
 import { describeTerms } from "@/lib/procurement/comparison";
 import { OfferComparison } from "./offer-comparison";
-import { UNIT_LABELS } from "@/lib/procurement/labels";
+import { formatQuantity } from "@/lib/procurement/labels";
 import { availableCredit } from "@/lib/procurement/po";
 import { buildShortlist, estimateRfqValue, priceIndexFromOffers, type ShortlistRow } from "@/lib/procurement/shortlist";
 import { Badge, CreditCapMeter, EmptyState, PageHeader, Panel, buttonClass } from "@/components/ui";
@@ -29,7 +29,7 @@ function Reason({ r }: { r: ShortlistReason }) {
       </span>
       <span className="sr-only">{positive ? "Why:" : "Why not:"}</span>
       <span className="flex-1">{r.text}</span>
-      <span className="tabular-nums text-ink-muted">+{r.points}</span>
+      <span className="shrink-0 pl-2 tabular-nums text-ink-muted">+{r.points}</span>
     </li>
   );
 }
@@ -41,8 +41,9 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
   const whyNot = row.reasons.filter((r) => r.polarity === "negative");
   return (
     <li data-testid={row.shortlisted ? "shortlist-row" : "shortlist-excluded"} data-supplier={row.supplierId} className="border-t border-line py-3 first:border-t-0">
-      <div className="flex flex-wrap items-start gap-3">
-        {onToggle && (
+      {/* Name and score on the first row; reasons span the card below, points at its right edge. */}
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3">
+        {onToggle ? (
           <input
             type="checkbox"
             data-testid="shortlist-select"
@@ -52,8 +53,10 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
             disabled={locked}
             onChange={onToggle}
           />
+        ) : (
+          <span aria-hidden />
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-ink">
             {row.supplierName}
             {row.newSupplierSlot && (
@@ -63,16 +66,22 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
             )}
             {row.recommended && <span className="inline-flex h-6 items-center rounded-sm bg-positive-soft px-2 text-xs font-medium text-positive">Recommended</span>}
           </p>
-          <p className="text-sm text-ink-muted">
+          <p className="mt-0.5 text-sm text-ink-muted">
             {supplier?.city} · {supplier?.localContent ? "Made in Saudi / local" : "Importer"} · {row.fitsCreditCap === true ? "Fits your credit cap" : row.fitsCreditCap === false ? "Above your available credit cap" : supplier?.acceptsPlatformCredit ? "Accepts platform credit" : "No platform credit"}
           </p>
-          <ul className="mt-2 space-y-0.5 text-sm" data-testid="shortlist-why">
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-semibold tabular-nums text-ink" data-testid="shortlist-score">{Math.round(row.matchScore)}</p>
+          <p className="whitespace-nowrap text-xs text-ink-muted">match of 100</p>
+        </div>
+        <div className="col-span-2 col-start-2 min-w-0">
+          <ul className="mt-2 space-y-1 text-sm" data-testid="shortlist-why">
             {why.slice(0, open ? why.length : 2).map((r) => (
               <Reason key={r.code} r={r} />
             ))}
           </ul>
           {whyNot.length > 0 && (
-            <ul className="mt-1 space-y-0.5 text-sm" data-testid="shortlist-why-not">
+            <ul className="mt-1 space-y-1 text-sm" data-testid="shortlist-why-not">
               {whyNot.map((r) => (
                 <Reason key={r.code} r={r} />
               ))}
@@ -89,10 +98,6 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
               {open ? "Show less" : `Show all ${why.length} reasons`}
             </button>
           )}
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-semibold tabular-nums text-ink" data-testid="shortlist-score">{Math.round(row.matchScore)}</p>
-          <p className="whitespace-nowrap text-xs text-ink-muted">match of 100</p>
         </div>
       </div>
     </li>
@@ -190,7 +195,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             {rfq.lines.map((l) => (
               <li key={l.id} className="flex justify-between gap-3">
                 <span className="text-ink">{material(l.materialId)?.name ?? l.description}</span>
-                <span className="tabular-nums text-ink-muted">{l.quantity.toLocaleString("en-US")} {UNIT_LABELS[l.unit]}</span>
+                <span className="tabular-nums text-ink-muted">{formatQuantity(l.quantity, l.unit)}</span>
               </li>
             ))}
           </ul>
@@ -245,15 +250,22 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             ))}
           </ul>
         </details>
-      </Panel>
-
-      {isDraft ? (
-        <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface/95 p-4 shadow-float backdrop-blur">
+        {isDraft ? (
+          <div className="mt-4 border-t border-line pt-4">
           <label className="flex items-center gap-2 text-sm text-ink">
             <input type="checkbox" className="size-4" data-testid="rfq-blind-toggle" checked={isBlind} onChange={(e) => setBlind(e.target.checked)} />
             Blind comparison: hide supplier names on offers until I choose
           </label>
-          <button type="button" data-testid="shortlist-send" disabled={selected.size === 0} onClick={send} className={buttonClass("primary")}>
+          </div>
+        ) : null}
+      </Panel>
+
+      {isDraft ? (
+        <div className="sticky bottom-3 z-10 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface/95 p-3 shadow-float backdrop-blur sm:bottom-4 sm:p-4">
+          <p className="hidden text-sm text-ink-muted sm:block">
+            {selected.size} of {shown.length} shortlisted suppliers selected{isBlind ? " · blind comparison on" : ""}
+          </p>
+          <button type="button" data-testid="shortlist-send" disabled={selected.size === 0} onClick={send} className={buttonClass("primary", "md", "w-full sm:w-auto")}>
             Send RFQ to {selected.size} {selected.size === 1 ? "supplier" : "suppliers"}
           </button>
         </div>
