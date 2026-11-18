@@ -152,8 +152,8 @@ export function assessSupplier(supplier: Supplier, rfq: Rfq, ctx: ShortlistConte
         1 - scale(index, 0.94, 1.1),
         W.price,
         delta === 0
-          ? "Usually quotes in line with the 90-day benchmark"
-          : `Usually quotes ${Math.abs(delta)}% ${delta < 0 ? "below" : "above"} the 90-day benchmark`,
+          ? "Usually prices in line with the 90-day benchmark"
+          : `Usually prices ${Math.abs(delta)}% ${delta < 0 ? "below" : "above"} the 90-day benchmark`,
         0.5,
       ),
     );

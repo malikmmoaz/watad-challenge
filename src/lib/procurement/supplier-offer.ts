@@ -36,7 +36,7 @@ const ok = (n: number) => Number.isFinite(n);
 export function validateOfferDraft(rfq: Rfq, draft: OfferDraft): OfferErrors {
   const e: OfferErrors = {};
   const quoted = draft.lines.filter((l) => ok(l.unitPriceSar) && l.unitPriceSar > 0);
-  if (quoted.length === 0) e.lines = "Quote a unit price for at least one line.";
+  if (quoted.length === 0) e.lines = "Enter a unit price for at least one line.";
   for (const l of draft.lines) {
     const line = rfq.lines.find((x) => x.id === l.rfqLineId);
     if (!line) {
