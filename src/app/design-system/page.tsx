@@ -34,6 +34,7 @@ import {
 } from "@/components/ui";
 import { formatSar, sar } from "@/domain/money";
 import { OfferComparisonDemo } from "./offer-comparison-demo";
+import { RtlSpecimen } from "./rtl-specimen";
 
 export const metadata: Metadata = { title: "Design system" };
 
@@ -85,6 +86,7 @@ const sections = [
   ["status", "Badges and labels"],
   ["tables", "Tables"],
   ["comparison", "Offer comparison"],
+  ["rtl", "Arabic, right to left"],
   ["evidence", "Evidence and decisions"],
   ["credit", "Score and credit cap"],
   ["timeline", "Status timeline"],
@@ -244,6 +246,10 @@ export default function DesignSystemPage() {
 
       <Section id="comparison" title="Offer comparison" lead="OfferComparisonTable, on seeded offers. Every offer shows the same fields in the same order; the score opens into the factors behind it. The ranking informs, the contractor chooses.">
         <OfferComparisonDemo />
+      </Section>
+
+      <Section id="rtl" title="Arabic, right to left" lead="The same components with dir=rtl and lang=ar: logical properties, mirrored arrows, bars and meters filling from the right, a larger Arabic scale with no letter-spacing, and Naskh where English uses the italic serif.">
+        <RtlSpecimen />
       </Section>
 
       <Section id="evidence" title="Evidence and decisions" lead="The seal marks a value a document backs, and opens that document. A stamp records a decision a named person made. AI proposals never get a stamp.">

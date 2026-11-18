@@ -29,7 +29,7 @@ export function StatusTimeline({ steps, label }: { steps: TimelineStep[]; label:
         const last = i === steps.length - 1;
         return (
           <li key={s.label} aria-current={s.state === "current" ? "step" : undefined} className="relative flex gap-3 pb-5 last:pb-0">
-            {last ? null : <span aria-hidden="true" className={cx("absolute left-[9px] top-5 h-full w-px", s.state === "done" ? "bg-positive" : "bg-line-strong")} />}
+            {last ? null : <span aria-hidden="true" className={cx("absolute start-[9px] top-5 h-full w-px", s.state === "done" ? "bg-positive" : "bg-line-strong")} />}
             <span className={cx("relative mt-0.5 flex size-[19px] shrink-0 items-center justify-center rounded-full border-[1.5px]", dot[s.state])}>
               {s.state === "done" ? <Icon name="check" size={11} strokeWidth={2.25} /> : null}
               {s.state === "problem" ? <Icon name="x" size={11} strokeWidth={2.25} /> : null}
@@ -71,8 +71,8 @@ export function LeadTimeBar({ days, maxDays, requiredInDays }: { days: number; m
         {requiredInDays === undefined ? null : <span className={cx("text-xs", late ? "text-negative" : "text-ink-muted")}>{late ? `${days - requiredInDays} late` : "in time"}</span>}
       </div>
       <div className="relative mt-1.5 h-1.5 rounded-full bg-neutral-soft" aria-hidden="true">
-        <span className={cx("absolute inset-y-0 left-0 rounded-full", late ? "bg-negative" : "bg-ink-muted")} style={{ width: pct(days) }} />
-        {requiredInDays === undefined ? null : <span className="absolute -inset-y-1 w-px bg-ink" style={{ left: pct(requiredInDays) }} />}
+        <span className={cx("absolute inset-y-0 start-0 rounded-full", late ? "bg-negative" : "bg-ink-muted")} style={{ width: pct(days) }} />
+        {requiredInDays === undefined ? null : <span className="absolute -inset-y-1 w-px bg-ink" style={{ insetInlineStart: pct(requiredInDays) }} />}
       </div>
     </div>
   );
