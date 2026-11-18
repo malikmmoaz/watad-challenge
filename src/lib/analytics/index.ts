@@ -47,3 +47,13 @@ export function setRole(role: Role): void {
   if (!started) return;
   posthog.register({ role });
 }
+
+/**
+ * Report an error caught by an error boundary. Sent to PostHog error tracking;
+ * Better Stack joins here when #4 lands. Only the error itself and where it
+ * was caught are sent, never page content.
+ */
+export function captureError(error: unknown, boundary: "route" | "global", digest?: string): void {
+  if (!started) return;
+  posthog.captureException(error, { boundary, ...(digest ? { digest } : {}) });
+}
