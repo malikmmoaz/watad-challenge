@@ -44,14 +44,14 @@ export function ReviewerGuide({ role }: { role: Role }) {
             <h2 id="reviewer-guide-h" className="text-base font-semibold tracking-[-0.01em] text-on-pine">
               {panel.title}
             </h2>
-            <p className="mt-0.5 text-sm text-on-pine-muted">{panel.intro}</p>
+            <p className="mt-0.5 hidden text-sm text-on-pine-muted sm:block">{panel.intro}</p>
           </div>
           <HideGuideButton />
         </div>
 
-        <ol className="mt-4 grid gap-3 md:grid-cols-3">
+        <ol aria-label="Three steps" className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
           {panel.steps.map((step, i) => (
-            <li key={step.title} className="flex flex-col gap-2 rounded-xl border border-on-pine/10 bg-pine/60 p-4">
+            <li key={step.title} className="flex w-[82%] shrink-0 snap-start flex-col gap-2 rounded-xl border border-on-pine/10 bg-pine/60 p-4 md:w-auto">
               <p className="flex items-center gap-2.5 text-sm font-semibold text-on-pine">
                 <span aria-hidden="true" className="grid size-6 shrink-0 place-items-center rounded-full bg-glow text-xs font-bold text-pine-deep">
                   {i + 1}
@@ -70,7 +70,7 @@ export function ReviewerGuide({ role }: { role: Role }) {
         </ol>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs text-on-pine-muted">
-          <p className="max-w-3xl">{withLabels(tour.footer)}</p>
+          <p className="hidden max-w-3xl md:block">{withLabels(tour.footer)}</p>
           <Link href={panel.next.href} className="inline-flex items-center gap-1.5 text-sm font-medium text-on-pine underline decoration-on-pine/40 underline-offset-[3px] hover:decoration-on-pine focus-visible:outline-on-pine">
             {panel.next.label}
             <Icon name="arrow-right" size={14} />
