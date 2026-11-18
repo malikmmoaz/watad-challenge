@@ -43,6 +43,18 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
 - Browser-verified on rfq_1042: compare, blind, breakdown, choose, pay with credit, confirmation,
   timeline to paid, RFQ awarded. No console errors on any contractor page (fixed a thead hydration bug).
 
+## #10 supplier portal (branch `feat/10-supplier-portal`, stacked on `feat/11-offers-po`)
+- `src/lib/procurement/supplier-offer.ts` (pure, 12 tests): offer validation, submit/revise/withdraw,
+  who acts on each PO step (`PO_ACTIONS`, `poActionFor`, `actOnPurchaseOrder`; credit POs auto-paid on invoice).
+- `/supplier/rfq/[id]` (`supplier-rfq.tsx`): request, why matched, offer (bid) form, submitted offer,
+  won/not-selected state. Only invited suppliers can open it.
+- `/supplier/po/[id]` reuses `PoDetail` with `viewer="supplier"`; each role sees its own action
+  (`po-action`) and a quiet demo shortcut for the other party's step (`po-advance`).
+- Seed: `rfq_1044` open and sent to Rawasi (the demo supplier) so the supplier portal has work.
+- Inbox list is Layla's #30 (`inbox-row`); its titles need to link to `/supplier/rfq/[id]`.
+- Browser-verified: supplier offers on rfq_1044 -> contractor chooses, pays with credit -> supplier
+  accepts, dispatches -> contractor confirms delivery -> supplier invoices -> paid. No console errors.
+
 ## Next
 - #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
   #10 supplier inbox and offer form.
@@ -53,4 +65,7 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
   `po-pay-bank`, `po-murabaha`, `po-place`, `po-confirmation`, `po-number`, `po-status` (data-status),
   `po-timeline-link`, `po-row`, `po-advance`, `po-total`, `rfq-status`, `credit-cap-available`, `rfq-choose-suppliers`, `rfq-new`, `rfq-tab-upload|catalog`, `rfq-upload`, `rfq-upload-sample`, `rfq-catalog-add`,
   `rfq-line`, `rfq-line-qty`, `rfq-site`, `rfq-city`, `rfq-required-by`, `rfq-required-in-7|14|30`,
-  `rfq-wants-credit`, `rfq-confirm`, `rfq-confirmed`, `rfq-id`, `rfq-row`. Still to come: `inbox-row`, `offer-submit`.
+  `rfq-wants-credit`, `rfq-confirm`, `rfq-confirmed`, `rfq-id`, `rfq-row`.
+  Supplier: `offer-form`, `offer-line`, `offer-line-price`, `offer-delivery`, `offer-lead-time`,
+  `offer-terms`, `offer-summary`, `offer-submit`, `offer-submitted` (data-status), `offer-revise`,
+  `offer-withdraw`, `supplier-po-link`, `po-action`.
