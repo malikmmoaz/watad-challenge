@@ -11,6 +11,7 @@ import { runChecks } from "@/domain/credit/workflow";
 import { update, useDemo } from "@/store";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
+import { UtilisationPanel } from "./utilisation-panel";
 import { CaseStatus, shortDate } from "./shared";
 
 const GATE: Record<GateResult, Tone> = { pass: "positive", flag: "caution", fail: "negative", pending: "neutral" };
@@ -239,6 +240,8 @@ export function CaseFile({ id }: { id: string }) {
 
           {/* Remount when checks finish so the form starts from the fresh AI proposal. */}
           <DecisionPanel key={`${c.status}-${c.aiProposal ? "ai" : "none"}`} c={c} />
+
+          {c.status === "approved" && <UtilisationPanel caseId={c.id} />}
 
           <Panel title="Decision log">
             <ol className="space-y-2 text-sm" data-testid="credit-decision-log">
