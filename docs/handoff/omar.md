@@ -64,6 +64,13 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
   `seed-scenarios.test.ts` guards it and rfq_1044.
 - Files released to Layla for restyling: rfq-builder, rfq-shortlist, supplier-rfq, po-detail.
 
+## State at 17:00 UTC
+- Merged: #20, #22, #28, #33, #36, #39, #44, #51, #57, #58 (Noor), #59, #65. #65 (supplier PO list, #62) merged too.
+- Design decisions for ranking, comparison, basket split and credit fit: `docs/adr/0002-procurement-ranking.md`.
+- Seed scenarios the demo relies on are guarded by `src/lib/procurement/seed-scenarios.test.ts`.
+- Rule I follow after two misses: check the merged diff on main and the live site before reporting a fix done.
+- Polish pass waits for Layla's design checklist (~18:00 UTC).
+
 ## Next
 - #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
   #10 supplier inbox and offer form.
