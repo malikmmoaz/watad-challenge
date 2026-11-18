@@ -117,7 +117,6 @@ export function decide(c: CreditCase, d: DecisionInput, now: string, current?: C
       contractorId: c.contractorId,
       cap: approvedCap,
       drawn: (current?.drawn ?? 0) as Halalas,
-      available: Math.max(0, approvedCap - (current?.drawn ?? 0)) as Halalas,
       band,
       maxTenorDays: c.requestedTenorDays,
       // Flat Murabaha profit rate for the full tenor, matching CreditFacility.profitRate.

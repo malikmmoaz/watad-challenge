@@ -251,7 +251,6 @@ export const creditFacilities: CreditFacility[] = [
     contractorId: org("con_najd"),
     cap: sar(1_500_000),
     drawn: sar(najdDrawn / 100),
-    available: sar(1_500_000 - najdDrawn / 100),
     band: "B",
     maxTenorDays: 60,
     profitRate: 0.03,

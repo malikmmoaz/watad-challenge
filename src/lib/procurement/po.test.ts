@@ -10,7 +10,6 @@ const facility: CreditFacility = {
   contractorId: rfq.contractorId,
   cap: sar(500_000),
   drawn: sar(100_000),
-  available: sar(400_000),
   band: "B",
   maxTenorDays: 60,
   profitRate: 0.03,
@@ -81,11 +80,11 @@ describe("placePurchaseOrders", () => {
       dueDate: "2027-02-03", // 5 days lead time + 60 days
     });
     expect(r.pos[0]!.creditDraw!.apr).toBeCloseTo(0.1825, 4);
-    expect(r.state.creditFacilities[0]).toMatchObject({ drawn: sar(152_900), available: sar(347_100) });
+    expect(r.state.creditFacilities[0]).toMatchObject({ drawn: sar(152_900) });
   });
 
   it("refuses credit above the available cap and leaves state untouched", () => {
-    const s = state({ creditFacilities: [{ ...facility, drawn: sar(490_000), available: sar(10_000) }] });
+    const s = state({ creditFacilities: [{ ...facility, drawn: sar(490_000) }] });
     expect(place(s, [{ offerId: "a" }], "platform_credit")).toEqual({ ok: false, error: "This order is SAR 42,900.00 above what is left of your credit cap (SAR 10,000.00 of SAR 500,000.00)." });
   });
 
@@ -157,8 +156,8 @@ describe("creditFit", () => {
 });
 
 describe("never overdraws the credit cap (#55)", () => {
-  // The stored `available` says plenty is left, but drawn has grown: only cap - drawn counts.
-  const stale: CreditFacility = { ...facility, cap: sar(1_500_000), drawn: sar(1_450_000), available: sar(1_316_046) };
+  // Only cap - drawn counts; there is no stored available to go stale.
+  const stale: CreditFacility = { ...facility, cap: sar(1_500_000), drawn: sar(1_450_000) };
 
   it("derives available from cap minus drawn", () => {
     expect(availableCredit(stale)).toBe(sar(50_000));
@@ -177,15 +176,9 @@ describe("never overdraws the credit cap (#55)", () => {
     expect(r.state.creditFacilities[0]).toBe(stale);
   });
 
-  it("keeps the stored available in step after a draw", () => {
-    const r = place(state(), [{ offerId: "a" }], "platform_credit");
-    if (!r.ok) throw new Error(r.error);
-    const f = r.state.creditFacilities[0]!;
-    expect(f.available).toBe(availableCredit(f));
-  });
 
   it("allows an order that uses the cap exactly", () => {
-    const exact = { ...facility, cap: sar(152_900), drawn: sar(100_000), available: sar(0) };
+    const exact = { ...facility, cap: sar(152_900), drawn: sar(100_000) };
     expect(place(state({ creditFacilities: [exact] }), [{ offerId: "a" }], "platform_credit")).toMatchObject({ ok: true });
   });
 });

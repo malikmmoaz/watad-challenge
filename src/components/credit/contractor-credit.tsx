@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { reference, demoPersona } from "@/data";
+import { availableCredit } from "@/domain/credit/facility";
 import { formatSar, murabaha } from "@/domain/money";
 import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
@@ -87,7 +88,7 @@ export function ContractorCredit() {
                   <Facts
                     columns={3}
                     items={[
-                      { label: "Available", value: formatSar(facility.available) },
+                      { label: "Available", value: formatSar(availableCredit(facility)) },
                       {
                         label: `Murabaha markup, ${facility.maxTenorDays} days`,
                         value: `${(facility.profitRate * 100).toFixed(2)}% (APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%)`,

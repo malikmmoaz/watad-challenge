@@ -9,7 +9,6 @@
  */
 import { VAT_RATE, formatSar, halalas } from "@/domain/money";
 import type {
-  CreditFacility,
   Halalas,
   Material,
   MaterialCategory,
@@ -40,8 +39,8 @@ export const NEW_SUPPLIER_MAX_ORDERS = 5;
 export interface ShortlistContext {
   /** Catalog, to resolve each RFQ line's category and benchmark price. */
   materials: Material[];
-  /** Contractor's approved facility; null when no credit cap is approved. */
-  facility: Pick<CreditFacility, "available"> | null;
+  /** What is left of the contractor's credit cap (cap minus drawn); null when no cap is approved. */
+  facility: { available: Halalas } | null;
   /**
    * Typical quoted price per supplier relative to the 90-day benchmark
    * (1 = at benchmark, 1.05 = 5% above). Suppliers without history are omitted.

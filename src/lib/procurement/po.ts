@@ -4,6 +4,7 @@
  * PO along its status timeline. Every function returns new state.
  */
 import type { DemoState } from "@/data";
+import { availableCredit } from "@/domain/credit/facility";
 import { add, formatSar, halalas, murabaha, vatOn } from "@/domain/money";
 import type { CreditFacility, Halalas, Offer, OfferId, PaymentMethod, PoId, PoStatus, PurchaseOrder, Rfq, Supplier } from "@/domain/types";
 
@@ -45,12 +46,8 @@ export function quoteOrder(rfq: Rfq, offer: Offer, rfqLineIds?: string[]): PoQuo
   return { offer, rfqLineIds: lines.map((l) => l.rfqLineId), subtotal, deliveryFee: offer.deliveryFee, vat, totalInclVat: add(subtotal, offer.deliveryFee, vat) };
 }
 
-/**
- * What is left of the credit cap: always cap minus drawn. The stored
- * `available` field is a cache that can go stale, so procurement never
- * reads it; every check and every screen goes through this one function.
- */
-export const availableCredit = (facility: Pick<CreditFacility, "cap" | "drawn">): Halalas => halalas(Math.max(0, facility.cap - facility.drawn));
+/** What is left of the credit cap (cap minus drawn); lives with the credit domain. */
+export { availableCredit };
 
 export type CreditEligibility = { ok: true; tenorDays: CreditFacility["maxTenorDays"] } | { ok: false; reason: string };
 
@@ -160,7 +157,7 @@ export function placePurchaseOrders(state: DemoState, args: PlaceArgs): PlaceRes
       purchaseOrders: [...pos, ...state.purchaseOrders],
       creditFacilities:
         args.method === "platform_credit" && facility
-          ? state.creditFacilities.map((f) => (f === facility ? { ...f, drawn: add(f.drawn, total), available: availableCredit({ cap: f.cap, drawn: add(f.drawn, total) }) } : f))
+          ? state.creditFacilities.map((f) => (f === facility ? { ...f, drawn: add(f.drawn, total) } : f))
           : state.creditFacilities,
     },
   };

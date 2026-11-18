@@ -45,7 +45,7 @@ describe("seed data integrity", () => {
   });
   it("facilities: available = cap - drawn, within cap", () => {
     for (const fac of seedState.creditFacilities) {
-      expect(fac.available).toBe(fac.cap - fac.drawn);
+      expect(fac.drawn).toBeLessThanOrEqual(fac.cap);
       expect(fac.drawn).toBeLessThanOrEqual(fac.cap);
     }
   });

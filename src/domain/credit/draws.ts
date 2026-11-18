@@ -7,6 +7,7 @@
  * payment is late; repaying early repays the same total.
  */
 import type { CreditFacility, Halalas, IsoDate, PoId, PurchaseOrder } from "../types";
+import { availableCredit } from "./facility";
 
 export type DrawState = "awaiting_supplier_payment" | "outstanding" | "overdue" | "repaid";
 
@@ -82,7 +83,7 @@ export function repayDraw(pos: PurchaseOrder[], facilities: CreditFacility[], po
     ok: true,
     repaid: d.totalRepayable,
     purchaseOrders: pos.map((p) => (p.id === po.id ? { ...p, creditDraw: { ...d, repaidAt: now } } : p)),
-    creditFacilities: facilities.map((f) => (f === facility ? { ...f, drawn, available: Math.max(0, f.cap - drawn) as Halalas } : f)),
+    creditFacilities: facilities.map((f) => (f === facility ? { ...f, drawn } : f)),
   };
 }
 
@@ -110,7 +111,7 @@ export function utilisation(facility: CreditFacility, pos: PurchaseOrder[], asOf
   return {
     cap: facility.cap,
     drawn: facility.drawn,
-    available: facility.available,
+    available: availableCredit(facility),
     utilisation: facility.cap > 0 ? facility.drawn / facility.cap : 0,
     openDraws: open.length,
     overdueDraws: overdue.length,

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Available credit is always cap minus drawn everywhere it is shown or checked; the stored field that could go stale is gone (#55).
 - Fixed: a purchase order can no longer be paid with credit above what is left of the cap (cap minus drawn); the PO draft explains why and offers bank transfer, a basket split or a higher cap (#55).
 - Contractor: each offer shows whether it fits the credit cap ("Fits your credit cap" / "Over your credit cap by SAR x", from cap minus drawn); sample RFQ rfq_1045 shows a basket split saving SAR 7,705 (#14).
 - Credit drawn on purchase orders: contractor ledger of draws (order total, Murabaha markup with APR, due date, status) with repayment that releases the cap; credit manager sees utilisation, open and overdue draws and the next repayment on approved cases.
