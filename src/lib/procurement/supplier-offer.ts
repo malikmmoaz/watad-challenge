@@ -43,7 +43,8 @@ export function validateOfferDraft(rfq: Rfq, draft: OfferDraft): OfferErrors {
       e[`line:${l.rfqLineId}:price`] = "This line is not in the request.";
       continue;
     }
-    if (!ok(l.unitPriceSar) || l.unitPriceSar < 0) e[`line:${l.rfqLineId}:price`] = "Enter a price of 0 or more.";
+    // An empty price (NaN from the number input) means "not quoting this line", as the form says.
+    if (l.unitPriceSar < 0 || l.unitPriceSar === Infinity) e[`line:${l.rfqLineId}:price`] = "Enter a price of 0 or more.";
     if (l.unitPriceSar > 0) {
       if (!ok(l.quantityAvailable) || l.quantityAvailable <= 0) e[`line:${l.rfqLineId}:qty`] = "Enter the quantity you can supply.";
       else if (l.quantityAvailable > line.quantity) e[`line:${l.rfqLineId}:qty`] = `At most the ${line.quantity} requested.`;

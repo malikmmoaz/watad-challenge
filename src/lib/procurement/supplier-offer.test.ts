@@ -30,6 +30,21 @@ describe("validateOfferDraft", () => {
     expect(validateOfferDraft(open, draft())).toEqual({});
   });
 
+  it("treats an empty price field (NaN) as skipping the line", () => {
+    const d = draft();
+    d.lines[1]!.unitPriceSar = NaN;
+    expect(validateOfferDraft(open, d)).toEqual({});
+    const r = submitOffer(state(), open.id, me, d, now);
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    expect(r.offer.lines.map((l) => l.rfqLineId)).toEqual(["rebar"]);
+  });
+
+  it("still rejects a negative price", () => {
+    const d = draft();
+    d.lines[1]!.unitPriceSar = -1;
+    expect(validateOfferDraft(open, d)["line:cement:price"]).toBe("Enter a price of 0 or more.");
+  });
+
   it("allows leaving a line out by not pricing it", () => {
     const d = draft();
     d.lines[1]!.unitPriceSar = 0;
