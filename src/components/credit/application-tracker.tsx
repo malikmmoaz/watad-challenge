@@ -1,111 +1,118 @@
 "use client";
 
 import { useState } from "react";
-import { STATUS_LABEL, provideMoreInfo, trackerSteps, type StepState } from "@/domain/credit-application";
+import { STATUS_LABEL, provideMoreInfo, trackerSteps } from "@/domain/credit-application";
 import { formatSar, murabaha } from "@/domain/money";
-import type { CreditCase, CreditFacility } from "@/domain/types";
+import type { CreditCase, CreditDecisionOutcome, CreditFacility, GateResult } from "@/domain/types";
 import { update } from "@/store";
+import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 
-const DOT: Record<StepState, string> = {
-  done: "bg-emerald-600 border-emerald-600",
-  current: "bg-white border-neutral-900 ring-4 ring-neutral-200",
-  upcoming: "bg-white border-neutral-300",
-  skipped: "bg-neutral-200 border-neutral-200",
+const STATUS_TONE: Record<CreditCase["status"], Tone> = {
+  draft: "neutral",
+  submitted: "info",
+  documents_review: "info",
+  in_assessment: "info",
+  more_info_requested: "caution",
+  approved: "positive",
+  declined: "negative",
 };
 
-const STATUS_TONE: Record<CreditCase["status"], string> = {
-  draft: "bg-neutral-100 text-neutral-700",
-  submitted: "bg-sky-50 text-sky-800",
-  documents_review: "bg-sky-50 text-sky-800",
-  in_assessment: "bg-sky-50 text-sky-800",
-  more_info_requested: "bg-amber-50 text-amber-900",
-  approved: "bg-emerald-50 text-emerald-800",
-  declined: "bg-red-50 text-red-800",
+const GATE: Record<GateResult, { text: string; tone: Tone }> = {
+  pass: { text: "Checked", tone: "positive" },
+  flag: { text: "Checked, noted for review", tone: "caution" },
+  fail: { text: "Needs attention", tone: "negative" },
+  pending: { text: "Queued", tone: "neutral" },
 };
 
-const GATE_TEXT = { pass: "Checked", flag: "Checked, noted for review", fail: "Needs attention", pending: "Queued" } as const;
+const STAMP: Record<CreditDecisionOutcome, "approved" | "referred" | "declined"> = {
+  approve: "approved",
+  request_info: "referred",
+  decline: "declined",
+};
 
 const date = (iso?: string) => (iso ? iso.slice(0, 10) : "");
 
+export function StatusBadge({ status }: { status: CreditCase["status"] }) {
+  return (
+    <span data-testid="credit-tracker-status" data-status={status}>
+      <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+    </span>
+  );
+}
+
 /** Contractor view of one application: progress, checks, outcome and reasons. */
 export function ApplicationTracker({ c, facility, readOnly = false }: { c: CreditCase; facility?: CreditFacility; readOnly?: boolean }) {
-  const steps = trackerSteps(c);
+  const steps: TimelineStep[] = trackerSteps(c).map((s) => ({
+    label: s.label,
+    state: s.state === "skipped" ? "upcoming" : s.key === "more_info" && s.state === "current" ? "problem" : s.state,
+    note: s.state === "skipped" ? "Not needed" : s.state === "current" ? s.description : undefined,
+  }));
   return (
-    <article className="space-y-5 rounded-lg border border-neutral-200 bg-white p-5" data-testid={`credit-case-${c.id}`}>
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">
-            Application {c.id.replace("cc_", "#")} · {formatSar(c.requestedCap)} for {c.requestedTenorDays} days
-          </h2>
-          <p className="text-sm text-neutral-600">
+    <div data-testid={`credit-case-${c.id}`}>
+      <Panel
+        title={`Application ${c.id.replace("cc_", "#")} · ${formatSar(c.requestedCap)} for ${c.requestedTenorDays} days`}
+        aside={<StatusBadge status={c.status} />}
+      >
+        <div className="space-y-6">
+          <p className="text-sm text-ink-muted">
             {c.purpose} · submitted {date(c.submittedAt)}
           </p>
-        </div>
-        <span data-testid="credit-tracker-status" data-status={c.status} className={`rounded px-2.5 py-1 text-sm font-medium ${STATUS_TONE[c.status]}`}>
-          {STATUS_LABEL[c.status]}
-        </span>
-      </header>
-
-      <ol className="grid gap-3 sm:grid-cols-5" aria-label="Application progress">
-        {steps.map((s) => (
-          <li key={s.key} className={`flex gap-2 sm:flex-col ${s.state === "skipped" ? "opacity-50" : ""}`} aria-current={s.state === "current" ? "step" : undefined}>
-            <span className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 ${DOT[s.state]}`} aria-hidden />
-            <div>
-              <p className={`text-sm font-medium ${s.state === "upcoming" ? "text-neutral-500" : ""}`}>
-                {s.label}
-                {s.state === "skipped" && <span className="font-normal text-neutral-500"> · not needed</span>}
-              </p>
-              <p className="text-xs text-neutral-600">{s.description}</p>
+          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+            <StatusTimeline label="Application progress" steps={steps} />
+            <div className="space-y-5">
+              <section aria-label="Checks" className="space-y-2">
+                <h3 className="text-sm font-medium text-ink">Checks, cheapest first; SIMAH last</h3>
+                <ul className="space-y-1.5">
+                  {[...c.gates]
+                    .sort((a, b) => a.order - b.order)
+                    .map((g) => (
+                      <li key={g.id} className="flex items-center justify-between gap-3 text-sm">
+                        <span>
+                          {g.order}. {g.label}
+                        </span>
+                        <Badge tone={GATE[g.result].tone}>{GATE[g.result].text}</Badge>
+                      </li>
+                    ))}
+                </ul>
+              </section>
+              <Outcome c={c} facility={facility} readOnly={readOnly} />
             </div>
-          </li>
-        ))}
-      </ol>
-
-      <section aria-label="Checks" className="text-sm">
-        <h3 className="mb-2 font-medium">Checks, cheapest first</h3>
-        <ul className="flex flex-wrap gap-2">
-          {[...c.gates]
-            .sort((a, b) => a.order - b.order)
-            .map((g) => (
-              <li key={g.id} className="rounded border border-neutral-200 px-2 py-1">
-                {g.order}. {g.label}: <span className={g.result === "fail" ? "text-red-700" : "text-neutral-700"}>{GATE_TEXT[g.result]}</span>
-              </li>
-            ))}
-        </ul>
-      </section>
-
-      <Outcome c={c} facility={facility} readOnly={readOnly} />
-
-      <details className="text-sm">
-        <summary className="cursor-pointer font-medium">Activity ({c.log.length})</summary>
-        <ul className="mt-2 space-y-1">
-          {c.log.map((l, i) => (
-            <li key={i} className="text-neutral-700">
-              <span className="tabular-nums text-neutral-500">{l.at.replace("T", " ").slice(0, 16)}</span> · {l.action}
-              {l.detail ? ` · ${l.detail}` : ""}
-            </li>
-          ))}
-        </ul>
-      </details>
-    </article>
+          </div>
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-ink">Activity ({c.log.length})</summary>
+            <ul className="mt-2 space-y-1 text-ink-muted">
+              {c.log.map((l, i) => (
+                <li key={i}>
+                  <span className="font-mono text-xs">{l.at.replace("T", " ").slice(0, 16)}</span> · {l.action}
+                  {l.detail ? ` · ${l.detail}` : ""}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      </Panel>
+    </div>
   );
 }
 
 function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFacility; readOnly: boolean }) {
   const d = c.decision;
-  if (c.status === "more_info_requested") return readOnly ? <p className="text-sm text-amber-900">Waiting for the contractor to provide more information.</p> : <MoreInfoForm c={c} />;
+  if (c.status === "more_info_requested") {
+    return readOnly ? <Alert tone="caution" title="Waiting for the contractor to provide more information" /> : <MoreInfoForm c={c} />;
+  }
   if (!d || (c.status !== "approved" && c.status !== "declined")) {
-    return <p className="text-sm text-neutral-600">No decision yet. An independent credit manager decides; the AI only prepares the file.</p>;
+    return <p className="text-sm text-ink-muted">No decision yet. An independent credit manager decides; the simulated AI only prepares the file.</p>;
   }
   const approved = d.outcome === "approve";
   return (
-    <section data-testid="credit-outcome" className={`space-y-2 rounded border p-4 text-sm ${approved ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
-      <h3 className="font-semibold">{approved ? `Approved: credit cap ${d.approvedCap ? formatSar(d.approvedCap) : ""}` : "Declined"}</h3>
-      <p>{d.reasonText}</p>
+    <section data-testid="credit-outcome" className="space-y-3">
+      <DecisionStamp decision={STAMP[d.outcome]} by={d.decidedBy} at={date(d.decidedAt)} />
+      {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
+      <p className="text-sm text-ink">{d.reasonText}</p>
       {d.conditions && d.conditions.length > 0 && (
-        <div>
-          <p className="font-medium">Conditions</p>
-          <ul className="list-disc pl-5">
+        <div className="text-sm">
+          <p className="font-medium text-ink">Conditions</p>
+          <ul className="list-disc pl-5 text-ink-muted">
             {d.conditions.map((x) => (
               <li key={x}>{x}</li>
             ))}
@@ -113,14 +120,11 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
         </div>
       )}
       {approved && facility && (
-        <p className="text-neutral-700">
-          Available now {formatSar(facility.available)} of {formatSar(facility.cap)} · up to {facility.maxTenorDays} days · Murabaha markup {(facility.profitRate * 100).toFixed(2)}% for the term (APR{" "}
+        <p className="text-sm text-ink-muted">
+          Up to {facility.maxTenorDays} days per purchase order · Murabaha markup {(facility.profitRate * 100).toFixed(2)}% for the term (APR{" "}
           {(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%) · suppliers are paid directly.
         </p>
       )}
-      <p className="text-xs text-neutral-600">
-        Decided by {d.decidedBy} on {date(d.decidedAt)}.
-      </p>
     </section>
   );
 }
@@ -132,37 +136,33 @@ function MoreInfoForm({ c }: { c: CreditCase }) {
   const items = c.decision?.requestedItems ?? [];
   const send = () => {
     try {
-      const now = new Date().toISOString();
-      const next = provideMoreInfo(c, files, note, now);
+      const next = provideMoreInfo(c, files, note, new Date().toISOString());
       update((s) => ({ ...s, creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)) }));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
   return (
-    <section className="space-y-3 rounded border border-amber-200 bg-amber-50 p-4 text-sm" data-testid="credit-more-info">
-      <h3 className="font-semibold">The credit manager needs more information</h3>
-      {c.decision?.reasonText && <p>{c.decision.reasonText}</p>}
-      {items.length > 0 && (
-        <ul className="list-disc pl-5">
-          {items.map((x) => (
-            <li key={x}>{x}</li>
-          ))}
-        </ul>
-      )}
-      <label className="block">
-        <span className="font-medium">Attach files</span>
-        <input type="file" multiple className="mt-1 block text-sm" onChange={(e) => setFiles(Array.from(e.target.files ?? []).map((f) => f.name))} />
+    <div data-testid="credit-more-info" className="space-y-3">
+      <Alert tone="caution" title="The credit manager needs more information">
+        {c.decision?.reasonText}
+        {items.length > 0 && (
+          <ul className="mt-1 list-disc pl-5">
+            {items.map((x) => (
+              <li key={x}>{x}</li>
+            ))}
+          </ul>
+        )}
+      </Alert>
+      <label className="block text-sm font-medium text-ink">
+        Attach files
+        <input type="file" multiple className="mt-1 block text-sm font-normal" onChange={(e) => setFiles(Array.from(e.target.files ?? []).map((f) => f.name))} />
       </label>
-      <label className="block">
-        <span className="font-medium">Note to the credit manager</span>
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="mt-1 w-full rounded border border-neutral-300 bg-white p-2" />
-      </label>
-      {error && <p className="text-red-700">{error}</p>}
-      <button type="button" onClick={send} data-testid="credit-more-info-send" className="rounded bg-neutral-900 px-3 py-1.5 text-white">
+      <Textarea label="Note to the credit manager" optional rows={2} value={note} onChange={(e) => setNote(e.target.value)} error={error ?? undefined} />
+      <Button variant="primary" onClick={send} data-testid="credit-more-info-send">
         Send to credit manager
-      </button>
-      <p className="text-xs text-neutral-600">Demo: files stay in your browser; only their names are recorded.</p>
-    </section>
+      </Button>
+      <p className="text-xs text-ink-muted">Demo: files stay in your browser; only their names are recorded.</p>
+    </div>
   );
 }

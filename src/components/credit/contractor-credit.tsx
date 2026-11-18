@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { reference, demoPersona } from "@/data";
 import { formatSar, murabaha } from "@/domain/money";
-import type { OrgId } from "@/domain/types";
+import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
+import { CreditCapMeter, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
 import { ApplicationTracker } from "./application-tracker";
+
+const fmt = (n: number) => formatSar(n as Halalas);
 
 /** Contractor credit home: facility summary, application trackers, and a way to apply. */
 export function ContractorCredit() {
@@ -23,27 +26,30 @@ export function ContractorCredit() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Credit</h1>
-          <p className="text-neutral-700">
-            Buy materials now and pay in 30 to 90 days. The platform pays the supplier directly; you repay the price plus a fixed Murabaha markup.
-          </p>
-        </div>
-        {isPersona && (
-          <Link href="/contractor/credit/apply" data-testid="credit-apply-start" className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
-            {facility ? "Apply for a higher cap" : "Apply for a credit cap"}
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title="Credit"
+        status={<SampleDataLabel />}
+        meta="Buy materials now and pay in 30 to 90 days. The platform pays the supplier directly; you repay the order total plus a fixed Murabaha markup."
+        actions={
+          isPersona ? (
+            <Link
+              href="/contractor/credit/apply"
+              data-testid="credit-apply-start"
+              className="inline-flex h-10 items-center rounded-md bg-action px-4 text-sm font-medium text-on-action hover:bg-action-hover"
+            >
+              {facility ? "Apply for a higher cap" : "Apply for a credit cap"}
+            </Link>
+          ) : undefined
+        }
+      />
 
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <span>Sample contractor</span>
-        <select
+      <div className="max-w-sm">
+        <Select
+          label="Sample contractor"
+          hint={isPersona ? "You are signed in as this contractor." : "Read-only preview of another sample contractor's applications."}
           value={contractorId}
           onChange={(e) => setContractorId(e.target.value as OrgId)}
           data-testid="credit-contractor-select"
-          className="rounded border border-neutral-300 bg-white px-2 py-1"
         >
           {reference.contractors.map((c) => (
             <option key={c.id} value={c.id}>
@@ -51,30 +57,33 @@ export function ContractorCredit() {
               {c.id === demoPersona.contractor ? " (you)" : ""}
             </option>
           ))}
-        </select>
-        {!isPersona && <span className="text-xs text-neutral-500">Read-only preview of another sample contractor&apos;s application.</span>}
-      </label>
+        </Select>
+      </div>
 
       {facility && (
-        <section className="grid gap-3 rounded-lg border border-neutral-200 bg-white p-5 sm:grid-cols-4" data-testid="credit-facility">
-          <Stat label="Credit cap" value={formatSar(facility.cap)} />
-          <Stat label="Available" value={formatSar(facility.available)} />
-          <Stat label="Drawn on open orders" value={formatSar(facility.drawn)} />
-          <Stat
-            label={`Murabaha markup, ${facility.maxTenorDays} days`}
-            value={`${(facility.profitRate * 100).toFixed(2)}% · APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%`}
-          />
-          <p className="text-xs text-neutral-600 sm:col-span-4">
-            Band {facility.band} · review due {facility.reviewDue}
-            {facility.conditions.length > 0 ? ` · ${facility.conditions.join("; ")}` : ""}
-          </p>
-        </section>
+        <div data-testid="credit-facility">
+          <Panel title="Your credit cap">
+            <div className="space-y-5">
+              <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={fmt} />
+              <Facts
+                columns={3}
+                items={[
+                  { label: "Available", value: formatSar(facility.available) },
+                  {
+                    label: `Murabaha markup, ${facility.maxTenorDays} days`,
+                    value: `${(facility.profitRate * 100).toFixed(2)}% (APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%)`,
+                  },
+                  { label: `Band ${facility.band} · review due`, value: facility.reviewDue },
+                ]}
+              />
+              {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">Conditions: {facility.conditions.join("; ")}</p>}
+            </div>
+          </Panel>
+        </div>
       )}
 
       {cases.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-6 text-neutral-700">
-          {contractor?.name} has no credit applications yet.
-        </p>
+        <EmptyState title="No credit applications yet">{contractor?.name} has not applied for a credit cap.</EmptyState>
       ) : (
         <div className="space-y-4">
           {cases.map((c) => (
@@ -84,15 +93,6 @@ export function ContractorCredit() {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-sm text-neutral-600">{label}</p>
-      <p className="text-lg font-semibold tabular-nums">{value}</p>
     </div>
   );
 }

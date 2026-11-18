@@ -16,6 +16,7 @@ import {
 import { formatSar, sar } from "@/domain/money";
 import type { Contractor, CreditDocumentType, PayerType } from "@/domain/types";
 import { getState, update } from "@/store";
+import { Badge, Button, Checkbox, Input, Panel, Table, Td, Th, THead, Tr } from "@/components/ui";
 
 const PAYER_LABEL: Record<PayerType, string> = {
   government: "Government",
@@ -76,12 +77,12 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
   const backlog = contractor.activeProjects.reduce((sum, p) => sum + p.contractValue * (1 - p.percentComplete / 100), 0);
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-8" data-testid="credit-apply-form">
-      <section className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-5 sm:grid-cols-2">
-        <h2 className="text-lg font-semibold sm:col-span-2">1. What you need</h2>
-        <label className="block text-sm">
-          <span className="font-medium">Requested credit cap (SAR)</span>
-          <input
+    <form onSubmit={submit} noValidate className="space-y-6" data-testid="credit-apply-form">
+      <Panel title="1. What you need">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Input
+            label="Requested credit cap"
+            suffix="SAR"
             type="number"
             inputMode="numeric"
             min={CAP_LIMITS.min / 100}
@@ -90,106 +91,99 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             value={Number.isNaN(d.requestedCapSar) ? "" : d.requestedCapSar}
             onChange={(e) => set({ requestedCapSar: e.target.valueAsNumber })}
             data-testid="credit-apply-cap"
-            className="mt-1 w-full rounded border border-neutral-300 p-2 tabular-nums"
-            aria-invalid={!!errors.requestedCap}
+            hint={`Covers order totals including 15% VAT, drawn per purchase order; each supplier is paid directly. ${formatSar(CAP_LIMITS.min)} to ${formatSar(CAP_LIMITS.max)}.`}
+            error={errors.requestedCap}
           />
-          <span className="mt-1 block text-xs text-neutral-600">
-            Drawn per purchase order; each supplier is paid directly. Between {formatSar(CAP_LIMITS.min)} and {formatSar(CAP_LIMITS.max)}.
-          </span>
-          {errors.requestedCap && <span className="text-xs text-red-700">{errors.requestedCap}</span>}
-        </label>
-        <fieldset className="text-sm">
-          <legend className="font-medium">Repayment term per purchase order</legend>
-          <div className="mt-1 flex gap-2">
-            {TENORS.map((t) => (
-              <label key={t} className={`cursor-pointer rounded border px-3 py-2 ${d.tenorDays === t ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"}`}>
-                <input type="radio" name="tenor" value={t} checked={d.tenorDays === t} onChange={() => set({ tenorDays: t as Tenor })} className="sr-only" />
-                {t} days
-              </label>
-            ))}
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className="text-sm font-medium text-ink">Repayment term per purchase order</legend>
+            <div className="mt-1.5 flex gap-2">
+              {TENORS.map((t) => (
+                <label
+                  key={t}
+                  className={`flex h-10 cursor-pointer items-center rounded-md border px-4 text-sm ${d.tenorDays === t ? "border-pine bg-pine text-on-pine" : "border-line-control bg-surface text-ink"}`}
+                >
+                  <input type="radio" name="tenor" value={t} checked={d.tenorDays === t} onChange={() => set({ tenorDays: t as Tenor })} className="sr-only" />
+                  {t} days
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-ink-muted">A fixed Murabaha markup is agreed per order and shown with its APR before you confirm.</p>
+          </fieldset>
+          <div className="sm:col-span-2">
+            <Input
+              label="What the materials are for"
+              value={d.purpose}
+              onChange={(e) => set({ purpose: e.target.value })}
+              placeholder="e.g. Rebar and ready-mix for Al Narjis Schools, phase 2"
+              data-testid="credit-apply-purpose"
+              error={errors.purpose}
+            />
           </div>
-          <span className="mt-1 block text-xs text-neutral-600">A fixed Murabaha markup is agreed per order; it is shown with its APR before you confirm.</span>
-        </fieldset>
-        <label className="block text-sm sm:col-span-2">
-          <span className="font-medium">What the materials are for</span>
-          <input
-            value={d.purpose}
-            onChange={(e) => set({ purpose: e.target.value })}
-            placeholder="e.g. Rebar and ready-mix for Al Narjis Schools, phase 2"
-            data-testid="credit-apply-purpose"
-            className="mt-1 w-full rounded border border-neutral-300 p-2"
-            aria-invalid={!!errors.purpose}
-          />
-          {errors.purpose && <span className="text-xs text-red-700">{errors.purpose}</span>}
-        </label>
-      </section>
+        </div>
+      </Panel>
 
-      <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
-        <h2 className="text-lg font-semibold">2. Company and contracts in hand</h2>
-        <p className="text-sm text-neutral-700">
-          {contractor.name} · CR {contractor.crNumber} · {contractor.city} · classification grade {contractor.classificationGrade} · {contractor.yearsOperating} years operating
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-neutral-600">
+      <Panel title="2. Company and contracts in hand">
+        <div className="space-y-4">
+          <p className="text-sm text-ink">
+            {contractor.name} · CR <span className="font-mono text-xs">{contractor.crNumber}</span> · {contractor.city} · classification grade {contractor.classificationGrade} ·{" "}
+            {contractor.yearsOperating} years operating
+          </p>
+          <Table caption="Contracts in hand" minWidth={560}>
+            <THead>
               <tr>
-                <th className="py-1 pr-4 font-medium">Project</th>
-                <th className="py-1 pr-4 font-medium">Payer</th>
-                <th className="py-1 pr-4 font-medium">Payer type</th>
-                <th className="py-1 pr-4 text-right font-medium">Contract value</th>
-                <th className="py-1 text-right font-medium">Complete</th>
+                <Th>Project</Th>
+                <Th>Payer</Th>
+                <Th>Payer type</Th>
+                <Th align="end">Contract value (excl. VAT)</Th>
+                <Th align="end">Complete</Th>
               </tr>
-            </thead>
+            </THead>
             <tbody>
               {contractor.activeProjects.map((p) => (
-                <tr key={p.id} className="border-t border-neutral-100">
-                  <td className="py-1.5 pr-4">{p.name}</td>
-                  <td className="py-1.5 pr-4">{p.payer.name}</td>
-                  <td className="py-1.5 pr-4">{PAYER_LABEL[p.payer.type]}</td>
-                  <td className="py-1.5 pr-4 text-right tabular-nums">{formatSar(p.contractValue)}</td>
-                  <td className="py-1.5 text-right tabular-nums">{p.percentComplete}%</td>
-                </tr>
+                <Tr key={p.id}>
+                  <Td>{p.name}</Td>
+                  <Td>{p.payer.name}</Td>
+                  <Td>{PAYER_LABEL[p.payer.type]}</Td>
+                  <Td align="end">{formatSar(p.contractValue)}</Td>
+                  <Td align="end">{p.percentComplete}%</Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
+          </Table>
+          <p className="text-xs text-ink-muted">
+            Remaining backlog about {formatSar(sar(backlog / 100))}. Who pays you matters: government and listed payers lower the risk. Retention terms are read from the contracts you upload.
+          </p>
         </div>
-        <p className="text-xs text-neutral-600">
-          Remaining backlog about {formatSar(sar(backlog / 100))}. Who pays you matters: government and listed payers lower the risk; retention terms are read from the contracts you upload.
-        </p>
-      </section>
+      </Panel>
 
-      <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">3. Documents, and why we ask</h2>
-          <button
-            type="button"
-            onClick={() => set({ files: { ...SAMPLE_FILES } })}
-            data-testid="credit-apply-sample-docs"
-            className="rounded border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs text-amber-900"
-          >
+      <Panel
+        title="3. Documents, and why we ask"
+        aside={
+          <Button size="sm" onClick={() => set({ files: { ...SAMPLE_FILES } })} data-testid="credit-apply-sample-docs">
             Attach sample documents (demo)
-          </button>
-        </div>
-        <ul className="divide-y divide-neutral-100">
+          </Button>
+        }
+      >
+        <ul className="divide-y divide-line">
           {DOCUMENT_REQUIREMENTS.map((r) => (
-            <li key={r.type} className="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center" data-testid={`credit-doc-${r.type}`}>
+            <li key={r.type} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[1fr_auto] sm:items-center" data-testid={`credit-doc-${r.type}`}>
               <div>
-                <p className="text-sm font-medium">
-                  {r.label} {r.required ? <span className="text-red-700">*</span> : <span className="font-normal text-neutral-500">(optional)</span>}
+                <p className="text-sm font-medium text-ink">
+                  {r.label} {r.required ? null : <span className="font-normal text-ink-subtle">(optional)</span>}
                 </p>
-                <p className="text-sm text-neutral-700">{r.whyItMatters}</p>
-                <p className="text-xs text-neutral-500">{r.hint}</p>
+                <p className="text-sm text-ink-muted">{r.whyItMatters}</p>
+                <p className="text-xs text-ink-subtle">{r.hint}</p>
               </div>
-              <div className="text-sm sm:text-right">
+              <div className="flex items-center gap-2 text-sm sm:justify-end">
                 {d.files[r.type] ? (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-emerald-700">✓ {d.files[r.type]}</span>
-                    <button type="button" onClick={() => setFile(r.type, undefined)} className="text-xs text-neutral-600 underline">
+                  <>
+                    <Badge tone="positive">{d.files[r.type]}</Badge>
+                    <Button size="sm" variant="quiet" onClick={() => setFile(r.type, undefined)}>
                       Remove
-                    </button>
-                  </span>
+                    </Button>
+                  </>
                 ) : (
-                  <label className="cursor-pointer rounded border border-neutral-300 px-2.5 py-1 hover:bg-neutral-50">
+                  <label className="inline-flex h-8 cursor-pointer items-center rounded-md border border-line-control bg-surface px-3 text-sm text-ink hover:bg-paper">
                     Upload
                     <input type="file" className="sr-only" onChange={(e) => setFile(r.type, e.target.files?.[0]?.name)} />
                   </label>
@@ -198,31 +192,35 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             </li>
           ))}
         </ul>
-        {errors.documents && <p className="text-sm text-red-700">{errors.documents}</p>}
-        <p className="text-xs text-neutral-600">Demo: files stay in your browser; only their names are recorded.</p>
-      </section>
+        {errors.documents && <p className="mt-3 text-sm text-negative">{errors.documents}</p>}
+        <p className="mt-3 text-xs text-ink-muted">Demo: files stay in your browser; only their names are recorded.</p>
+      </Panel>
 
-      <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5 text-sm">
-        <h2 className="text-lg font-semibold">4. Consent and submit</h2>
-        <label className="flex gap-2">
-          <input type="checkbox" checked={d.simahConsent} onChange={(e) => set({ simahConsent: e.target.checked })} data-testid="credit-apply-simah-consent" />
-          <span>
-            I consent to a SIMAH commercial credit report being pulled for this company. It is the last and most expensive check, run only if the earlier checks pass.
-          </span>
-        </label>
-        {errors.simahConsent && <p className="text-red-700">{errors.simahConsent}</p>}
-        <label className="flex gap-2">
-          <input type="checkbox" checked={d.declarationAccepted} onChange={(e) => set({ declarationAccepted: e.target.checked })} data-testid="credit-apply-declaration" />
-          <span>The documents are genuine, complete and current.</span>
-        </label>
-        {errors.declaration && <p className="text-red-700">{errors.declaration}</p>}
-        <p className="text-neutral-600">
-          What happens next: documents are read and checked automatically (simulated AI), then an independent credit manager reviews the file and decides. You can follow every step here.
-        </p>
-        <button type="submit" data-testid="credit-apply-submit" className="rounded bg-neutral-900 px-4 py-2 font-medium text-white">
-          Submit application
-        </button>
-      </section>
+      <Panel title="4. Consent and submit">
+        <div className="space-y-4">
+          <Checkbox
+            label="I consent to a SIMAH commercial credit report being pulled for this company."
+            hint="It is the last and most expensive check, run only if the earlier checks pass."
+            checked={d.simahConsent}
+            onChange={(e) => set({ simahConsent: e.target.checked })}
+            data-testid="credit-apply-simah-consent"
+          />
+          {errors.simahConsent && <p className="text-sm text-negative">{errors.simahConsent}</p>}
+          <Checkbox
+            label="The documents are genuine, complete and current."
+            checked={d.declarationAccepted}
+            onChange={(e) => set({ declarationAccepted: e.target.checked })}
+            data-testid="credit-apply-declaration"
+          />
+          {errors.declaration && <p className="text-sm text-negative">{errors.declaration}</p>}
+          <p className="text-sm text-ink-muted">
+            What happens next: documents are read and checked automatically (simulated AI), then an independent credit manager reviews the file and decides. You can follow every step on the Credit page.
+          </p>
+          <Button type="submit" variant="primary" data-testid="credit-apply-submit">
+            Submit credit application
+          </Button>
+        </div>
+      </Panel>
     </form>
   );
 }
