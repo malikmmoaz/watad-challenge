@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { reference } from "@/data";
 import { formatSar, murabaha } from "@/domain/money";
 import type { OrgId, ShortlistReason } from "@/domain/types";
@@ -15,10 +16,13 @@ const card = "rounded border border-neutral-200 bg-white p-4";
 
 function Reason({ r }: { r: ShortlistReason }) {
   const positive = r.polarity === "positive";
+  // Partial credit is not a failure: only reasons worth nothing get the red cross.
+  const mark = positive ? "✓" : r.points > 0 ? "–" : "✗";
+  const tone = positive ? "text-positive" : r.points > 0 ? "text-ink-muted" : "text-negative";
   return (
     <li className="flex gap-2">
-      <span aria-hidden className={positive ? "text-emerald-700" : "text-rose-700"}>
-        {positive ? "✓" : "✗"}
+      <span aria-hidden className={tone}>
+        {mark}
       </span>
       <span className="sr-only">{positive ? "Why:" : "Why not:"}</span>
       <span className="flex-1">{r.text}</span>
@@ -33,7 +37,7 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
   const why = row.reasons.filter((r) => r.polarity === "positive");
   const whyNot = row.reasons.filter((r) => r.polarity === "negative");
   return (
-    <li data-testid={row.shortlisted ? "shortlist-row" : "shortlist-excluded"} data-supplier={row.supplierId} className="rounded border border-neutral-200 p-3">
+    <li data-testid={row.shortlisted ? "shortlist-row" : "shortlist-excluded"} data-supplier={row.supplierId} className="border-t border-line py-3 first:border-t-0">
       <div className="flex flex-wrap items-start gap-3">
         {onToggle && (
           <input
@@ -84,7 +88,7 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
           )}
         </div>
         <div className="text-right">
-          <p className="text-2xl font-semibold tabular-nums" data-testid="shortlist-score">{row.matchScore}</p>
+          <p className="text-2xl font-semibold tabular-nums" data-testid="shortlist-score">{Math.round(row.matchScore)}</p>
           <p className="text-xs text-neutral-600">match / 100</p>
         </div>
       </div>
@@ -104,6 +108,12 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
     const priceIndex = priceIndexFromOffers(rfqs, offers, reference.materials);
     return buildShortlist(reference.suppliers, rfq, { materials: reference.materials, facility, priceIndex });
   }, [rfq, rfqs, offers, facility]);
+
+  const shortlistSize = shortlist?.shortlisted.length ?? 0;
+  const viewedDraft = rfq?.status === "draft";
+  useEffect(() => {
+    if (viewedDraft) track("shortlist_viewed", { rfq_id: rfqId, supplier_count: shortlistSize });
+  }, [rfqId, viewedDraft, shortlistSize]);
 
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [blind, setBlind] = useState<boolean | null>(null);
@@ -134,6 +144,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
       ...prev,
       rfqs: prev.rfqs.map((r) => (r.id === rfq.id ? { ...r, status: "sent", invitedSupplierIds: invited, blindComparison: isBlind } : r)),
     }));
+    track("rfq_sent", { rfq_id: rfq.id, line_count: rfq.lines.length, invited_suppliers: invited.length, wants_credit: rfq.wantsCredit });
   };
   const material = (id: string) => reference.materials.find((m) => m.id === id);
   // Once sent, show who was actually invited (the ranking may have moved since), not today's shortlist.
@@ -177,8 +188,8 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
                 {estimate <= facility.available ? "This RFQ fits within your available cap." : "This RFQ is above your available cap; part would need another payment method."}
               </p>
               <p className="text-neutral-600">
-                Murabaha markup {(facility.profitRate * 100).toFixed(1)}% flat for {facility.maxTenorDays} days (APR{" "}
-                {((murabaha(estimate, facility.profitRate, facility.maxTenorDays).apr) * 100).toFixed(1)}%) · supplier paid directly
+                Murabaha: {(facility.profitRate * 100).toFixed(1)}% profit rate for {facility.maxTenorDays} days (
+                {(murabaha(estimate, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}% APR) · supplier paid directly
               </p>
             </div>
           ) : (

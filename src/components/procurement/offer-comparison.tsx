@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { Alert, Button, CreditCapMeter, Panel } from "@/components/ui";
 import { OfferComparisonTable } from "./offer-comparison-table";
 import { reference } from "@/data";
@@ -28,6 +29,11 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const split = useMemo(() => suggestBasketSplit(rfq, offers), [rfq, offers]);
   const labels = useMemo(() => blindLabels(offers), [offers]);
   const awarded = rfq.status === "awarded";
+  const offerCount = offers.length;
+  useEffect(() => {
+    if (offerCount > 0 && !awarded) track("offers_compared", { rfq_id: rfq.id, offer_count: offerCount });
+  }, [rfq.id, offerCount, awarded]);
+  const ranks = useMemo(() => new Map(rows.map((r) => [r.offerId as string, r.rank])), [rows]);
   const awardedOffer = offers.find((o) => o.status === "awarded");
   const requiredInDays = Math.max(0, Math.ceil((Date.parse(rfq.requiredBy) - Date.parse(today)) / 86_400_000));
   const blind = rfq.blindComparison && !awarded;
@@ -102,12 +108,12 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
         </Alert>
       )}
 
-      {draft && !awarded && <PoDraft rfq={rfq} orders={draft} onCancel={() => setDraft(null)} onPlaced={setPlaced} />}
+      {draft && !awarded && <PoDraft rfq={rfq} orders={draft} ranks={ranks} onCancel={() => setDraft(null)} onPlaced={setPlaced} />}
     </div>
   );
 }
 
-function PoDraft({ rfq, orders, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrder[]; onCancel: () => void; onPlaced: (pos: PurchaseOrder[]) => void }) {
+function PoDraft({ rfq, orders, ranks, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrder[]; ranks: Map<string, number>; onCancel: () => void; onPlaced: (pos: PurchaseOrder[]) => void }) {
   const allOffers = useDemo((s) => s.offers);
   const facilities = useDemo((s) => s.creditFacilities);
   const facility = facilities.find((f) => f.contractorId === rfq.contractorId) ?? null;
@@ -130,6 +136,10 @@ function PoDraft({ rfq, orders, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrde
       return;
     }
     update(() => r.state);
+    for (const po of r.pos) {
+      track("offer_awarded", { rfq_id: rfq.id, offer_id: po.offerId, rank: ranks.get(po.offerId) ?? 0 });
+      track("po_placed", { po_id: po.id, payment_method: po.paymentMethod, within_credit_cap: facility ? total <= facility.available : null });
+    }
     onPlaced(r.pos);
   };
 
@@ -176,7 +186,7 @@ function PoDraft({ rfq, orders, onCancel, onPlaced }: { rfq: Rfq; orders: PoOrde
             <CreditCapMeter cap={facility.cap} drawn={facility.drawn} thisPo={useCredit ? total : 0} format={fmt} />
             {useCredit && (
               <p className="text-sm text-ink-muted" data-testid="po-murabaha">
-                Murabaha: markup {(facility.profitRate * 100).toFixed(1)}% flat for {tenor} days = {formatSar(markup as Halalas)} (APR {((facility.profitRate * 365 * 100) / tenor).toFixed(1)}%). You repay{" "}
+                Murabaha: {(facility.profitRate * 100).toFixed(1)}% profit rate for {tenor} days ({((facility.profitRate * 365 * 100) / tenor).toFixed(1)}% APR), markup {formatSar(markup as Halalas)}. You repay{" "}
                 {formatSar((total + markup) as Halalas)} {tenor} days after delivery.
               </p>
             )}
@@ -227,7 +237,7 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
                   {methodLabel(po)}
                   {po.creditDraw && (
                     <span className="block text-ink-muted">
-                      Repay {formatSar(po.creditDraw.totalRepayable)} by {po.creditDraw.dueDate} (markup {formatSar(po.creditDraw.markup)}, APR {(po.creditDraw.apr * 100).toFixed(1)}%)
+                      Repay {formatSar(po.creditDraw.totalRepayable)} by {po.creditDraw.dueDate} (markup {formatSar(po.creditDraw.markup)}, {(po.creditDraw.apr * 100).toFixed(1)}% APR)
                     </span>
                   )}
                 </dd>

@@ -6,8 +6,10 @@ import { reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { PurchaseOrder } from "@/domain/types";
 import { UNIT_LABELS } from "@/lib/procurement/labels";
-import { PO_STEPS, advancePurchaseOrder, stepIndex } from "@/lib/procurement/po";
-import { update, useDemo } from "@/store";
+import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
+import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
+import { track } from "@/lib/analytics";
+import { getState, update, useDemo } from "@/store";
 
 const ACTOR: Record<string, string> = { contractor: "You", supplier: "Supplier", platform: "Platform", credit: "Credit manager" };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" });
@@ -25,7 +27,7 @@ export function timelineSteps(po: PurchaseOrder): TimelineStep[] {
   });
 }
 
-export function PoDetail({ poId }: { poId: string }) {
+export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer?: "contractor" | "supplier" }) {
   const pos = useDemo((s) => s.purchaseOrders);
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
@@ -36,7 +38,7 @@ export function PoDetail({ poId }: { poId: string }) {
       <div className="space-y-3">
         <h1 className="text-2xl font-semibold text-ink">Purchase order not found</h1>
         <p className="text-sm text-ink-muted">It may have been placed in another browser, or the demo data was reset.</p>
-        <Link href="/contractor" className="text-ink underline">Back to my RFQs</Link>
+        <Link href={`/${viewer}`} className="text-ink underline">Back</Link>
       </div>
     );
   }
@@ -45,8 +47,19 @@ export function PoDetail({ poId }: { poId: string }) {
   const offer = offers.find((o) => o.id === po.offerId);
   const supplier = reference.suppliers.find((s) => s.id === po.supplierId);
   const step = PO_STEPS[stepIndex(po.status)];
-  const last = po.status === "paid" || po.status === "cancelled";
-  const advance = () => update((prev) => ({ ...prev, purchaseOrders: prev.purchaseOrders.map((p) => (p.id === po.id ? advancePurchaseOrder(p, new Date().toISOString()) : p)) }));
+  const other = viewer === "supplier" ? "contractor" : "supplier";
+  const mine = poActionFor(po, viewer);
+  const theirs = poActionFor(po, other);
+  const act = (role: "contractor" | "supplier") => {
+    update((prev) => ({
+      ...prev,
+      purchaseOrders: prev.purchaseOrders.map((p) =>
+        p.id === po.id ? actOnPurchaseOrder(p, role, new Date().toISOString(), p.status === "delivered" ? `ZATCA e-invoice ${p.id.replace("po_", "INV-")}` : undefined) : p,
+      ),
+    }));
+    const after = getState().purchaseOrders.find((p) => p.id === po.id);
+    if (after && after.status !== po.status) track("po_status_changed", { po_id: po.id, status: after.status });
+  };
   const d = po.creditDraw;
 
   return (
@@ -56,20 +69,27 @@ export function PoDetail({ poId }: { poId: string }) {
         serial={po.id}
         status={
           <span data-testid="po-status" data-status={po.status}>
-            <Badge tone={last ? "positive" : "info"}>{step?.label ?? po.status}</Badge>
+            <Badge tone={po.status === "delivered" || po.status === "invoiced" || po.status === "paid" ? "positive" : "info"}>{step?.label ?? po.status}</Badge>
           </span>
         }
         meta={
           <>
-            {supplier?.name} · placed {when(po.placedAt)} · {rfq ? <Link href={`/contractor/rfq/${rfq.id}`} className="underline">{rfq.title}</Link> : po.rfqId}
+            {supplier?.name} · placed {when(po.placedAt)} · {rfq ? <Link href={`/${viewer}/rfq/${rfq.id}`} className="underline">{rfq.title}</Link> : po.rfqId}
           </>
         }
         actions={
-          !last && (
-            <Button size="sm" data-testid="po-advance" onClick={advance} title="Demo control: in the live product the supplier and site team move the PO along">
-              Demo: next step
+          mine ? (
+            <Button variant="primary" data-testid="po-action" onClick={() => act(viewer)}>
+              {mine.label}
             </Button>
-          )
+          ) : theirs ? (
+            <span className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+              Waiting for the {other}: {theirs.label.toLowerCase()}
+              <Button size="sm" variant="quiet" data-testid="po-advance" onClick={() => act(other)} title="Demo shortcut: act as the other party without switching role">
+                Demo: do it as the {other}
+              </Button>
+            </span>
+          ) : null
         }
       />
       <div className="grid gap-4 lg:grid-cols-3">
@@ -115,7 +135,7 @@ export function PoDetail({ poId }: { poId: string }) {
               <Facts
                 items={[
                   { label: "Drawn from credit cap", value: formatSar(d.principal) },
-                  { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% flat for ${d.tenorDays} days, APR ${(d.apr * 100).toFixed(1)}%)` },
+                  { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% profit rate for ${d.tenorDays} days, ${(d.apr * 100).toFixed(1)}% APR)` },
                   { label: "You repay", value: formatSar(d.totalRepayable) },
                   { label: "Due", value: d.dueDate },
                   { label: "Supplier paid", value: d.supplierPaidAt ? `Directly by the financier, ${when(d.supplierPaidAt)}` : "Directly by the financier once invoiced" },

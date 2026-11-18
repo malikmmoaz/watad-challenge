@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 import { demoPersona, reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { City, MaterialCategory, OrgId, PaymentTerms, Rfq, RfqId, RfqLine } from "@/domain/types";
@@ -44,7 +45,15 @@ export function RfqBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Rfq | null>(null);
 
+  const started = useRef(false);
+  const start = (source: "upload" | "catalog") => {
+    if (started.current) return;
+    started.current = true;
+    track("rfq_started", { source });
+  };
   const applyExtraction = (e: BoqExtraction) => {
+    start("upload");
+    track("rfq_parsed", { line_count: e.lines.length, simulated_ai: true });
     setExtraction(e);
     // Lines already added by hand are kept; extracted lines replace an earlier extraction.
     setLines((prev) => [...prev.filter((l) => !l.parsedBy && !e.lines.some((x) => x.id === l.id)), ...e.lines]);
@@ -207,7 +216,7 @@ export function RfqBuilder() {
                       data-material={m.id}
                       disabled={added}
                       className="shrink-0 rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50 disabled:text-neutral-400"
-                      onClick={() => setLines((prev) => [...prev, { id: lineIdFor(m.id), materialId: m.id, description: m.name, spec: m.spec, quantity: 1, unit: m.unit }])}
+                      onClick={() => { start("catalog"); setLines((prev) => [...prev, { id: lineIdFor(m.id), materialId: m.id, description: m.name, spec: m.spec, quantity: 1, unit: m.unit }]); }}
                     >
                       {added ? "Added" : "Add"}
                     </button>

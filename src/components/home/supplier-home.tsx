@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { demoPersona, reference } from "@/data";
 import { Badge, CellNote, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, Table, Td, Th, THead, Tr } from "@/components/ui";
 import type { Rfq, Supplier } from "@/domain/types";
@@ -77,7 +78,9 @@ export function SupplierHome() {
                 return (
                   <Tr key={r.id} data-testid="inbox-row" state={awardedToMe ? "recommended" : "default"}>
                     <Td>
-                      <span className="font-medium text-ink">{r.title}</span>
+                      <Link href={`/supplier/rfq/${r.id}`} data-testid="inbox-open" className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
+                        {r.title}
+                      </Link>
                       <CellNote>
                         <span className="font-mono">{r.id}</span> · {contractor?.name} · {r.lines.length} {r.lines.length === 1 ? "line" : "lines"}
                       </CellNote>

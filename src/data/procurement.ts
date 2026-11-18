@@ -83,6 +83,28 @@ export const rfqs: Rfq[] = [
     createdAt: "2026-11-18T06:40:00Z",
   },
   {
+    // Open request waiting for the demo supplier's offer, so the supplier portal has work on day one.
+    id: "rfq_1044" as RfqId,
+    contractorId: org("con_najd"),
+    projectId: "prj_villas",
+    title: "Villas 13 to 24: ground floor slabs",
+    source: "catalog",
+    status: "sent",
+    lines: [
+      line("l1", "mat_rebar_12", "Deformed rebar 12 mm", "SASO ASTM A615 Grade 60, 12 m lengths", 24, "tonne"),
+      line("l2", "mat_cement_opc", "Ordinary Portland Cement (OPC), 50 kg bag", "SASO GSO 1914 CEM I 42.5N", 1800, "bag_50kg"),
+    ],
+    deliveryCity: "Riyadh",
+    deliverySite: "Al Malqa Villas, Plot 14, Riyadh",
+    requiredBy: "2026-12-14",
+    closesAt: "2026-11-26T14:00:00Z",
+    preferredTerms: CREDIT60,
+    wantsCredit: true,
+    invitedSupplierIds: [org("sup_rawasi"), org("sup_sawari"), org("sup_nakheel")],
+    blindComparison: false,
+    createdAt: "2026-11-18T09:15:00Z",
+  },
+  {
     id: "rfq_1038" as RfqId,
     contractorId: org("con_najd"),
     projectId: "prj_school",
