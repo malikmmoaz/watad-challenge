@@ -48,3 +48,5 @@ jobs:
             e2e/.results
           retention-days: 7
           if-no-files-found: ignore
+          # Playwright writes to e2e/.results and e2e/.report; v4 skips dot-folders by default.
+          include-hidden-files: true
