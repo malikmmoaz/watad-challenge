@@ -1,0 +1,50 @@
+name: Cross-browser e2e
+
+# Manual, not a required check: runs the full e2e suite in Firefox and WebKit
+# (Safari's engine, desktop and iPhone) against production or a given URL.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: URL to test
+        default: https://watad-challenge.vercel.app
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: e2e (${{ matrix.project }})
+    runs-on: ubuntu-24.04
+    # Browsers and their system libraries come preinstalled in Playwright's image (match the
+    # @playwright/test version); installing WebKit's ~200 apt packages on a runner can take 20+ min.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --user 1001
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [firefox, webkit, webkit-mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run e2e
+        env:
+          E2E_ALL_BROWSERS: "1"
+          PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || 'https://watad-challenge.vercel.app' }}
+        run: pnpm exec playwright test --project=${{ matrix.project }}
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.project }}
+          path: |
+            e2e/.report
+            e2e/.results
+          retention-days: 7
+          if-no-files-found: ignore

@@ -14,6 +14,8 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 
 Last full pass: 18 Nov 16:42 UTC, pass 3 (88/90 rows) · Live link: https://watad-challenge.vercel.app
 
+Browsers tested (18 Nov, production, full e2e suite): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 30/30; WebKit (Safari engine) desktop 29/30 and iPhone 14 26/27, the misses tracked in #81 (RFQ tabs not keyboard-reachable in Safari) and #80 (landing scrolls sideways on narrow phones). Re-run: Actions → "Cross-browser e2e" → Run workflow.
+
 ## A. Platform and access
 
 | ID | Type | Requirement | Owner | Issue | E2E | Status |

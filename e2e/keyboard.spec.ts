@@ -7,8 +7,10 @@ import { test, expect, tid } from "./fixtures";
 test.skip(({ isMobile }) => isMobile, "keyboard-only journeys are a desktop concern");
 
 async function tabTo(page: Page, target: Locator, label: string, { checkFocusRing = true, max = 150 } = {}) {
+  // Safari's Tab moves between form fields and links only; Option+Tab reaches every control.
+  const key = page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab";
   for (let i = 0; i < max; i++) {
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(key);
     if (await target.evaluate((el) => el === document.activeElement).catch(() => false)) {
       if (checkFocusRing) {
         const visible = await page.evaluate(() => {
@@ -28,7 +30,8 @@ async function tabTo(page: Page, target: Locator, label: string, { checkFocusRin
   throw new Error(`Could not reach "${label}" with Tab`);
 }
 
-test("keyboard only: create an RFQ from the catalog", async ({ page }) => {
+test("keyboard only: create an RFQ from the catalog", async ({ page, browserName }) => {
+  test.fixme(browserName === "webkit", "#81: RFQ builder tabs are not reachable with Tab in WebKit");
   await page.goto("/contractor");
   await tabTo(page, tid(page, "rfq-new"), "New RFQ");
   await page.keyboard.press("Enter");

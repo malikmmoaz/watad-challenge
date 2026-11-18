@@ -14,7 +14,13 @@ export const test = base.extend<{ errors: string[] }>({
   errors: [
     async ({ page }, use) => {
       const errors: string[] = [];
-      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      page.on("pageerror", (e) => {
+        // WebKit reports a same-origin request cancelled by a navigation as "... due to access
+        // control checks": Next.js route prefetches (?_rsc=) and blob: worker URLs (/<uuid>, e.g. the
+        // analytics recorder). Nothing breaks for the user; Chromium and Firefox stay silent.
+        if (/(_rsc=\S*|\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) due to access control checks/.test(e.message)) return;
+        errors.push(`pageerror: ${e.message}`);
+      });
       page.on("console", (m) => {
         if (m.type() === "error" && !IGNORED.some((re) => re.test(m.text()))) {
           errors.push(`console: ${m.text()}`);
