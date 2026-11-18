@@ -61,7 +61,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
   const caption = `Offers for ${rfqLabel}, best score first`;
 
   return (
-    <div className="rounded-lg border border-line bg-surface lg:overflow-x-auto" role="region" aria-label={caption} tabIndex={0}>
+    <div className="rounded-xl border border-line bg-surface shadow-card lg:overflow-x-auto" role="region" aria-label={caption} tabIndex={0}>
       <table className="w-full border-collapse text-left text-sm max-lg:block lg:min-w-[46rem]">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-line-strong bg-panel text-xs text-ink-muted max-lg:hidden">

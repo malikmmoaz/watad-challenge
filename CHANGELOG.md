@@ -22,3 +22,4 @@
 - About and How we built it pages: layout and components in place, linked from the landing page and the role bar, with the business model, priorities, stack, AI use, assumptions, research and the team's process (#17).
 - Landing page redesigned as one ruled sheet: a larger headline, the three roles one click away with what is waiting for each, and the flow shown in four steps with live components on the sample data.
 - Offer comparison stacks into one card per offer below 1024 px wide, with "Choose offer" on each card; no sideways scrolling on phones or tablets (#7).
+- Landing page rebuilt with a bold headline, a live product preview by role, numbers, a bento of the four steps and a dark trust section; the same design language (contrast, type scale, elevation, motion) now applies to every screen through the shared components (#7).

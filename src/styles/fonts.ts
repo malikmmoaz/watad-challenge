@@ -1,4 +1,4 @@
-import { Geist_Mono, Noto_Sans_Arabic, Public_Sans } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Noto_Sans_Arabic, Public_Sans } from "next/font/google";
 
 /** UI face: headings, labels, body and data. */
 export const publicSans = Public_Sans({
@@ -23,5 +23,14 @@ export const notoArabic = Noto_Sans_Arabic({
   preload: false,
 });
 
+/** Accent serif: one italic phrase in a display headline. Italic only, one weight. */
+export const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+  weight: "400",
+  style: "italic",
+  display: "swap",
+});
+
 /** Put on <html>: `className={fontVariables}`. */
-export const fontVariables = `${publicSans.variable} ${geistMono.variable} ${notoArabic.variable}`;
+export const fontVariables = `${publicSans.variable} ${geistMono.variable} ${notoArabic.variable} ${instrumentSerif.variable}`;

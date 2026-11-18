@@ -8,7 +8,7 @@ import { cx } from "./cx";
  */
 export function Table({ caption, children, className, minWidth = 640 }: { caption: string; children: ReactNode; className?: string; minWidth?: number }) {
   return (
-    <div className={cx("relative overflow-x-auto rounded-lg border border-line bg-surface", className)} tabIndex={0} role="region" aria-label={caption}>
+    <div className={cx("relative overflow-x-auto rounded-xl border border-line bg-surface shadow-card", className)} tabIndex={0} role="region" aria-label={caption}>
       <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
         <caption className="sr-only">{caption}</caption>
         {children}

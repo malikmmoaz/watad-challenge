@@ -11,8 +11,8 @@
   --color-current: currentColor;
 
   /* Grounds: green-tinted security paper, two plies */
-  --color-paper: oklch(0.972 0.007 155);
-  --color-surface: oklch(0.995 0.003 155);
+  --color-paper: oklch(0.979 0.006 155);
+  --color-surface: oklch(0.998 0.002 155);
   --color-panel: oklch(0.948 0.01 155);
   --color-line: oklch(0.895 0.012 155);
   --color-line-strong: oklch(0.8 0.016 155);
@@ -20,15 +20,20 @@
   --color-line-control: oklch(0.62 0.02 158);
 
   /* Ink */
-  --color-ink: oklch(0.235 0.022 160);
-  --color-ink-muted: oklch(0.43 0.022 160);
+  --color-ink: oklch(0.19 0.022 162);
+  --color-ink-muted: oklch(0.42 0.02 160);
   --color-ink-subtle: oklch(0.52 0.02 160);
 
   /* Shell: the pine rail */
-  --color-pine: oklch(0.285 0.048 162);
+  --color-pine: oklch(0.255 0.05 163);
+  --color-pine-deep: oklch(0.2 0.04 164);
   --color-pine-raised: oklch(0.345 0.055 162);
   --color-on-pine: oklch(0.955 0.02 155);
   --color-on-pine-muted: oklch(0.8 0.035 158);
+
+  /* Glow: decorative light in hero backgrounds only, never text or controls */
+  --color-glow: oklch(0.86 0.11 158);
+  --color-glow-warm: oklch(0.93 0.06 95);
 
   /* Action: only on things that can be pressed */
   --color-action: oklch(0.44 0.105 156);
@@ -66,6 +71,8 @@
   /* Type: one family, fixed rem scale, ratio about 1.15 */
   --font-sans: var(--font-public-sans), "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: var(--font-noto-arabic), "Noto Sans Arabic", "Geeza Pro", sans-serif;
+  /* Accent serif: one italic phrase in a display headline, never body or UI */
+  --font-serif: var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-xs: 0.75rem;
@@ -84,22 +91,39 @@
   --text-3xl--line-height: 2.25rem;
   --text-4xl: 2.5rem;
   --text-4xl--line-height: 2.75rem;
-  /* Landing headline only */
-  --text-5xl: 3.25rem;
-  --text-5xl--line-height: 3.5rem;
-  --text-6xl: 4rem;
-  --text-6xl--line-height: 4.125rem;
+  /* Display: headlines on the landing page and section openers only */
+  --text-5xl: 3.5rem;
+  --text-5xl--line-height: 1.02;
+  --text-6xl: 4.5rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 5.5rem;
+  --text-7xl--line-height: 0.98;
+
+  --tracking-display: -0.045em;
+  --tracking-heading: -0.025em;
+  --tracking-eyebrow: 0.08em;
 
   /* Shape: small radii, like a printed form */
   --radius-xs: 2px;
   --radius-sm: 3px;
-  --radius-md: 5px;
-  --radius-lg: 8px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 22px;
   --radius-full: 999px;
 
-  /* Two plies only: the page, and one raised leaf */
-  --shadow-leaf: 0 1px 2px oklch(0.235 0.022 160 / 0.06), 0 8px 24px -6px oklch(0.235 0.022 160 / 0.16);
-  --shadow-press: inset 0 1px 2px oklch(0.235 0.022 160 / 0.18);
+  /* Elevation: a whisper under resting cards, a lift on hover, a float for showcased product */
+  --shadow-card: 0 1px 2px oklch(0.19 0.022 162 / 0.05), 0 1px 0 oklch(0.19 0.022 162 / 0.02);
+  --shadow-raised: 0 1px 2px oklch(0.19 0.022 162 / 0.06), 0 14px 32px -14px oklch(0.19 0.022 162 / 0.22);
+  --shadow-float: 0 2px 4px oklch(0.19 0.022 162 / 0.05), 0 40px 90px -30px oklch(0.255 0.05 163 / 0.45);
+  --shadow-leaf: 0 1px 2px oklch(0.19 0.022 162 / 0.06), 0 8px 24px -6px oklch(0.19 0.022 162 / 0.16);
+  --shadow-press: inset 0 1px 2px oklch(0.19 0.022 162 / 0.18);
+  --shadow-button: inset 0 1px 0 oklch(1 0 0 / 0.14), 0 1px 2px oklch(0.19 0.022 162 / 0.2);
+
+  /* Motion: one entrance and one ambient loop; both stop under prefers-reduced-motion */
+  --animate-rise: rise 700ms var(--ease-out) both;
+  --animate-fade: fade 500ms var(--ease-out) both;
+  --animate-drift: drift 14s ease-in-out infinite alternate;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -127,6 +151,7 @@
   }
   h1, h2, h3 {
     text-wrap: balance;
+    letter-spacing: var(--tracking-heading);
   }
   p, li, dd {
     text-wrap: pretty;
@@ -152,6 +177,18 @@
   }
 }
 
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes drift {
+  from { transform: translate3d(-3%, 0, 0) scale(1); }
+  to { transform: translate3d(3%, -2%, 0) scale(1.06); }
+}
 @keyframes skeleton-sweep {
   from { background-position: 100% 0; }
   to { background-position: -100% 0; }
