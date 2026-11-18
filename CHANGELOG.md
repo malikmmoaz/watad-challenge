@@ -15,3 +15,5 @@
 - Contractor and supplier open on live work: RFQs with offer counts, credit cap and latest PO status; supplier requests with match reasons (#7).
 - Supplier: open a matched request, submit or revise an offer (bid) with price, quantity, availability, brand or alternative, delivery fee, lead time, payment terms and Made in Saudi, see it against the benchmark, and run the won PO: accept, dispatch, invoice (paid directly from the contractor's credit cap on credit orders) (#10).
 - About and How we built it pages: layout and components in place, linked from the landing page and the role bar, with the business model, priorities, stack, AI use, assumptions, research and the team's process (#17).
+- Landing page redesigned as one ruled sheet: a larger headline, the three roles one click away with what is waiting for each, and the flow shown in four steps with live components on the sample data.
+- Offer comparison stacks into one card per offer below 1024 px wide, with "Choose offer" on each card; no sideways scrolling on phones or tablets (#7).
