@@ -8,7 +8,7 @@ import { PO_STATUS } from "@/lib/status";
 import { reference } from "@/data";
 import { formatSar } from "@/domain/money";
 import type { PurchaseOrder } from "@/domain/types";
-import { UNIT_LABELS } from "@/lib/procurement/labels";
+import { formatQuantity } from "@/lib/procurement/labels";
 import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
 import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
 import { track } from "@/lib/analytics";
@@ -144,7 +144,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                           {line.description} <span className="text-ink-muted">· {ol.brand}</span>
                         </span>
                         <span className="tabular-nums text-ink-muted">
-                          {Math.min(line.quantity, ol.quantityAvailable).toLocaleString("en-US")} {UNIT_LABELS[line.unit]} × {formatSar(ol.unitPrice)}
+                          {formatQuantity(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {formatSar(ol.unitPrice)}
                         </span>
                       </li>
                     );
