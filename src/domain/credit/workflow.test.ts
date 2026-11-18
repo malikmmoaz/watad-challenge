@@ -170,3 +170,12 @@ it("requires a reason for approve, refer and decline alike", () => {
     expect(errors, outcome).toContain("Write the reason the contractor will read (at least 15 characters).");
   }
 });
+
+it("seeds valid ISO timestamps on every credit case and log entry", async () => {
+  const { seedState } = await import("@/data");
+  for (const c of seedState.creditCases) {
+    for (const iso of [c.submittedAt, c.updatedAt, ...c.log.map((l) => l.at)].filter(Boolean)) {
+      expect(Number.isNaN(Date.parse(iso!)), `${c.id} ${iso}`).toBe(false);
+    }
+  }
+});

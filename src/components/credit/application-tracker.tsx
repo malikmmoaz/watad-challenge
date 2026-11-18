@@ -1,21 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { STATUS_LABEL, provideMoreInfo, trackerSteps } from "@/domain/credit-application";
+import { provideMoreInfo, trackerSteps } from "@/domain/credit-application";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { CREDIT_CASE_STATUS } from "@/lib/status";
 import { formatSar, murabaha } from "@/domain/money";
 import type { CreditCase, CreditFacility, GateResult } from "@/domain/types";
 import { update } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
-
-const STATUS_TONE: Record<CreditCase["status"], Tone> = {
-  draft: "neutral",
-  submitted: "info",
-  documents_review: "info",
-  in_assessment: "info",
-  more_info_requested: "caution",
-  approved: "positive",
-  declined: "negative",
-};
 
 const GATE: Record<GateResult, { text: string; tone: Tone }> = {
   pass: { text: "Checked", tone: "positive" },
@@ -24,12 +16,12 @@ const GATE: Record<GateResult, { text: string; tone: Tone }> = {
   pending: { text: "Queued", tone: "neutral" },
 };
 
-const date = (iso?: string) => (iso ? iso.slice(0, 10) : "");
+const date = (iso?: string) => (iso ? formatDate(iso) : "");
 
 export function StatusBadge({ status }: { status: CreditCase["status"] }) {
   return (
     <span data-testid="credit-tracker-status" data-status={status}>
-      <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+      <Badge tone={CREDIT_CASE_STATUS[status].tone}>{CREDIT_CASE_STATUS[status].label}</Badge>
     </span>
   );
 }
@@ -51,7 +43,7 @@ export function ApplicationTracker({ c, facility, readOnly = false }: { c: Credi
           <p className="text-sm text-ink-muted">
             {c.purpose} · submitted {date(c.submittedAt)}
           </p>
-          <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
             <StatusTimeline label="Application progress" steps={steps} />
             <div className="space-y-5">
               <section aria-label="Checks" className="space-y-2">
@@ -77,7 +69,7 @@ export function ApplicationTracker({ c, facility, readOnly = false }: { c: Credi
             <ul className="mt-2 space-y-1 text-ink-muted">
               {c.log.map((l, i) => (
                 <li key={i}>
-                  <span className="font-mono text-xs">{l.at.replace("T", " ").slice(0, 16)}</span> · {l.action}
+                  <span className="text-xs tabular-nums">{formatDateTime(l.at)}</span> · {l.action}
                   {l.detail ? ` · ${l.detail}` : ""}
                 </li>
               ))}
@@ -110,7 +102,10 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
   const approved = d.outcome === "approve";
   return (
     <section data-testid="credit-outcome" className="space-y-3">
-      <DecisionStamp decision={d.outcome} by={d.decidedBy} at={date(d.decidedAt)} />
+      {/* The stamp is tilted on purpose; clip its corners rather than scroll sideways on phones. */}
+      <div className="overflow-x-clip py-1">
+        <DecisionStamp decision={d.outcome} by={d.decidedBy} at={date(d.decidedAt)} />
+      </div>
       {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
       <p className="text-sm text-ink">{d.reasonText}</p>
       {d.conditions && d.conditions.length > 0 && (

@@ -7,7 +7,8 @@ import { drawLedger, repayDraw, type DrawState } from "@/domain/credit/draws";
 import { formatSar } from "@/domain/money";
 import { getState, update, useDemo } from "@/store";
 import { useToday } from "./use-today";
-import { Alert, Badge, Button, EmptyState, Panel, Table, Td, Th, THead, Tr, type Tone } from "@/components/ui";
+import { Alert, Badge, Button, CellNote, Panel, Table, Td, Th, THead, Tr, type Tone } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 
 const STATE: Record<DrawState, { text: string; tone: Tone }> = {
   awaiting_supplier_payment: { text: "Supplier not yet paid", tone: "neutral" },
@@ -33,13 +34,20 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
 
   return (
     <div data-testid="credit-draws">
-      <Panel title="Credit drawn on purchase orders">
+      <Panel title="Credit drawn on purchase orders" flush>
         {rows.length === 0 ? (
-          <EmptyState title="No credit drawn yet">Choose &ldquo;Pay with credit&rdquo; when you place a purchase order; the supplier is paid directly.</EmptyState>
+          <div className="p-5" data-testid="credit-draws-empty">
+            <p className="text-sm font-medium text-ink">No credit drawn yet</p>
+            <p className="mt-1 text-sm text-ink-muted">Choose &ldquo;Pay with credit&rdquo; when you place a purchase order; the supplier is paid directly and the order appears here.</p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            {message && <Alert tone="positive" title={message} />}
-            <Table caption="Credit draws" minWidth={760}>
+          <div>
+            {message && (
+              <div className="border-b border-line p-4">
+                <Alert tone="positive" title={message} />
+              </div>
+            )}
+            <Table caption="Credit draws" minWidth={760} className="rounded-none border-0 shadow-none">
               <THead>
                 <tr>
                   <Th>Purchase order</Th>
@@ -64,14 +72,14 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                     <Td align="end">{formatSar(r.principal)}</Td>
                     <Td align="end">
                       {formatSar(r.markup)}
-                      <span className="block text-xs text-ink-muted">
+                      <CellNote>
                         {(r.profitRate * 100).toFixed(2)}% for {r.tenorDays} days · {(r.apr * 100).toFixed(1)}% APR
-                      </span>
+                      </CellNote>
                     </Td>
                     <Td align="end">{formatSar(r.totalRepayable)}</Td>
                     <Td>
-                      {r.dueDate}
-                      {r.state !== "repaid" && <span className="block text-xs text-ink-muted">{r.daysToDue >= 0 ? `in ${r.daysToDue} days` : `${-r.daysToDue} days late`}</span>}
+                      {formatDate(r.dueDate)}
+                      {r.state !== "repaid" && <CellNote>{r.daysToDue >= 0 ? `in ${r.daysToDue} days` : `${-r.daysToDue} days late`}</CellNote>}
                     </Td>
                     <Td>
                       <Badge tone={STATE[r.state].tone}>{STATE[r.state].text}</Badge>
@@ -89,7 +97,7 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                 ))}
               </tbody>
             </Table>
-            <p className="text-xs text-ink-muted">The markup is fixed when the order is placed and does not grow if payment is late. Repaying releases the order total back to your cap.</p>
+            <p className="border-t border-line px-5 py-3 text-xs text-ink-muted">The markup is fixed when the order is placed and does not grow if payment is late. Repaying releases the order total back to your cap.</p>
           </div>
         )}
       </Panel>

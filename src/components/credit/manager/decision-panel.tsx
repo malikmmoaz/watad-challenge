@@ -7,7 +7,7 @@ import { formatSar } from "@/domain/money";
 import type { CreditCase, CreditDecisionOutcome } from "@/domain/types";
 import { getState, update } from "@/store";
 import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/components/ui";
-import { shortDate } from "./shared";
+import { formatDateTime } from "@/lib/format";
 
 const OUTCOMES: { value: CreditDecisionOutcome; label: string }[] = [
   { value: "approve", label: "Approve" },
@@ -22,7 +22,9 @@ const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 export function DecisionPanel({ c }: { c: CreditCase }) {
   const ai = c.aiProposal;
   const [outcome, setOutcome] = useState<CreditDecisionOutcome>(ai?.outcome ?? "approve");
-  const [cap, setCap] = useState<number>(ai?.proposedCap ? ai.proposedCap / 100 : c.scorecard ? c.scorecard.proposedCap / 100 : 0);
+  const proposedCap = ai?.proposedCap ?? c.scorecard?.proposedCap;
+  // Prefilled with the proposed cap; empty (never 0) when there is no proposal yet.
+  const [cap, setCap] = useState<number>(proposedCap ? proposedCap / 100 : Number.NaN);
   const [reason, setReason] = useState("");
   const [conditions, setConditions] = useState("");
   const [items, setItems] = useState("");
@@ -31,12 +33,30 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
 
   if (c.decision && c.status !== "in_assessment") {
     const d = c.decision;
+    const fresh = justDecided.has(c.id);
     return (
-      <Panel title="Decision">
-        <div className="space-y-3 text-sm" data-testid="credit-decision">
-          <DecisionStamp decision={d.outcome} by={d.decidedBy} at={shortDate(d.decidedAt)} animate={justDecided.has(c.id)} />
-          {d.approvedCap !== undefined && <p className="font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
-          <p className="text-ink">{d.reasonText}</p>
+      <Panel title="Decision" aside={<span className="text-xs text-ink-muted">Recorded · sent to the contractor</span>}>
+        <div className="space-y-4 text-sm" data-testid="credit-decision">
+          <div className="flex justify-center overflow-x-clip rounded-xl bg-paper px-2 py-6">
+            <DecisionStamp decision={d.outcome} by={d.decidedBy} at={formatDateTime(d.decidedAt)} animate={fresh} />
+          </div>
+          {d.approvedCap !== undefined && (
+            <p className="flex items-baseline justify-between gap-3 border-b border-line pb-3">
+              <span className="text-ink-muted">Credit cap</span>
+              <span className="text-xl font-semibold tabular-nums text-ink">{formatSar(d.approvedCap)}</span>
+            </p>
+          )}
+          <div>
+            <p className="text-xs font-medium text-ink-muted">Reason given to the contractor</p>
+            <p className="mt-1 text-ink">{d.reasonText}</p>
+          </div>
+          {d.requestedItems && d.requestedItems.length > 0 && (
+            <ul className="list-disc pl-5 text-ink-muted">
+              {d.requestedItems.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          )}
           {d.overrodeAi && <p className="text-xs text-caution">Departed from the AI proposal: {d.overrideReason}</p>}
         </div>
       </Panel>
@@ -93,7 +113,15 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
         </fieldset>
         {outcome === "approve" && (
           <>
-            <Input label="Approved credit cap" suffix="SAR" type="number" value={Number.isNaN(cap) ? "" : cap} onChange={(e) => setCap(e.target.valueAsNumber)} data-testid="credit-decision-cap" />
+            <Input
+              label="Approved credit cap"
+              suffix="SAR"
+              type="number"
+              value={Number.isNaN(cap) ? "" : cap}
+              onChange={(e) => setCap(e.target.valueAsNumber)}
+              hint={proposedCap ? `Proposed: ${formatSar(proposedCap)}, never above the ${formatSar(c.requestedCap)} requested.` : `No proposed cap yet: run the checks, or enter one up to ${formatSar(c.requestedCap)}.`}
+              data-testid="credit-decision-cap"
+            />
             <Textarea label="Conditions, one per line" optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
           </>
         )}

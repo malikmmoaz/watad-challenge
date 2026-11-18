@@ -16,7 +16,7 @@ import {
 import { formatSar, sar } from "@/domain/money";
 import type { Contractor, CreditDocumentType, PayerType } from "@/domain/types";
 import { getState, update } from "@/store";
-import { Badge, Button, Checkbox, Input, Panel, Table, Td, Th, THead, Tr } from "@/components/ui";
+import { Badge, Button, buttonClass, Checkbox, Input, Panel, Table, Td, Th, THead, Tr } from "@/components/ui";
 
 const PAYER_LABEL: Record<PayerType, string> = {
   government: "Government",
@@ -183,7 +183,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
                     </Button>
                   </>
                 ) : (
-                  <label className="inline-flex h-8 cursor-pointer items-center rounded-md border border-line-control bg-surface px-3 text-sm text-ink hover:bg-paper">
+                  <label className={buttonClass("secondary", "sm", "cursor-pointer")}>
                     Upload
                     <input type="file" className="sr-only" onChange={(e) => setFile(r.type, e.target.files?.[0]?.name)} />
                   </label>
