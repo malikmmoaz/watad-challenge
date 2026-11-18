@@ -14,6 +14,8 @@ const OUTCOMES: { value: CreditDecisionOutcome; label: string }[] = [
   { value: "request_info", label: "Request more information" },
   { value: "decline", label: "Decline" },
 ];
+/** Cases decided in this tab, so their stamp is pressed in once, not on every visit. */
+const justDecided = new Set<string>();
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
 /** Approve / request more information / decline with structured reasons that go back to the contractor. */
@@ -32,7 +34,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     return (
       <Panel title="Decision">
         <div className="space-y-3 text-sm" data-testid="credit-decision">
-          <DecisionStamp decision={d.outcome} by={d.decidedBy} at={shortDate(d.decidedAt)} />
+          <DecisionStamp decision={d.outcome} by={d.decidedBy} at={shortDate(d.decidedAt)} animate={justDecided.has(c.id)} />
           {d.approvedCap !== undefined && <p className="font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
           <p className="text-ink">{d.reasonText}</p>
           {d.overrodeAi && <p className="text-xs text-caution">Departed from the AI proposal: {d.overrideReason}</p>}
@@ -60,6 +62,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     const now = new Date().toISOString();
     const current = getState().creditFacilities.find((f) => f.contractorId === c.contractorId);
     const { case: next, facility } = decide(c, input, now, current);
+    justDecided.add(c.id);
     update((s) => ({
       ...s,
       creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)),

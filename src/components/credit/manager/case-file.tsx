@@ -8,8 +8,10 @@ import { formatSar, sar } from "@/domain/money";
 import type { CreditDocument, EvidenceRef, GateResult } from "@/domain/types";
 import { factorImpacts } from "@/domain/credit/impact";
 import { runChecks } from "@/domain/credit/workflow";
+import { useState } from "react";
 import { update, useDemo } from "@/store";
-import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
+import { useHydrated, useReducedMotion } from "../client-state";
+import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
 import { UtilisationPanel } from "./utilisation-panel";
 import { CaseStatus, shortDate } from "./shared";
@@ -68,8 +70,45 @@ function ImpactLine({ impact, weight, points }: { impact?: FactorImpact; weight:
   );
 }
 
+/** What the simulated AI does when the manager runs the checks, shown step by step. */
+const PREP_STEPS = [
+  "Reading the documents and extracting fields",
+  "1. Commercial Registration",
+  "2. ZATCA VAT returns",
+  "3. Bank statements against VAT",
+  "4. Audited financials (Qawaem)",
+  "5. SIMAH commercial report, last",
+  "Scoring the 10 factors and the limit",
+  "Drafting the credit memo",
+];
+const STEP_MS = 260;
+
+function Preparing({ step }: { step: number }) {
+  return (
+    <div data-testid="credit-preparing" role="status" aria-live="polite">
+      <Panel title="Preparing the file" aside={<AiLabel agent="Credit analyst" />}>
+        <ol className="space-y-2 text-sm">
+          {PREP_STEPS.map((label, i) => (
+            <li key={label} className={`flex items-center gap-2 transition-opacity duration-200 ${i > step ? "opacity-40" : ""}`}>
+              <span className={`flex size-4 items-center justify-center rounded-full border ${i < step ? "border-positive bg-positive text-on-action" : i === step ? "border-ink" : "border-line-strong"}`}>
+                {i < step ? <Icon name="check" size={10} strokeWidth={2.5} /> : i === step ? <span className="size-1.5 animate-pulse rounded-full bg-ink" /> : null}
+              </span>
+              <span className={i <= step ? "text-ink" : "text-ink-subtle"}>{label}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 text-xs text-ink-muted">Simulated: no document leaves your browser and no external service is called.</p>
+      </Panel>
+    </div>
+  );
+}
+
 export function CaseFile({ id }: { id: string }) {
   const c = useDemo((s) => s.creditCases.find((x) => x.id === id));
+  const hydrated = useHydrated();
+  const reduced = useReducedMotion();
+  const [step, setStep] = useState<number | null>(null);
+  if (!hydrated) return <LoadingRows rows={8} label="Loading the credit file" />;
   if (!c) {
     return (
       <EmptyState title="Application not found" action={<Link href="/credit">Back to the queue</Link>}>
@@ -79,10 +118,19 @@ export function CaseFile({ id }: { id: string }) {
   }
   const profile = creditProfiles[c.contractorId];
   const canRun = c.status === "submitted" || c.status === "documents_review";
-  const run = () => {
+  const commit = () => {
     if (!profile) return;
     const next = runChecks(c, profile, new Date().toISOString()).case;
     update((s) => ({ ...s, creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)) }));
+    setStep(null);
+  };
+  // Steps through the preparation, then records the result; instant with reduced motion.
+  const run = () => {
+    if (!profile || step !== null) return;
+    if (reduced) return commit();
+    setStep(0);
+    PREP_STEPS.forEach((_, i) => setTimeout(() => setStep(i + 1), STEP_MS * (i + 1)));
+    setTimeout(commit, STEP_MS * (PREP_STEPS.length + 1));
   };
   const consistency = profile && c.scorecard ? checkConsistency(profile) : null;
   const card = c.scorecard;
@@ -100,13 +148,14 @@ export function CaseFile({ id }: { id: string }) {
         meta={`Requests ${formatSar(c.requestedCap)} for ${c.requestedTenorDays} days · ${c.purpose} · submitted ${shortDate(c.submittedAt)}`}
         actions={
           canRun ? (
-            <Button variant="primary" onClick={run} disabled={!profile} data-testid="credit-run-checks">
+            <Button variant="primary" onClick={run} disabled={!profile} loading={step !== null} data-testid="credit-run-checks">
               Run checks (simulated AI)
             </Button>
           ) : undefined
         }
       />
-      {canRun && (
+      {step !== null && <Preparing step={step} />}
+      {canRun && step === null && (
         <Alert tone="info" title="Checks have not run yet">
           Running them reads the documents and runs the gated checks cheapest first (CR, VAT, bank, financials, SIMAH last), then scores the file and drafts a memo. All simulated.
         </Alert>
