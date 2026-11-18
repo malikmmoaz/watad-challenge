@@ -120,7 +120,7 @@
   --shadow-press: inset 0 1px 2px oklch(0.19 0.022 162 / 0.18);
   --shadow-button: inset 0 1px 0 oklch(1 0 0 / 0.14), 0 1px 2px oklch(0.19 0.022 162 / 0.2);
 
-  /* Motion: one entrance and one ambient loop; both stop under prefers-reduced-motion */
+  /* Motion: one entrance and one ambient loop; both stop under prefers-reduced-motion. No opacity on text. */
   --animate-rise: rise 700ms var(--ease-out) both;
   --animate-fade: fade 500ms var(--ease-out) both;
   --animate-drift: drift 14s ease-in-out infinite alternate;
@@ -186,13 +186,17 @@
   }
 }
 
+/*
+ * Entrances move, they never fade text: text stays at full contrast in every
+ * frame, so accessibility checks that sample early never see a washed-out frame.
+ */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateY(14px); }
+  to { transform: none; }
 }
 @keyframes fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { transform: translateY(4px); }
+  to { transform: none; }
 }
 @keyframes drift {
   from { transform: translate3d(-3%, 0, 0) scale(1); }
