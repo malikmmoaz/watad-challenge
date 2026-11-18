@@ -22,6 +22,8 @@ export const test = base.extend<{ errors: string[] }>({
         errors.push(`pageerror: ${e.message}`);
       });
       page.on("console", (m) => {
+        // Firefox: a web font download aborted by a navigation (NS_BINDING_ABORTED = 2152398850).
+        if (/downloadable font: download failed.*status=2152398850/.test(m.text())) return;
         if (m.type() === "error" && !IGNORED.some((re) => re.test(m.text()))) {
           errors.push(`console: ${m.text()}`);
         }
