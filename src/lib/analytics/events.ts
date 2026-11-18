@@ -7,6 +7,7 @@
  * company names, document contents, free text or amounts tied to a person.
  */
 import type {
+  CreditBand,
   CreditDecisionOutcome,
   CreditDocumentType,
   PaymentMethod,
@@ -50,7 +51,14 @@ export interface AnalyticsEvents {
   credit_case_opened: { case_id: string };
   credit_evidence_opened: { case_id: string; document_type: CreditDocumentType };
   credit_memo_viewed: { case_id: string; simulated_ai: true };
+  /** The simulated AI prepared the file: gates, score, band and a proposed outcome. */
+  credit_checks_run: { case_id: string; band: CreditBand; proposed_outcome: CreditDecisionOutcome; provisional: boolean; simulated_ai: true };
   credit_decision_made: { case_id: string; outcome: CreditDecisionOutcome; overrode_ai: boolean };
+  /** The contractor answered a request for more information. */
+  credit_info_provided: { case_id: string; file_count: number; has_note: boolean };
+
+  // Credit drawn per PO: repayment releases the cap. No amounts.
+  draw_repaid: { po_id: string; repaid_before_due: boolean; tenor_days: number };
 
   // Explainer pages
   about_viewed: { page: string };

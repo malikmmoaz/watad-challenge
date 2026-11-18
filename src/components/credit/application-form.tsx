@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CAP_LIMITS,
   DOCUMENT_REQUIREMENTS,
@@ -15,6 +15,7 @@ import {
 } from "@/domain/credit-application";
 import { formatSar, sar } from "@/domain/money";
 import type { Contractor, CreditDocumentType, PayerType } from "@/domain/types";
+import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
 import { Badge, Button, buttonClass, Checkbox, Input, Panel, Table, Td, Th, THead, Tr } from "@/components/ui";
 
@@ -55,8 +56,17 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
   const [attempted, setAttempted] = useState(false);
   const errors: DraftErrors = attempted ? validateDraft(d) : {};
   const set = (patch: Partial<ApplicationDraft>) => setD((prev) => ({ ...prev, ...patch }));
-  const setFile = (type: CreditDocumentType, name: string | undefined) =>
+  useEffect(() => track("credit_application_started", {}), []);
+  // One event per document type newly attached (not on replace or remove).
+  const attach = (files: ApplicationDraft["files"]) => {
+    for (const [type, name] of Object.entries(files) as [CreditDocumentType, string | undefined][]) {
+      if (name && !d.files[type]) track("credit_document_uploaded", { document_type: type });
+    }
+  };
+  const setFile = (type: CreditDocumentType, name: string | undefined) => {
+    attach({ [type]: name });
     setD((prev) => ({ ...prev, files: { ...prev.files, [type]: name } }));
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +81,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
       platformHistory: { posPlaced: pos.length, posPaidOnTime: 0, totalSpend: sar(0) },
     });
     update((prev) => ({ ...prev, creditCases: [...prev.creditCases, c] }));
+    track("credit_application_submitted", { case_id: c.id, document_count: c.documents.filter((x) => x.status === "uploaded").length });
     router.push(`/contractor/credit#${c.id}`);
   };
 
@@ -159,7 +170,10 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
       <Panel
         title="3. Documents, and why we ask"
         aside={
-          <Button size="sm" onClick={() => set({ files: { ...SAMPLE_FILES } })} data-testid="credit-apply-sample-docs">
+          <Button size="sm" onClick={() => {
+              attach(SAMPLE_FILES);
+              set({ files: { ...d.files, ...SAMPLE_FILES } });
+            }} data-testid="credit-apply-sample-docs">
             Attach sample documents (demo)
           </Button>
         }

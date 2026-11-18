@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { reference } from "@/data";
 import { drawLedger, repayDraw, type DrawState } from "@/domain/credit/draws";
 import { formatSar } from "@/domain/money";
+import { track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 import { useToday } from "./use-today";
 import { Alert, Badge, Button, CellNote, Panel, Table, Td, Th, THead, Tr, type Tone } from "@/components/ui";
@@ -26,8 +27,11 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
 
   const repay = (poId: string) => {
     const s = getState();
-    const r = repayDraw(s.purchaseOrders, s.creditFacilities, poId, new Date().toISOString());
+    const now = new Date().toISOString();
+    const r = repayDraw(s.purchaseOrders, s.creditFacilities, poId, now);
     if (!r.ok) return setMessage(r.error);
+    const draw = s.purchaseOrders.find((p) => p.id === poId)?.creditDraw;
+    if (draw) track("draw_repaid", { po_id: poId, repaid_before_due: now.slice(0, 10) <= draw.dueDate, tenor_days: draw.tenorDays });
     update((prev) => ({ ...prev, purchaseOrders: r.purchaseOrders, creditFacilities: r.creditFacilities }));
     setMessage(`Repaid ${formatSar(r.repaid)}. The principal is back in your available credit.`);
   };

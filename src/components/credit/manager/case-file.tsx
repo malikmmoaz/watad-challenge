@@ -9,7 +9,8 @@ import { DOCUMENT_REQUIREMENTS } from "@/domain/credit-application";
 import type { CreditCase, CreditDocument, EvidenceRef } from "@/domain/types";
 import { factorImpacts } from "@/domain/credit/impact";
 import { runChecks } from "@/domain/credit/workflow";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { update, useDemo } from "@/store";
 import { useHydrated, useReducedMotion } from "../client-state";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, type Tone } from "@/components/ui";
@@ -43,14 +44,19 @@ const justScored = new Set<string>();
 const POLICY: Record<"pass" | "refer" | "fail", Tone> = { pass: "positive", refer: "caution", fail: "negative" };
 const pct = (n: number | null) => (n === null ? "n/a" : `${(n * 100).toFixed(1)}%`);
 
-function Evidence({ refs, docs }: { refs: EvidenceRef[]; docs: CreditDocument[] }) {
+function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[]; docs: CreditDocument[] }) {
   if (refs.length === 0) return <span className="text-xs text-caution">No document on file</span>;
   return (
     <span className="flex flex-wrap gap-x-3 gap-y-1">
       {refs.map((r) => {
         const d = docs.find((x) => x.id === r.documentId);
         const f = d?.extracted.find((x) => x.key === r.fieldKey);
-        return <EvidenceSeal key={`${r.documentId}-${r.fieldKey}`} source={`${d?.fileName || d?.type || "document"}${f ? `, ${f.label}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />;
+        // The seal is a link to the field; its click bubbles here so opening evidence is counted.
+        return (
+          <span key={`${r.documentId}-${r.fieldKey}`} onClick={() => d && track("credit_evidence_opened", { case_id: caseId, document_type: d.type })}>
+            <EvidenceSeal source={`${d?.fileName || d?.type || "document"}${f ? `, ${f.label}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
+          </span>
+        );
       })}
     </span>
   );
@@ -130,6 +136,15 @@ export function CaseFile({ id }: { id: string }) {
   const hydrated = useHydrated();
   const reduced = useReducedMotion();
   const [step, setStep] = useState<number | null>(null);
+  const caseId = c?.id;
+  const hasMemo = !!c?.aiProposal;
+  // Once per visit to a case, and once per memo shown (on open, or when the checks produce it).
+  useEffect(() => {
+    if (hydrated && caseId) track("credit_case_opened", { case_id: caseId });
+  }, [hydrated, caseId]);
+  useEffect(() => {
+    if (hydrated && caseId && hasMemo) track("credit_memo_viewed", { case_id: caseId, simulated_ai: true });
+  }, [hydrated, caseId, hasMemo]);
   if (!hydrated) return <LoadingRows rows={8} label="Loading the credit file" />;
   if (!c) {
     return (
@@ -143,7 +158,16 @@ export function CaseFile({ id }: { id: string }) {
   const canRun = c.status === "submitted" || c.status === "documents_review" || (c.status === "in_assessment" && !c.scorecard);
   const commit = () => {
     if (!profile) return;
-    const next = runChecks(c, profile, new Date().toISOString()).case;
+    const { case: next, assessment } = runChecks(c, profile, new Date().toISOString());
+    if (next.aiProposal) {
+      track("credit_checks_run", {
+        case_id: c.id,
+        band: assessment.band,
+        proposed_outcome: next.aiProposal.outcome,
+        provisional: assessment.provisional,
+        simulated_ai: true,
+      });
+    }
     update((s) => ({ ...s, creditCases: s.creditCases.map((x) => (x.id === c.id ? next : x)) }));
     justScored.add(c.id);
     setStep(null);
@@ -201,7 +225,7 @@ export function CaseFile({ id }: { id: string }) {
                       <Badge tone={GATE_RESULT[g.result].tone}>{g.result === "pending" && card ? "Not run" : GATE_RESULT[g.result].label}</Badge>
                     </div>
                     <p className="text-sm text-ink-muted">{g.detail}</p>
-                    {g.evidence.length > 0 && <Evidence refs={g.evidence} docs={c.documents} />}
+                    {g.evidence.length > 0 && <Evidence caseId={c.id} refs={g.evidence} docs={c.documents} />}
                   </li>
                 ))}
             </ol>
@@ -219,7 +243,7 @@ export function CaseFile({ id }: { id: string }) {
                         <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters}
                       </p>
                       <ImpactLine impact={impacts.find((i) => i.factorId === f.id)} weight={f.weight} points={f.points} />
-                      <Evidence refs={f.evidence} docs={c.documents} />
+                      <Evidence caseId={c.id} refs={f.evidence} docs={c.documents} />
                     </li>
                   ))}
                 </ul>
