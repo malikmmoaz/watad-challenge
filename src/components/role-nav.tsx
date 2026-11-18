@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Role } from "@/domain/types";
 import { Icon } from "./ui";
 import { ResetDemoButton } from "./reset-demo-button";
+import { RestartTour } from "./reviewer-guide-client";
 import { RoleLink } from "./role-link";
 
 export const ROLES: { role: Role; href: string; label: string; persona: string; blurb: string }[] = [
@@ -49,6 +50,7 @@ export function RoleNav({ current }: { current: Role }) {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-x-2 text-sm sm:gap-x-4">
+          <RestartTour />
           <Link href="/about" data-testid="nav-about" className="hidden text-ink-muted transition-colors duration-150 hover:text-ink xl:inline">
             About
           </Link>

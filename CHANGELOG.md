@@ -24,3 +24,4 @@
 - Offer comparison stacks into one card per offer below 1024 px wide, with "Choose offer" on each card; no sideways scrolling on phones or tablets (#7).
 - Landing page rebuilt with a bold headline, a live product preview by role, numbers, a bento of the four steps and a dark trust section; the same design language (contrast, type scale, elevation, motion) now applies to every screen through the shared components (#7).
 - Contractor and supplier home screens open on their key figures (open RFQs, offers to compare, POs on the way, credit cap left; requests waiting, offers submitted, POs to fulfil, on-time rate) (#7).
+- Reviewer guide on each role: three steps with links, Hide guide, and Restart tour in the app bar (#16).
