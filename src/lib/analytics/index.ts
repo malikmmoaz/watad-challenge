@@ -36,8 +36,19 @@ export function initAnalytics(): void {
   started = true;
 }
 
+declare global {
+  interface Window {
+    /**
+     * Test-only sink. Playwright sets it before the app loads (e2e/analytics.spec.ts) to record
+     * every tracked event, with or without a PostHog key. Never set in production.
+     */
+    __WATAD_ANALYTICS_SINK__?: { push: (entry: { event: string; properties: unknown }) => unknown };
+  }
+}
+
 /** Capture a catalogued event with its typed properties. */
 export function track<E extends AnalyticsEvent>(event: E, properties: AnalyticsEvents[E]): void {
+  if (typeof window !== "undefined") window.__WATAD_ANALYTICS_SINK__?.push({ event, properties });
   if (!started) return;
   posthog.capture(event, properties);
 }
