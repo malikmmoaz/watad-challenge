@@ -4,7 +4,7 @@ import { cx } from "./cx";
 /** A titled region of the page. Panels sit on the page; never inside another panel. */
 export function Panel({ title, aside, children, className, flush = false }: { title?: string; aside?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cx("rounded-xl border border-line bg-surface shadow-card", className)}>
+    <section className={cx("min-w-0 rounded-xl border border-line bg-surface shadow-card", className)}>
       {title ? (
         <header className="flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line px-5 py-2.5">
           <h2 className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
