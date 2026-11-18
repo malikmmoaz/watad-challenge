@@ -25,6 +25,8 @@ export default function GlobalError({ error, retry }: { error: unknown; retry: (
             <button type="button" onClick={() => retry()} className="rounded-md bg-action px-4 py-2 text-sm font-medium text-on-action">
               Try again
             </button>
+            {/* A full reload on purpose: the root layout failed, so client navigation cannot be trusted. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" className="rounded-md border border-line-control px-4 py-2 text-sm font-medium text-ink">
               Back to the start
             </a>
