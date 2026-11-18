@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
+import { securityHeaders } from "./src/config/security-headers";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
+  poweredByHeader: false,
+  async headers() {
+    const headers = securityHeaders({
+      dev: process.env.NODE_ENV === "development",
+      preview: process.env.VERCEL_ENV === "preview",
+    });
+    return [{ source: "/(.*)", headers }];
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

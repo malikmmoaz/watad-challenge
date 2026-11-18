@@ -26,3 +26,4 @@
 - Landing page rebuilt with a bold headline, a live product preview by role, numbers, a bento of the four steps and a dark trust section; the same design language (contrast, type scale, elevation, motion) now applies to every screen through the shared components (#7).
 - Contractor and supplier home screens open on their key figures (open RFQs, offers to compare, POs on the way, credit cap left; requests waiting, offers submitted, POs to fulfil, on-time rate) (#7).
 - Reviewer guide on each role: three steps with links, Hide guide, and Restart tour in the app bar (#16).
+- Production hardening: security headers on every page (CSP limited to our origin and PostHog EU, no framing, strict referrer and permissions), a designed not-found page, and error pages that report to PostHog and offer to reset the demo data.
