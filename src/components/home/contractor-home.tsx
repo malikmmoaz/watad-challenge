@@ -100,7 +100,7 @@ export function ContractorHome() {
             <div className="flex flex-col gap-5" data-testid="po-status">
               <Facts
                 items={[
-                  { label: "PO number", value: <span className="font-mono text-xs">{po.id}</span> },
+                  { label: "PO number", value: <Link href={`/contractor/po/${po.id}`} data-testid="home-po-link" className="font-mono text-xs underline">{po.id}</Link> },
                   { label: "Supplier", value: supplier?.name ?? po.supplierId, valueAr: supplier?.nameAr },
                   { label: "Total incl. 15% VAT", value: formatSar(po.totalInclVat) },
                   {
