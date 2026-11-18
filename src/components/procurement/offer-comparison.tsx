@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { Alert, Button, CreditCapMeter, Panel } from "@/components/ui";
 import { OfferComparisonTable } from "./offer-comparison-table";
@@ -41,7 +41,19 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const blind = rfq.blindComparison && !awarded;
   const nameOf = (o: Pick<Offer, "id" | "supplierId">) => (blind ? (labels.get(o.id) ?? "Supplier") : (supplierOf(o.supplierId)?.name ?? o.supplierId));
 
-  if (placed) return <PoConfirmation pos={placed} />;
+  // Always mounted, so screen readers announce the text when a PO is placed (#75).
+  const live = (
+    <p role="status" aria-live="polite" className="sr-only" data-testid="po-announcement">
+      {placed ? `${placed.length > 1 ? `${placed.length} purchase orders issued` : "Purchase order issued"}: ${placed.map((p) => p.id).join(", ")}, total ${formatSar(add(...placed.map((p) => p.totalInclVat)))} including VAT.` : ""}
+    </p>
+  );
+  if (placed)
+    return (
+      <>
+        {live}
+        <PoConfirmation pos={placed} />
+      </>
+    );
   if (offers.length === 0) {
     return (
       <Panel title="Offers">
@@ -53,6 +65,8 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const setBlind = (on: boolean) => update((prev) => ({ ...prev, rfqs: prev.rfqs.map((r) => (r.id === rfq.id ? { ...r, blindComparison: on } : r)) }));
 
   return (
+    <>
+      {live}
     <div className="space-y-4">
       {awarded && pos.length > 0 && <PoList pos={pos} />}
       <Panel
@@ -118,6 +132,7 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
 
       {draft && !awarded && <PoDraft rfq={rfq} orders={draft} ranks={ranks} {...(split && draft.length === 1 ? { onUseSplit: () => setDraft(split.allocations.map((a) => ({ offerId: a.offerId, rfqLineIds: a.rfqLineIds }))) } : {})} onCancel={() => setDraft(null)} onPlaced={setPlaced} />}
     </div>
+    </>
   );
 }
 
@@ -246,10 +261,20 @@ const methodLabel = (po: PurchaseOrder) => (po.paymentMethod === "platform_credi
 
 function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
   const total = add(...pos.map((p) => p.totalInclVat));
+  const title = pos.length > 1 ? `${pos.length} purchase orders issued` : "Purchase order issued";
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    // The button that placed the PO is gone: move focus to the result so keyboard
+    // users land on it instead of <body> (#75). The parent's live region announces it.
+    heading.current?.focus();
+  }, []);
   return (
     <div data-testid="po-confirmation" className="space-y-4">
-      <Alert tone="positive" title={pos.length > 1 ? `${pos.length} purchase orders issued` : "Purchase order issued"}>
-        Total {formatSar(total)} incl. 15% VAT · {methodLabel(pos[0]!)}
+      <h2 ref={heading} tabIndex={-1} data-testid="po-confirmation-heading" className="text-xl font-semibold text-ink focus:outline-none">
+        {title}
+      </h2>
+      <Alert tone="positive" title={`Total ${formatSar(total)} incl. 15% VAT`}>
+        {methodLabel(pos[0]!)}
       </Alert>
       {pos.map((po) => {
         const supplier = supplierOf(po.supplierId);
