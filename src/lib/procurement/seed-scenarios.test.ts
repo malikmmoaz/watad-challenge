@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { offers, rfqs } from "@/data";
+import { creditFacilities, offers, purchaseOrders, rfqs } from "@/data";
+import { supplierNextStep } from "./supplier-offer";
 import { sar } from "@/domain/money";
 import { suggestBasketSplit } from "./comparison";
 
@@ -25,5 +26,19 @@ describe("seed scenarios", () => {
     expect(rfq.status).toBe("sent");
     expect(rfq.invitedSupplierIds).toContain("sup_rawasi");
     expect(offers.some((o) => o.rfqId === "rfq_1044")).toBe(false);
+  });
+
+  it("the demo supplier opens on a won PO to dispatch, drawn on the contractor's cap", () => {
+    const po = purchaseOrders.find((p) => p.supplierId === "sup_rawasi")!;
+    expect(po).toMatchObject({ id: "po_3011", rfqId: "rfq_1039", status: "confirmed", paymentMethod: "platform_credit" });
+    expect(supplierNextStep(po)).toEqual({ text: "Mark as dispatched", yours: true });
+    expect(rfqs.find((r) => r.id === "rfq_1039")!.status).toBe("awarded");
+    expect(offers.find((o) => o.id === po.offerId)!.status).toBe("awarded");
+    // The facility's drawn amount includes every unrepaid seeded draw, and the open comparison
+    // on rfq_1042 (Rawasi, SAR 560,993) still fits what is left of the cap.
+    const facility = creditFacilities.find((f) => f.contractorId === "con_najd")!;
+    const drawn = purchaseOrders.filter((p) => p.creditDraw && !p.creditDraw.repaidAt).reduce((s, p) => s + p.creditDraw!.principal, 0);
+    expect(facility.drawn).toBe(drawn);
+    expect(facility.cap - facility.drawn).toBeGreaterThanOrEqual(sar(560_993));
   });
 });
