@@ -9,6 +9,8 @@ import type { City, MaterialCategory, OrgId, PaymentTerms, Rfq, RfqId, RfqLine }
 import { SAMPLE_BOQ_FILE, lineIdFor, simulateBoqExtraction, type BoqExtraction } from "@/lib/procurement/boq";
 import { CATEGORY_LABELS, CITIES, UNIT_LABELS } from "@/lib/procurement/labels";
 import { estimateRfqValue } from "@/lib/procurement/shortlist";
+import { buttonClass } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 import { update } from "@/store";
 
 const TERMS: { key: string; label: string; terms: PaymentTerms }[] = [
@@ -19,14 +21,16 @@ const TERMS: { key: string; label: string; terms: PaymentTerms }[] = [
 ];
 const CREDIT_TERMS: PaymentTerms = { kind: "platform_credit", days: 60 };
 const DAY_MS = 86_400_000;
-const input = "rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm";
-const card = "rounded border border-neutral-200 bg-white p-4";
+const input =
+  "rounded-md border border-line-control bg-surface px-2.5 py-1.5 text-sm text-ink transition-[border-color] duration-150 hover:border-ink-subtle " +
+  "focus-visible:border-stamp focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stamp/30 disabled:cursor-not-allowed disabled:bg-panel disabled:text-ink-subtle";
+const card = "rounded-lg border border-line bg-surface p-4 sm:p-5";
 
 const contractor = reference.contractors.find((c) => c.id === demoPersona.contractor) ?? reference.contractors[0]!;
 const categories = [...new Set(reference.materials.map((m) => m.category))];
 
 function SimulatedBadge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-xs text-amber-900">{children}</span>;
+  return <span className="inline-flex items-center rounded-sm border border-dashed border-ai-line bg-ai-soft px-1.5 py-0.5 text-xs font-medium text-ai">{children}</span>;
 }
 
 export function RfqBuilder() {
@@ -116,20 +120,20 @@ export function RfqBuilder() {
   if (created) {
     return (
       <div className="space-y-4" data-testid="rfq-confirmed">
-        <h1 className="text-2xl font-semibold">RFQ confirmed</h1>
+        <h1 className="text-2xl font-semibold text-ink">RFQ confirmed</h1>
         <div className={card}>
-          <p className="font-medium">{created.title}</p>
-          <p className="mt-1 text-sm text-neutral-700">
+          <p className="font-medium text-ink">{created.title}</p>
+          <p className="mt-1 text-sm text-ink-muted">
             <span data-testid="rfq-id" className="font-mono">{created.id}</span> · {created.lines.length} line items · deliver to {created.deliverySite}, {created.deliveryCity} by{" "}
-            {created.requiredBy.slice(0, 10)} · about {formatSar(estimateRfqValue(created, reference.materials))} incl. VAT at benchmark prices
+            {formatDate(created.requiredBy)} · about {formatSar(estimateRfqValue(created, reference.materials))} incl. VAT at benchmark prices
           </p>
-          <p className="mt-2 text-sm text-neutral-700">Saved as a draft. Next step: choose which suppliers receive it from the explainable shortlist.</p>
+          <p className="mt-2 text-sm text-ink-muted">Saved as a draft. Next step: choose which suppliers receive it from the explainable shortlist.</p>
         </div>
         <div className="flex gap-3">
-          <Link href={`/contractor/rfq/${created.id}`} data-testid="rfq-choose-suppliers" className="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white">
+          <Link href={`/contractor/rfq/${created.id}`} data-testid="rfq-choose-suppliers" className={buttonClass("primary")}>
             Choose suppliers
           </Link>
-          <Link href="/contractor" className="inline-block rounded border border-neutral-300 px-4 py-2 text-sm">
+          <Link href="/contractor" className={buttonClass("secondary")}>
             Back to my RFQs
           </Link>
         </div>
@@ -144,7 +148,7 @@ export function RfqBuilder() {
       aria-selected={mode === m}
       data-testid={`rfq-tab-${m}`}
       onClick={() => setMode(m)}
-      className={`rounded px-3 py-1.5 text-sm ${mode === m ? "bg-neutral-900 text-white" : "text-neutral-700 hover:bg-neutral-100"}`}
+      className={`flex h-8 items-center rounded-[4px] px-3 text-sm transition-colors duration-150 ${mode === m ? "bg-surface font-medium text-ink shadow-[0_1px_2px_oklch(0.235_0.022_160/0.12)]" : "text-ink-muted hover:text-ink"}`}
     >
       {label}
     </button>
@@ -153,30 +157,30 @@ export function RfqBuilder() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">New request for quotation</h1>
-        <p className="mt-1 text-sm text-neutral-700">Upload a bill of quantities or pick materials from the catalog, then confirm quantities, specs and delivery.</p>
+        <h1 className="text-2xl font-semibold text-ink">New request for quotation</h1>
+        <p className="mt-1 text-sm text-ink-muted">Upload a bill of quantities or pick materials from the catalog, then confirm quantities, specs and delivery.</p>
       </div>
 
       <section className={card} aria-label="Add line items">
-        <div role="tablist" className="mb-4 flex gap-1">
+        <div role="tablist" aria-label="How to add line items" className="mb-4 inline-flex gap-0.5 rounded-md border border-line-control bg-panel p-0.5">
           {tab("upload", "Upload RFQ / BOQ")}
           {tab("catalog", "Pick from catalog")}
         </div>
 
         {mode === "upload" ? (
           <div className="space-y-3">
-            <p className="text-sm text-neutral-700">
+            <p className="text-sm text-ink-muted">
               <SimulatedBadge>Simulated AI</SimulatedBadge> The BOQ reader is simulated: CSV and TXT files (<code>description; quantity; unit</code>) are read and matched to the catalog by keyword; any other
               file returns a fixed sample extraction. Always review the lines before confirming.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <input type="file" data-testid="rfq-upload" aria-label="RFQ or BOQ file" accept=".csv,.txt,.tsv,.pdf,.xlsx,.xls" className="text-sm" onChange={(e) => void onFile(e.target.files?.[0])} />
-              <button type="button" data-testid="rfq-upload-sample" className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50" onClick={() => applyExtraction(simulateBoqExtraction(SAMPLE_BOQ_FILE, null, reference.materials))}>
+              <input type="file" data-testid="rfq-upload" aria-label="RFQ or BOQ file" accept=".csv,.txt,.tsv,.pdf,.xlsx,.xls" className="max-w-full text-sm text-ink-muted file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-control file:bg-surface file:px-3 file:text-sm file:font-medium file:text-ink hover:file:bg-paper" onChange={(e) => void onFile(e.target.files?.[0])} />
+              <button type="button" data-testid="rfq-upload-sample" className={buttonClass("secondary", "sm")} onClick={() => applyExtraction(simulateBoqExtraction(SAMPLE_BOQ_FILE, null, reference.materials))}>
                 Try the sample BOQ
               </button>
             </div>
             {extraction && (
-              <div data-testid="rfq-extraction" className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+              <div data-testid="rfq-extraction" className="rounded-md border border-dashed border-ai-line bg-ai-soft p-3 text-sm text-ink">
                 <p>
                   <strong>{extraction.fileName}</strong>: {extraction.lines.length} line items extracted
                   {extraction.mode === "sample" ? " (sample extraction, not read from your file)" : " from the file"}. Simulated AI, check each line below.
@@ -204,18 +208,18 @@ export function RfqBuilder() {
               {reference.materials.filter((m) => category === "all" || m.category === category).map((m) => {
                 const added = lines.some((l) => l.materialId === m.id);
                 return (
-                  <li key={m.id} className="flex items-start justify-between gap-3 rounded border border-neutral-200 p-3">
+                  <li key={m.id} className="flex items-start justify-between gap-3 rounded-md border border-line p-3">
                     <div className="text-sm">
-                      <p className="font-medium">{m.name}</p>
-                      <p className="text-neutral-600">{m.spec}</p>
-                      <p className="text-neutral-600">Benchmark {formatSar(m.benchmarkUnitPrice)} per {UNIT_LABELS[m.unit]} excl. VAT (sample data)</p>
+                      <p className="font-medium text-ink">{m.name}</p>
+                      <p className="text-ink-muted">{m.spec}</p>
+                      <p className="text-ink-muted">Benchmark {formatSar(m.benchmarkUnitPrice)} per {UNIT_LABELS[m.unit]} excl. VAT (sample data)</p>
                     </div>
                     <button
                       type="button"
                       data-testid="rfq-catalog-add"
                       data-material={m.id}
                       disabled={added}
-                      className="shrink-0 rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50 disabled:text-neutral-400"
+                      className={buttonClass("secondary", "sm", "shrink-0")}
                       onClick={() => { start("catalog"); setLines((prev) => [...prev, { id: lineIdFor(m.id), materialId: m.id, description: m.name, spec: m.spec, quantity: 1, unit: m.unit }]); }}
                     >
                       {added ? "Added" : "Add"}
@@ -229,23 +233,23 @@ export function RfqBuilder() {
       </section>
 
       <section className={card} aria-label="Line items">
-        <h2 className="mb-3 font-semibold">Line items ({lines.length})</h2>
+        <h2 className="mb-3 text-sm font-semibold text-ink">Line items ({lines.length})</h2>
         {lines.length === 0 ? (
-          <p className="text-sm text-neutral-600">No line items yet.</p>
+          <p className="text-sm text-ink-muted">No line items yet.</p>
         ) : (
           <div>
             {/* A grid, not a table: one row per line from sm up, a stacked card on phones (#29). */}
-            <div aria-hidden="true" className="hidden gap-3 border-b border-neutral-200 pb-1 text-sm font-medium text-neutral-600 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem]">
+            <div aria-hidden="true" className="hidden gap-3 border-b border-line-strong pb-1.5 text-xs font-medium text-ink-muted sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem]">
               <span>Material</span>
               <span>Spec</span>
               <span>Quantity</span>
               <span />
             </div>
-            <ul className="divide-y divide-neutral-200 text-sm">
+            <ul className="divide-y divide-line text-sm">
               {lines.map((l) => (
                 <li key={l.id} data-testid="rfq-line" className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem] sm:items-start sm:gap-3">
                   <div className="min-w-0">
-                    <span className="font-medium sm:font-normal">{l.description}</span>
+                    <span className="font-medium text-ink sm:font-normal">{l.description}</span>
                     {l.parsedBy && (
                       <div className="mt-1">
                         <SimulatedBadge>
@@ -255,12 +259,12 @@ export function RfqBuilder() {
                     )}
                   </div>
                   <label className="flex min-w-0 flex-col gap-1">
-                    <span className="text-neutral-600 sm:sr-only">Spec</span>
+                    <span className="text-ink-muted sm:sr-only">Spec</span>
                     <input aria-label={`Spec for ${l.description}`} className={`${input} w-full min-w-0`} value={l.spec} onChange={(e) => patch(l.id, { spec: e.target.value })} />
                   </label>
                   <div className="flex items-end justify-between gap-3 sm:contents">
                     <label className="flex flex-col gap-1">
-                      <span className="text-neutral-600 sm:sr-only">Quantity</span>
+                      <span className="text-ink-muted sm:sr-only">Quantity</span>
                       <span className="flex items-center gap-2 whitespace-nowrap">
                         <input
                           type="number"
@@ -276,14 +280,14 @@ export function RfqBuilder() {
                         {UNIT_LABELS[l.unit]}
                       </span>
                     </label>
-                    <button type="button" className="py-1.5 text-left text-neutral-600 underline" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
+                    <button type="button" className="py-1.5 text-left text-ink-muted underline decoration-line-strong underline-offset-[3px] hover:text-negative hover:decoration-negative" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
                       Remove
                     </button>
                   </div>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-sm text-neutral-700">
+            <p className="mt-3 text-sm text-ink-muted">
               Estimated value: <strong data-testid="rfq-estimate">{formatSar(estimate)}</strong> incl. 15% VAT, at 90-day benchmark prices (sample data). Offers will set the real price.
             </p>
           </div>
@@ -291,7 +295,7 @@ export function RfqBuilder() {
       </section>
 
       <section className={card} aria-label="Delivery and terms">
-        <h2 className="mb-3 font-semibold">Delivery and terms</h2>
+        <h2 className="mb-3 text-sm font-semibold text-ink">Delivery and terms</h2>
         <div className="grid gap-4 text-sm sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             Project
@@ -318,7 +322,7 @@ export function RfqBuilder() {
             <div className="flex flex-wrap items-center gap-2">
               <input id="rfq-required-by" type="date" data-testid="rfq-required-by" className={input} value={requiredBy} onChange={(e) => setRequiredBy(e.target.value)} />
               {[7, 14, 30].map((d) => (
-                <button key={d} type="button" data-testid={`rfq-required-in-${d}`} className="rounded border border-neutral-300 px-2 py-1 hover:bg-neutral-50" onClick={() => setRequiredBy(new Date(Date.now() + d * DAY_MS).toISOString().slice(0, 10))}>
+                <button key={d} type="button" data-testid={`rfq-required-in-${d}`} className={buttonClass("secondary", "sm")} onClick={() => setRequiredBy(new Date(Date.now() + d * DAY_MS).toISOString().slice(0, 10))}>
                   in {d} days
                 </button>
               ))}
@@ -344,10 +348,10 @@ export function RfqBuilder() {
       </section>
 
       <div className="flex flex-wrap items-center gap-4">
-        <button type="button" data-testid="rfq-confirm" disabled={problems.length > 0} onClick={confirm} className="rounded bg-neutral-900 px-4 py-2 text-sm text-white disabled:bg-neutral-300">
+        <button type="button" data-testid="rfq-confirm" disabled={problems.length > 0} onClick={confirm} className={buttonClass("primary")}>
           Confirm RFQ
         </button>
-        <p role="status" className="text-sm text-neutral-700">{error ?? problems[0] ?? "Ready to confirm."}</p>
+        <p role="status" className={`text-sm ${error ? "text-negative" : "text-ink-muted"}`}>{error ?? problems[0] ?? "Ready to confirm."}</p>
       </div>
     </div>
   );
