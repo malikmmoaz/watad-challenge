@@ -17,12 +17,14 @@ export function OfferComparisonDemo() {
   const offers = seedState.offers.filter((o) => o.rfqId === rfq.id);
   const rows = compareOffers(rfq, offers, { materials: reference.materials, suppliers: reference.suppliers, today: TODAY });
   const name = new Map(reference.suppliers.map((s) => [s.id, s.name]));
+  const takesCredit = new Map(reference.suppliers.map((s) => [s.id, s.acceptsPlatformCredit]));
   return (
     <OfferComparisonTable
       rows={rows}
       nameOf={(r) => name.get(r.supplierId) ?? r.supplierId}
       requiredInDays={Math.floor((Date.parse(rfq.requiredBy) - Date.parse(TODAY)) / DAY_MS)}
       rfqLabel={rfq.id}
+      acceptsCredit={(r) => takesCredit.get(r.supplierId) ?? false}
       chosenOfferId={chosen}
       onChoose={setChosen}
     />
