@@ -274,6 +274,13 @@ All exported from `@/components/ui`.
 ### Navigation (`RoleNav`, `AppShell`)
 - The current role is the light pill on the pine bar; others are `on-pine-muted` and lighten on hover. Focus rings on pine are `on-pine`.
 
+### Landing page (`/`)
+- **One sheet.** The hero is a single ruled sheet with crop marks at its corners: a mono strip naming the flow, the headline (`text-6xl`, 600, tracking -0.025em, at most three lines), a register of what is on file, and the three parties as cells of one ruled row. The parties are not floating cards.
+- **One click in.** Each party cell is one link (`data-testid="role-<role>"`) ending in an action-green bar, with a live line saying what is waiting for that role.
+- **Live specimens, not screenshots.** "One order, four steps" renders the app's own components on the seeded data: RFQ lines, offers with `LeadTimeBar`, a PO's status, `CreditCapMeter` and a `DecisionStamp`.
+- **No invented proof.** There are no customers or testimonials (see PRODUCT.md), so the proof slot states how the product earns trust instead.
+- Display sizes `text-5xl` and `text-6xl` are for this page's headline only.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -291,3 +298,17 @@ All exported from `@/components/ui`.
 - **Don't** write "interest", "quote" or "bid" (except the first mention "offers (bids)" on the PO flow), and don't round or abbreviate money.
 - **Don't** stamp or seal anything a simulated AI produced.
 - **Don't** add a dark theme or a second typeface.
+
+## Inspiration
+
+Five reference sites were studied on 18 Nov 2026 (rendered at 1440 wide). We take patterns, never copy, logos, illustrations or layouts. Each pattern is translated into the attested-document world above; where a reference conflicts with a rule in this file, the rule wins.
+
+| Reference | Pattern we take | How it maps here |
+| --- | --- | --- |
+| meelio.io | A very large, tightly tracked headline with a small mono line above it; the product itself directly under the hero; a strip of plain facts. | Headline at `text-6xl` with -0.025em tracking; the mono strip names the flow (RFQ → offers → PO → credit); the fact strip becomes the register of what is on file. We keep one type family and sentence case (no italic serif, no uppercase). |
+| firecrawl.dev | Page structure drawn with visible hairlines and registration marks; a working product control inside the hero. | Ruled sheets with crop marks, which is how an attested form is already built. The working control is the three role entries: one click and the reviewer is inside the product. |
+| phonic.ai | A left-aligned hero with the live product beside it and at most two actions; a restrained warm-neutral ground. | Left-aligned headline with the live register beside it; actions are limited to the three role entries. Our ground stays the green-tinted paper. |
+| amboras.com | A short headline, small buttons, then product surfaces straight away, with generous white space and no decoration. | No illustration and no gradient: the second section is already product ("One order, four steps"). Section headings are short (`text-3xl`). |
+| nabrah.ai/en | A product switcher right under the hero for its three products; a numbered step-by-step section; an Arabic toggle. | Three parties under the headline, each with what is waiting for them; the flow as four numbered steps with serials (01 · rfq_1042). The Arabic toggle stays optional for the polish pass. |
+
+**Not taken, on purpose:** announcement banners, funding and customer-logo rows, testimonials and pricing tables (we have no such evidence and PRODUCT.md forbids inventing it); orange and violet brand accents (action green stays the only pressable colour); scroll-driven animation (motion stays at 150 ms state changes).

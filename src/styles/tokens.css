@@ -84,6 +84,11 @@
   --text-3xl--line-height: 2.25rem;
   --text-4xl: 2.5rem;
   --text-4xl--line-height: 2.75rem;
+  /* Landing headline only */
+  --text-5xl: 3.25rem;
+  --text-5xl--line-height: 3.5rem;
+  --text-6xl: 4rem;
+  --text-6xl--line-height: 4.125rem;
 
   /* Shape: small radii, like a printed form */
   --radius-xs: 2px;
