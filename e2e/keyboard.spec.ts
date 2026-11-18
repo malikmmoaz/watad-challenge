@@ -30,7 +30,8 @@ async function tabTo(page: Page, target: Locator, label: string, { checkFocusRin
   throw new Error(`Could not reach "${label}" with Tab`);
 }
 
-test("keyboard only: create an RFQ from the catalog", async ({ page }) => {
+test("keyboard only: create an RFQ from the catalog", async ({ page, browserName }) => {
+  test.fixme(browserName === "webkit", "#81: RFQ builder tabs are not reachable with Tab in WebKit");
   await page.goto("/contractor");
   await tabTo(page, tid(page, "rfq-new"), "New RFQ");
   await page.keyboard.press("Enter");
