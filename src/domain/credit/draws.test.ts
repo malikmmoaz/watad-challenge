@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { seedState } from "@/data";
 import type { Halalas, PurchaseOrder } from "../types";
 import { drawLedger, drawState, repayDraw, utilisation } from "./draws";
+import { availableCredit } from "./facility";
 
 const asOf = "2026-11-18";
 const { purchaseOrders: pos, creditFacilities: facilities } = seedState;
@@ -31,7 +32,7 @@ describe("repayDraw", () => {
     if (!r.ok) throw new Error(r.error);
     const f = r.creditFacilities.find((x) => x.contractorId === "con_najd")!;
     expect(f.drawn).toBe(najd.drawn - draw.creditDraw!.principal);
-    expect(f.available).toBe(f.cap - f.drawn);
+    expect(availableCredit(f)).toBe(f.cap - f.drawn);
     expect(r.repaid).toBe(draw.creditDraw!.totalRepayable);
     expect(r.purchaseOrders.find((p) => p.id === draw.id)?.creditDraw?.repaidAt).toBe("2026-11-18T10:00:00Z");
   });

@@ -3,6 +3,7 @@ import type { CreditCase, CreditCaseId, OrgId } from "../types";
 import { SAMPLE_CASES, bunyanAlHijaz, durratAlQassim, rawasiNajd, sahelAlSharq } from "./samples";
 import { reasonCodes } from "./to-case";
 import type { CreditProfile } from "./types";
+import { availableCredit } from "./facility";
 import { decide, runChecks, validateDecision, type DecisionInput } from "./workflow";
 
 const now = "2026-11-18T12:00:00Z";
@@ -87,17 +88,19 @@ describe("decide", () => {
     const { case: c, facility } = decide(run(rawasiNajd), approve, now);
     expect(c.status).toBe("approved");
     expect(c.decision).toMatchObject({ outcome: "approve", approvedCap: 100_000_000, overrodeAi: false });
-    expect(facility).toMatchObject({ cap: 100_000_000, available: 100_000_000, drawn: 0, band: "A", maxTenorDays: 60, profitRate: 0.025 });
+    expect(facility).toMatchObject({ cap: 100_000_000, drawn: 0, band: "A", maxTenorDays: 60, profitRate: 0.025 });
     expect(c.log.at(-1)).toMatchObject({ actor: "credit_manager", action: "Approved" });
   });
 
   it("carries outstanding draws into a replacement facility", () => {
     const current = decide(run(rawasiNajd), approve, now).facility!;
-    const withDraws = { ...current, drawn: 30_000_000 as typeof current.drawn, available: 70_000_000 as typeof current.drawn };
+    const withDraws = { ...current, drawn: 30_000_000 as typeof current.drawn };
     const higher = decide(run(rawasiNajd), { ...approve, approvedCapSar: 800_000 }, now, withDraws).facility!;
-    expect(higher).toMatchObject({ cap: 80_000_000, drawn: 30_000_000, available: 50_000_000 });
+    expect(higher).toMatchObject({ cap: 80_000_000, drawn: 30_000_000 });
+    expect(availableCredit(higher)).toBe(50_000_000);
     const below = decide(run(rawasiNajd), { ...approve, approvedCapSar: 200_000 }, now, withDraws).facility!;
-    expect(below).toMatchObject({ drawn: 30_000_000, available: 0 });
+    expect(below).toMatchObject({ drawn: 30_000_000 });
+    expect(availableCredit(below)).toBe(0);
   });
 
   it("requests more information with the items listed", () => {

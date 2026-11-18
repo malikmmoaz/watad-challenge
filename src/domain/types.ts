@@ -361,8 +361,6 @@ export interface CreditFacility {
   cap: Halalas;
   /** Sum of outstanding principal across open draws. */
   drawn: Halalas;
-  /** cap - drawn */
-  available: Halalas;
   band: CreditBand;
   maxTenorDays: 30 | 60 | 90;
   profitRate: number;
