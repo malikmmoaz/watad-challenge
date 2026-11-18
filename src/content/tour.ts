@@ -105,8 +105,8 @@ export const tour: Tour = {
       intro: "You work for neither buyer nor seller: you review credit applications and decide.",
       steps: [
         {
-          title: "Open a file that is ready",
-          text: "Open **Hijaz Peaks Building Est.**: gated checks run cheapest first with SIMAH last, and each extracted field shows its confidence and source.",
+          title: "Open a file and run the checks",
+          text: "Open **Hijaz Peaks Building Est.** → **Run checks (simulated AI)**: gated checks run cheapest first, SIMAH last, and each extracted field shows its confidence and source.",
           href: "/credit/cases/cc_502",
           linkLabel: "Hijaz Peaks Building Est.",
         },

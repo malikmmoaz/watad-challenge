@@ -33,7 +33,7 @@ You are **Rawasi Building Materials Trading**, a Riyadh distributor of rebar and
 The credit manager works for neither the buyer nor the seller. Switch with **Credit manager**.
 
 1. **Credit applications**: the queue, sorted by what needs a decision, with score and band once scored.
-2. Open **Hijaz Peaks Building Est.** (`cc_502`, *Ready to decide*):
+2. Open **Hijaz Peaks Building Est.** (`cc_502`, *In assessment*) → **Run checks (simulated AI)**; the file is prepared in about 3 seconds:
    - ★ **Gated checks, cheapest first**: CR, VAT, bank, financials, SIMAH last; a failed gate stops the later ones.
    - **Documents and extracted fields**, each with its confidence; the evidence seals on a factor jump to the field it came from.
    - **Scorecard**: 10 weighted factors. Each says *why it matters* and shows its effect: what the score, band and limit would be at full marks and at zero.
@@ -47,4 +47,4 @@ The credit manager works for neither the buyer nor the seller. Switch with **Cre
 
 ---
 
-Checked against production on 18 Nov 2026 at 1440 and 412 px (`docs/BRIEF-CHECKLIST.md`, pass 2). The same journeys run on every pull request as Playwright end-to-end tests in `e2e/`.
+Checked against production on 18 Nov 2026 at 1440 and 412 px, last after the redesign (`docs/BRIEF-CHECKLIST.md`, pass 4). The same journeys run on every pull request as Playwright end-to-end tests in `e2e/`.
