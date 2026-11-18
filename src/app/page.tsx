@@ -8,7 +8,7 @@ import { demoPersona, reference, seedState } from "@/data";
 import { formatSar, halalas } from "@/domain/money";
 import type { Role } from "@/domain/types";
 import { COMPARISON_WEIGHTS, compareOffers } from "@/lib/procurement/comparison";
-import { UNIT_LABELS } from "@/lib/procurement/labels";
+import { formatQuantity } from "@/lib/procurement/labels";
 
 /** Fixed "today" for the seeded sample data, so the page renders the same everywhere. */
 const TODAY = "2026-11-18";
@@ -90,7 +90,7 @@ export default function Home() {
       contractor: reference.contractors.find((c) => c.id === supplierRfq.contractorId)?.name ?? "",
       reasons: ["You stock rebar, steel and cement", `You deliver to ${supplierRfq.deliveryCity}`, "Paid directly from the contractor's credit cap"],
       closes: date.format(new Date(supplierRfq.closesAt)),
-      lines: supplierRfq.lines.map((l) => ({ name: l.description, qty: `${l.quantity.toLocaleString("en-SA")} ${UNIT_LABELS[l.unit]}` })),
+      lines: supplierRfq.lines.map((l) => ({ name: l.description, qty: formatQuantity(l.quantity, l.unit) })),
     },
     credit: {
       applicant: reference.contractors.find((c) => c.id === creditCase?.contractorId)?.name ?? "",
@@ -245,7 +245,7 @@ export default function Home() {
                     <li key={l.id} className="flex items-baseline justify-between gap-3">
                       <span className="text-ink">{l.description}</span>
                       <span className="whitespace-nowrap tabular-nums text-ink-muted">
-                        {l.quantity.toLocaleString("en-SA")} {UNIT_LABELS[l.unit]}
+                        {formatQuantity(l.quantity, l.unit)}
                       </span>
                     </li>
                   ))}
