@@ -70,7 +70,7 @@ jobs:
   lighthouse:
     name: lighthouse (budgets)
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
