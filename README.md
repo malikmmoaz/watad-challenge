@@ -4,7 +4,7 @@ A three-role demo for Saudi construction materials procurement: **contractor**, 
 
 All companies, prices and credit files are **sample data**. AI features are **simulated** and labelled.
 
-Live link: _added with the first Vercel deploy (#3)._
+Live link: _added once Malik imports the repo on Vercel (#3)._
 
 ## Run
 
@@ -47,4 +47,9 @@ Every task is a GitHub issue. Branch `feat/<issue>-name`, small PRs, conventiona
 
 ## Deploy
 
-Vercel: production from `main`, a preview per PR. No environment variables are needed to run the app.
+Vercel, imported by Malik through Vercel's GitHub integration (limited to this repo). Agents hold no Vercel credentials: there is no Vercel CLI on the team machine and no `vercel.json`.
+
+- `main` deploys to production; every PR gets a preview deployment.
+- Default Next.js settings: build `next build`, install `pnpm install`. Vercel picks pnpm 10 from the lockfile (`lockfileVersion: '9.0'`); install and build with pnpm 10 are verified. Node is pinned to `22.x` in `package.json`, matching CI.
+- Deployment status and URLs: the PR checks, the Vercel bot comment, or `gh api repos/malikmmoaz/watad-challenge/deployments`.
+- The app runs with no environment variables. Optional ones are listed in `.env.example`.
