@@ -37,6 +37,8 @@ export interface OfferComparisonTableProps {
   chosenOfferId?: OfferId;
   /** Omit to show the comparison read-only (e.g. after a PO is placed). */
   onChoose?: (offerId: OfferId) => void;
+  /** Whether the offer's supplier accepts payment from the contractor's credit cap; shown under the terms. */
+  acceptsCredit?: (row: OfferComparisonRow) => boolean;
 }
 
 /**
@@ -44,7 +46,7 @@ export interface OfferComparisonTableProps {
  * order, and its score opens into the factors behind it, so the contractor can
  * see why an offer ranks where it does. The ranking informs; the contractor chooses.
  */
-export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, chosenOfferId, onChoose }: OfferComparisonTableProps) {
+export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, chosenOfferId, onChoose, acceptsCredit }: OfferComparisonTableProps) {
   const sorted = [...rows].sort((a, b) => a.rank - b.rank);
   const maxDays = Math.max(requiredInDays, ...sorted.map((r) => r.leadTimeDays), 1);
   const columns = onChoose ? 7 : 6;
@@ -74,9 +76,9 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
         const full = r.linesCovered === r.linesRequested;
         return (
           <tbody key={r.offerId} className="border-b border-line last:border-b-0">
-            <Tr state={state} data-testid="offer-row" className="border-b-0">
+            <Tr state={state} data-testid="offer-row" data-offer={r.offerId} className="border-b-0">
               <Td className="min-w-60">
-                <span className="font-medium text-ink">{nameOf(r)}</span>
+                <span className="font-medium text-ink" data-testid="offer-supplier">{nameOf(r)}</span>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {r.rank === 1 ? <Badge tone="positive">Best overall score</Badge> : null}
                   {r.badges.map((b) => (
@@ -84,7 +86,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                       {BADGE_LABEL[b]}
                     </Badge>
                   ))}
-                  {r.localContent ? <Badge icon={false}>Local content</Badge> : null}
+                  {r.localContent ? <Badge icon={false}>Made in Saudi</Badge> : null}
                 </div>
               </Td>
               <Td align="end">
@@ -101,14 +103,17 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                 <span className={full ? "text-ink" : "font-medium text-caution"}>
                   {r.linesCovered} of {r.linesRequested} lines in full
                 </span>
-                <CellNote>{Math.round(r.coverage * 100)}% of the quantity</CellNote>
+                <CellNote>{Math.round(r.coverage * 100)}% of requested value</CellNote>
               </Td>
               <Td>
                 <LeadTimeBar days={r.leadTimeDays} maxDays={maxDays} requiredInDays={requiredInDays} />
               </Td>
-              <Td className="min-w-40">{r.termsLabel}</Td>
+              <Td className="min-w-40">
+                {r.termsLabel}
+                {acceptsCredit ? <CellNote>{acceptsCredit(r) ? "Accepts your credit cap" : "No platform credit"}</CellNote> : null}
+              </Td>
               <Td align="end">
-                <span className="text-lg font-semibold text-ink">{Math.round(r.score)}</span>
+                <span className="text-lg font-semibold text-ink" data-testid="offer-score">{Math.round(r.score)}</span>
                 <CellNote>of 100</CellNote>
               </Td>
               {onChoose ? (

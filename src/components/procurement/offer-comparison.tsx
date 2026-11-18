@@ -1,37 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useMemo, useState } from "react";
-import { Alert, Badge, Button, CellNote, CreditCapMeter, FactorBar, Panel, Table, THead, Td, Th, Tr, type Tone } from "@/components/ui";
+import { useMemo, useState } from "react";
+import { Alert, Button, CreditCapMeter, Panel } from "@/components/ui";
+import { OfferComparisonTable } from "./offer-comparison-table";
 import { reference } from "@/data";
 import { add, formatSar } from "@/domain/money";
-import type { ComparisonFactor, Halalas, Offer, PaymentMethod, PurchaseOrder, Rfq } from "@/domain/types";
-import { blindLabels, compareOffers, suggestBasketSplit, type OfferBadge, type OfferComparisonRow } from "@/lib/procurement/comparison";
+import type { Halalas, Offer, OfferId, PaymentMethod, PurchaseOrder, Rfq } from "@/domain/types";
+import { blindLabels, compareOffers, suggestBasketSplit } from "@/lib/procurement/comparison";
 import { PO_STEPS, creditEligibility, placePurchaseOrders, quoteOrder, type PoOrder } from "@/lib/procurement/po";
 import { getState, update, useDemo } from "@/store";
 
-const BADGES: Record<OfferBadge, string> = {
-  lowest_landed_cost: "Lowest landed cost",
-  fastest: "Fastest",
-  best_terms: "Best terms",
-  most_reliable: "Most reliable",
-};
-const FACTORS: Record<ComparisonFactor, string> = {
-  cost: "Landed cost",
-  coverage: "Coverage",
-  lead_time: "Lead time",
-  reliability: "Reliability",
-  payment_terms: "Payment terms",
-  local_content: "Local content",
-};
-const FLAG: Record<OfferComparisonRow["priceFlag"], { tone: Tone; text: (pct: number) => string }> = {
-  below_market: { tone: "positive", text: (p) => `${Math.abs(p)}% below benchmark` },
-  in_line: { tone: "neutral", text: () => "In line with benchmark" },
-  above_market: { tone: "caution", text: (p) => `${p}% above benchmark` },
-};
 
 const supplierOf = (id: string) => reference.suppliers.find((s) => s.id === id);
-const pct = (n: number) => `${Math.round(n * 100)}%`;
 const fmt = (n: number) => formatSar(n as Halalas);
 
 export function OfferComparison({ rfq }: { rfq: Rfq }) {
@@ -40,7 +21,6 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const offers = useMemo(() => allOffers.filter((o) => o.rfqId === rfq.id && o.status !== "withdrawn"), [allOffers, rfq.id]);
   const pos = useMemo(() => allPos.filter((p) => p.rfqId === rfq.id), [allPos, rfq.id]);
   const [today] = useState(() => new Date().toISOString());
-  const [open, setOpen] = useState<string | null>(null);
   const [draft, setDraft] = useState<PoOrder[] | null>(null);
   const [placed, setPlaced] = useState<PurchaseOrder[] | null>(null);
 
@@ -48,6 +28,8 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
   const split = useMemo(() => suggestBasketSplit(rfq, offers), [rfq, offers]);
   const labels = useMemo(() => blindLabels(offers), [offers]);
   const awarded = rfq.status === "awarded";
+  const awardedOffer = offers.find((o) => o.status === "awarded");
+  const requiredInDays = Math.max(0, Math.ceil((Date.parse(rfq.requiredBy) - Date.parse(today)) / 86_400_000));
   const blind = rfq.blindComparison && !awarded;
   const nameOf = (o: Pick<Offer, "id" | "supplierId">) => (blind ? (labels.get(o.id) ?? "Supplier") : (supplierOf(o.supplierId)?.name ?? o.supplierId));
 
@@ -81,99 +63,17 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
           Ranked on landed cost incl. delivery and 15% VAT (Made in Saudi offers get the 10% local-content preference in ranking only), coverage, lead time against your date, payment terms and supplier reliability. Prices are
           compared with the 90-day benchmark (sample data).
         </p>
-        <Table caption="Offers for this RFQ, best first" minWidth={900} className="mt-2">
-          <THead>
-            <tr>
-            <Th>Supplier</Th>
-            <Th align="end">Landed cost incl. VAT</Th>
-            <Th>Price vs benchmark</Th>
-            <Th>Covers</Th>
-            <Th>Lead time</Th>
-            <Th>Terms</Th>
-            <Th>Reliability</Th>
-            <Th align="end">Score</Th>
-            <Th>
-              <span className="sr-only">Actions</span>
-            </Th>
-            </tr>
-          </THead>
-          <tbody>
-            {rows.map((r) => {
-              const offer = offers.find((o) => o.id === r.offerId)!;
-              const supplier = supplierOf(r.supplierId);
-              const flag = FLAG[r.priceFlag];
-              const isOpen = open === r.offerId;
-              return (
-                <Fragment key={r.offerId}>
-                  <Tr data-testid="offer-row" data-offer={r.offerId} state={offer.status === "awarded" ? "selected" : offer.status === "not_selected" ? "muted" : r.rank === 1 && !awarded ? "recommended" : "default"}>
-                    <Td>
-                      <span className="font-medium text-ink" data-testid="offer-supplier">{nameOf(offer)}</span>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {r.badges.map((b) => (
-                          <Badge key={b} tone="positive">{BADGES[b]}</Badge>
-                        ))}
-                        {r.localContent && <Badge tone="info" icon={false}>Made in Saudi</Badge>}
-                        {offer.status === "awarded" && <Badge tone="positive">Awarded</Badge>}
-                      </div>
-                    </Td>
-                    <Td align="end">
-                      <span className="font-medium tabular-nums text-ink" data-testid="offer-landed">{formatSar(r.landedCostInclVat)}</span>
-                      <CellNote>
-                        <span className="block">Goods {formatSar(r.subtotal)}</span>
-                        <span className="block">Delivery {formatSar(r.deliveryFee)}</span>
-                        <span className="block">VAT {formatSar(r.vat)}</span>
-                      </CellNote>
-                    </Td>
-                    <Td>
-                      <Badge tone={flag.tone}>{flag.text(r.vsBenchmarkPct)}</Badge>
-                    </Td>
-                    <Td>
-                      {r.linesCovered === r.linesRequested ? "All lines" : <span className="text-caution">{r.linesCovered} of {r.linesRequested} lines</span>}
-                      <CellNote>{pct(r.coverage)} of value</CellNote>
-                    </Td>
-                    <Td>
-                      {r.leadTimeDays} days
-                      <CellNote>{r.meetsRequiredBy ? "In time" : <span className="text-negative">Late for your date</span>}</CellNote>
-                    </Td>
-                    <Td>
-                      {r.termsLabel.replace(" (supplier paid directly)", "")}
-                      <CellNote>{supplier?.acceptsPlatformCredit ? "Takes credit cap" : "No platform credit"}</CellNote>
-                    </Td>
-                    <Td>
-                      {supplier && supplier.performance.ordersCompleted >= 5 ? `${pct(supplier.performance.onTimeRate)} on time` : "New supplier"}
-                      <CellNote>{supplier ? `${supplier.performance.ordersCompleted} orders` : ""}</CellNote>
-                    </Td>
-                    <Td align="end">
-                      <button type="button" className="font-semibold tabular-nums text-ink underline decoration-dotted underline-offset-4" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : r.offerId)} data-testid="offer-score">
-                        {r.score}
-                      </button>
-                      <CellNote>#{r.rank}</CellNote>
-                    </Td>
-                    <Td>
-                      {!awarded && (
-                        <Button size="sm" variant={r.rank === 1 ? "primary" : "secondary"} data-testid="offer-choose" onClick={() => setDraft([{ offerId: offer.id }])}>
-                          Choose
-                        </Button>
-                      )}
-                    </Td>
-                  </Tr>
-                  {isOpen && (
-                    <tr>
-                      <td colSpan={9} className="border-b border-line bg-paper px-4 py-3">
-                        <p className="mb-2 text-sm font-medium text-ink">Why this score</p>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          {r.scoreBreakdown.map((f) => (
-                            <FactorBar key={f.factor} label={FACTORS[f.factor]} points={f.points} weight={f.weight} note={f.note} />
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </Table>
+        <div className="mt-2">
+          <OfferComparisonTable
+            rows={rows}
+            nameOf={(r) => nameOf(offers.find((o) => o.id === r.offerId)!)}
+            requiredInDays={requiredInDays}
+            rfqLabel={rfq.id}
+            {...(awardedOffer ? { chosenOfferId: awardedOffer.id } : {})}
+            {...(awarded ? {} : { onChoose: (offerId: OfferId) => setDraft([{ offerId }]) })}
+            acceptsCredit={(r) => supplierOf(r.supplierId)?.acceptsPlatformCredit ?? false}
+          />
+        </div>
       </Panel>
 
       {split && !awarded && (
