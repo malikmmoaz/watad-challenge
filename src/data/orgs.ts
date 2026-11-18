@@ -37,7 +37,7 @@ export const contractors: Contractor[] = [
         id: "prj_villas",
         name: "Al Malqa Residential Villas (24 units)",
         city: "Riyadh",
-        payer: { name: "Dar Al Wessam Development (fictional)", type: "private_developer" },
+        payer: { name: "Dar Al Wessam Development (fictional)", type: "large_private" },
         contractValue: sar(21_200_000),
         percentComplete: 18,
       },

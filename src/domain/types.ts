@@ -71,7 +71,15 @@ export interface Project {
   percentComplete: number;
 }
 
-export type PayerType = "government" | "giga_project" | "main_contractor" | "private_developer";
+export type PayerType =
+  | "government"
+  | "semi_government"
+  | "giga_project"
+  | "main_contractor"
+  | "listed"
+  | "large_private"
+  | "sme"
+  | "individual";
 
 export type MaterialCategory =
   | "cement"
@@ -192,6 +200,7 @@ export type ShortlistReasonCode =
   | "accepts_terms"
   | "local_content"
   | "price_history"
+  | "responsiveness"
   | "does_not_deliver"
   | "no_credit_acceptance"
   | "terms_mismatch"
@@ -215,6 +224,8 @@ export interface ShortlistEntry {
   reasons: ShortlistReason[];
   /** Whether the estimated order value fits the contractor's remaining credit cap. */
   fitsCreditCap: boolean | null;
+  /** True when this entry fills the slot reserved for a vetted newcomer. */
+  newSupplierSlot: boolean;
 }
 
 // ---------- offers ----------

@@ -14,7 +14,7 @@ export default function Home() {
       <ul className="grid gap-4 md:grid-cols-3">
         {ROLES.map((r) => (
           <li key={r.role}>
-            <Link href={r.href} className="flex h-full flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-5 hover:border-neutral-900">
+            <Link href={r.href} data-testid={`role-${r.role}`} className="flex h-full flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-5 hover:border-neutral-900">
               <span className="text-lg font-semibold">{r.label}</span>
               <span className="text-sm text-neutral-600">Signed in as {r.persona}</span>
               <span className="text-sm text-neutral-700">{r.blurb}</span>

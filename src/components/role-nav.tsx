@@ -16,11 +16,12 @@ export function RoleNav({ current }: { current: Role }) {
         <Link href="/" className="font-semibold">
           Watad challenge demo
         </Link>
-        <nav aria-label="Switch role" className="flex gap-1 text-sm">
+        <nav aria-label="Switch role" data-testid="role-switcher" className="flex gap-1 text-sm">
           {ROLES.map((r) => (
             <Link
               key={r.role}
               href={r.href}
+              data-testid={`role-switcher-${r.role}`}
               aria-current={r.role === current ? "page" : undefined}
               className={`rounded px-3 py-1.5 ${r.role === current ? "bg-neutral-900 text-white" : "text-neutral-700 hover:bg-neutral-100"}`}
             >
