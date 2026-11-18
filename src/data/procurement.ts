@@ -123,6 +123,28 @@ export const rfqs: Rfq[] = [
     createdAt: "2026-11-02T09:05:00Z",
   },
   {
+    // Awarded to Rawasi (the demo supplier) and accepted, so the supplier home opens on a PO to dispatch.
+    id: "rfq_1039" as RfqId,
+    contractorId: org("con_najd"),
+    projectId: "prj_villas",
+    title: "Villas 1 to 12: rebar and cement top-up",
+    source: "catalog",
+    status: "awarded",
+    lines: [
+      line("l1", "mat_rebar_12", "Deformed rebar 12 mm", "SASO ASTM A615 Grade 60, 12 m lengths", 20, "tonne"),
+      line("l2", "mat_cement_opc", "Ordinary Portland Cement (OPC), 50 kg bag", "SASO GSO 1914 CEM I 42.5N", 1500, "bag_50kg"),
+    ],
+    deliveryCity: "Riyadh",
+    deliverySite: "Al Malqa Villas, Plot 14, Riyadh",
+    requiredBy: "2026-11-24",
+    closesAt: "2026-11-16T14:00:00Z",
+    preferredTerms: CREDIT60,
+    wantsCredit: true,
+    invitedSupplierIds: [org("sup_rawasi"), org("sup_sawari")],
+    blindComparison: false,
+    createdAt: "2026-11-14T08:00:00Z",
+  },
+  {
     id: "rfq_1040" as RfqId,
     contractorId: org("con_hijaz"),
     projectId: "prj_clinic",
@@ -232,6 +254,33 @@ export const offers: Offer[] = [
     validUntil: "2026-11-10",
     submittedAt: "2026-11-03T10:15:00Z",
     notes: "Pump included. Night pours available.",
+  },
+  {
+    id: "off_2095" as OfferId,
+    rfqId: "rfq_1039" as RfqId,
+    supplierId: org("sup_rawasi"),
+    status: "awarded",
+    lines: [ol("l1", 3480, 20, "Hadeed (SABIC)"), ol("l2", 15.7, 1500, "Yamama Cement")],
+    deliveryFee: sar(1800),
+    leadTimeDays: 4,
+    paymentTerms: CREDIT60,
+    localContent: true,
+    validUntil: "2026-11-25",
+    submittedAt: "2026-11-15T09:40:00Z",
+    notes: "Two drops: rebar first, cement the day after.",
+  },
+  {
+    id: "off_2096" as OfferId,
+    rfqId: "rfq_1039" as RfqId,
+    supplierId: org("sup_sawari"),
+    status: "not_selected",
+    lines: [ol("l1", 3455, 20, "Al Ittefaq Steel"), ol("l2", 16.1, 1500, "Saudi Cement")],
+    deliveryFee: sar(2600),
+    leadTimeDays: 7,
+    paymentTerms: CREDIT60,
+    localContent: true,
+    validUntil: "2026-11-25",
+    submittedAt: "2026-11-15T13:20:00Z",
   },
   {
     id: "off_2110" as OfferId,
@@ -355,4 +404,45 @@ const po1038 = (() => {
   return po;
 })();
 
-export const purchaseOrders: PurchaseOrder[] = [po1038];
+/** Rawasi's won PO on rfq_1039: accepted, waiting to be dispatched; drawn on Najd's credit cap. */
+const po1039 = (() => {
+  const rfq = rfqs.find((r) => r.id === "rfq_1039")!;
+  const offer = offers.find((o) => o.id === "off_2095")!;
+  const subtotal = offerSubtotal(offer, rfq);
+  const net = add(subtotal, offer.deliveryFee);
+  const totalInclVat = inclVat(net);
+  const m = murabaha(totalInclVat, 0.03, 60);
+  const po: PurchaseOrder = {
+    id: "po_3011" as PoId,
+    rfqId: rfq.id,
+    offerId: offer.id,
+    contractorId: rfq.contractorId,
+    supplierId: offer.supplierId,
+    status: "confirmed",
+    timeline: [
+      { status: "placed", at: "2026-11-17T10:20:00Z", actor: "contractor" },
+      { status: "confirmed", at: "2026-11-17T12:05:00Z", actor: "supplier", note: "Rebar on 20 Nov, cement on 21 Nov" },
+    ],
+    subtotal,
+    deliveryFee: offer.deliveryFee,
+    vat: vatOn(net),
+    totalInclVat,
+    paymentMethod: "platform_credit",
+    creditDraw: {
+      poId: "po_3011" as PoId,
+      creditCaseId: "cc_501" as CreditCaseId,
+      principal: totalInclVat,
+      tenorDays: 60,
+      profitRate: 0.03,
+      markup: m.markup,
+      apr: m.apr,
+      totalRepayable: m.totalRepayable,
+      dueDate: "2027-01-20",
+    },
+    expectedDelivery: "2026-11-21",
+    placedAt: "2026-11-17T10:20:00Z",
+  };
+  return po;
+})();
+
+export const purchaseOrders: PurchaseOrder[] = [po1039, po1038];
