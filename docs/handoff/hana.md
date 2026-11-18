@@ -1,6 +1,6 @@
 # Hana (credit) handoff
 
-Updated 2026-11-18 17:05 UTC. Design and rules: [ADR 0003](../adr/0003-credit-assessment.md).
+Updated 2026-11-18 20:55 UTC. Design and rules: [ADR 0003](../adr/0003-credit-assessment.md). Nothing open on my side.
 
 ## Shipped (merged)
 
@@ -8,13 +8,15 @@ Updated 2026-11-18 17:05 UTC. Design and rules: [ADR 0003](../adr/0003-credit-as
 - #27 contractor credit application and tracker: `/contractor/credit`, `/contractor/credit/apply`.
 - #35 credit manager workspace: `/credit` queue, `/credit/cases/[id]` case file, `runChecks` / `decide`, factor impact.
 - #42 draws carry over when a new cap is approved. #45 draw ledger, repayment, utilisation. #53 loading, empty and success states, "Preparing the file" step-through. #63 available credit derived as cap − drawn; `CreditFacility.available` removed.
+- #70 ADR 0003. #79 credit screens on the new design language: score count-up through the bands (once, reduced motion respected), decision stamp moment, queue `StatStrip`. #88 credit analytics: all credit events wired plus `credit_checks_run`, `credit_info_provided`, `draw_repaid`. #96 / #97 contractor Credit page opens on its figures; roomier draws table.
 
 ## Where things are
 
 - Pure logic and tests: `src/domain/credit/*.ts`, `src/domain/credit-application.ts`.
 - Sample engine profiles and the 4 queue cases: `src/data/credit-profiles.ts`.
-- UI: `src/components/credit/` (contractor) and `src/components/credit/manager/` (credit manager). Client hooks: `client-state.ts` (`useHydrated`, `useHash`, `useReducedMotion`), `use-today.ts`.
-- E2E (Noor): `e2e/contractor-credit.spec.ts`, `e2e/credit-manager.spec.ts`.
+- UI: `src/components/credit/` (contractor) and `src/components/credit/manager/` (credit manager, incl. `score-reveal.tsx`). Client hooks: `client-state.ts` (`useHydrated`, `useHash`, `useReducedMotion`), `use-today.ts`.
+- Analytics: events typed in `src/lib/analytics/events.ts`; when each credit event fires is in `docs/analytics.md`.
+- E2E: `e2e/contractor-credit.spec.ts`, `e2e/credit-manager.spec.ts` (Noor); the credit funnel in `e2e/analytics.spec.ts`.
 
 ## Gotchas
 
@@ -22,8 +24,9 @@ Updated 2026-11-18 17:05 UTC. Design and rules: [ADR 0003](../adr/0003-credit-as
 - The store hydrates after first paint; screens show `LoadingRows` until `useHydrated()` is true.
 - New sample cases only appear after "Reset demo data" in a browser that already saved state.
 - Amounts are whole SAR inside the engine and halalas everywhere else; convert at the boundary (`to-case.ts`, `workflow.ts`).
+- E2E on srv1041554: pick your own `E2E_PORT` (I use 3142); 3141 collided with another server once.
+- Since 20:45 UTC (Tariq's incident rule): no automated requests to production; test on a local production build or a PR preview.
 
 ## Next
 
-- Restyle the credit screens to Layla's new design language (#60) once it merges: score/band reveal (reduced motion respected), factor bars, AI memo framing, decision stamp.
-- #14 acceptance: Noor runs RFQ → offer → PO paid with credit → repay on production.
+- #14 acceptance: Noor runs RFQ → offer → PO paid with credit → repay on production, once the production traffic rule is lifted.
