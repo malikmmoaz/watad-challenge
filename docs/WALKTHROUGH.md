@@ -26,7 +26,7 @@ You are **Rawasi Building Materials Trading**, a Riyadh distributor of rebar and
 
 1. The inbox lists only requests you were matched to, and says why: *You stock rebar & steel and cement · You deliver to Riyadh*. A request you were not invited to cannot be opened.
 2. Open **Villas 13 to 24: ground floor slabs** (`rfq_1044`, *Offer not sent*), or the request you sent in step 1.3 → **Your offer (bid)**: unit price per line against the 90-day benchmark, quantity you can supply, availability, brand, delivery fee, lead time, payment terms, validity and ★ *Made in Saudi*. The summary adds goods, delivery and 15% VAT and tells you where you stand against the benchmark. → **Submit offer**; it appears on the contractor's comparison at once.
-3. In the inbox, **Structure package — Block C** now reads *Chosen · PO placed*: open it → **Open purchase order**. **Accept purchase order** → **Mark as dispatched**. Switch to the contractor to **Confirm delivery on site**, back to the supplier for **Issue invoice** (ZATCA e-invoice reference). ★ On a credit PO the status moves to **Paid: supplier paid directly** by the financier; the contractor repays later.
+3. The PO you placed in step 1.5 is under **Purchase orders** on the supplier home, marked *needs you* with its next step. Open it → **Accept purchase order** → **Mark as dispatched**. Switch to the contractor to **Confirm delivery on site**, back to the supplier for **Issue invoice** (ZATCA e-invoice reference). ★ On a credit PO the status moves to **Paid: supplier paid directly** by the financier; the contractor repays later.
 
 ## 3. Independent credit manager: application → decision (3 min)
 
