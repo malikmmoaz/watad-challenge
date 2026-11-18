@@ -43,7 +43,7 @@ export function ContractorHome() {
   const posInProgress = pos.filter((p) => p.contractorId === demoPersona.contractor && !["delivered", "paid", "cancelled", "invoiced"].includes(p.status)).length;
 
   const creditLink = (
-    <Link href="/contractor/credit" data-testid="contractor-credit-link" className={buttonClass("secondary", "sm", "self-start")}>
+    <Link href="/contractor/credit" data-testid="contractor-credit-link" className={buttonClass("secondary", "sm", "h-auto min-h-8 self-start whitespace-normal! py-1.5 text-left")}>
       Credit cap, applications and progress
       <Icon name="arrow-right" />
     </Link>
