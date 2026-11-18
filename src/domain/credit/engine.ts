@@ -1,6 +1,6 @@
 import { checkConsistency, runGatedChecks } from './checks';
 import { bandFor, scoreFactors, topPayerShare, totalScore } from './scorecard';
-import type { Assessment, Band, CreditCase, Decision, LimitResult, PolicyRuleResult, Reason } from './types';
+import type { Assessment, Band, CreditProfile, Decision, LimitResult, PolicyRuleResult, Reason } from './types';
 
 export const BAND_MULTIPLIER: Record<Band, number> = { A: 1, B: 0.75, C: 0.5, D: 0 };
 export const POLICY = { minYearsTrading: 2, maxTenorDays: 90, maxPayerShare: 0.7 } as const;
@@ -9,7 +9,7 @@ export const POLICY = { minYearsTrading: 2, maxTenorDays: 90, maxPayerShare: 0.7
  * Limit = lowest of 10% of net worth, 10% of working capital and
  * monthly purchases x term/30, adjusted by band, rounded down to SAR 1,000.
  */
-export function computeLimit(c: CreditCase, band: Band): LimitResult {
+export function computeLimit(c: CreditProfile, band: Band): LimitResult {
   const f = c.financials;
   const netWorth = Math.max(0, Math.floor((f?.netWorthSar ?? 0) * 0.1));
   const workingCapital = Math.max(0, Math.floor(((f?.currentAssetsSar ?? 0) - (f?.currentLiabilitiesSar ?? 0)) * 0.1));
@@ -33,7 +33,7 @@ export function computeLimit(c: CreditCase, band: Band): LimitResult {
 
 const sar = (n: number): string => `SAR ${n.toLocaleString('en-US')}`;
 
-export function evaluatePolicy(c: CreditCase, limit: LimitResult, asOf: string): PolicyRuleResult[] {
+export function evaluatePolicy(c: CreditProfile, limit: LimitResult, asOf: string): PolicyRuleResult[] {
   const top = topPayerShare(c);
   const zakatOk = !!c.zakat && c.zakat.validUntil >= asOf;
   const gosiOk = !!c.gosi && c.gosi.validUntil >= asOf;
@@ -105,14 +105,14 @@ export function evaluatePolicy(c: CreditCase, limit: LimitResult, asOf: string):
   ];
 }
 
-const CONDITION_TEXT: Record<string, (c: CreditCase, l: LimitResult) => string> = {
+const CONDITION_TEXT: Record<string, (c: CreditProfile, l: LimitResult) => string> = {
   P7: () => 'Assignment of proceeds from the largest payer contract to the repayment account.',
   P8: (_c, l) => `Credit cap set at the computed limit of ${sar(l.limitSar)}, below the amount requested.`,
   P9: () => 'Audited financial statements to be provided within 90 days.',
 };
 
 /** Full, deterministic assessment of one case. `asOf` is passed in so the engine never reads the clock. */
-export function assessCase(c: CreditCase, asOf: string): Assessment {
+export function assessCase(c: CreditProfile, asOf: string): Assessment {
   const checks = runGatedChecks(c, asOf);
   const factors = scoreFactors(c, asOf);
   const score = totalScore(factors);

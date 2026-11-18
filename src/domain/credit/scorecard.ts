@@ -1,4 +1,4 @@
-import type { Band, CreditCase, DocKey, FactorId, FactorResult, PayerType } from './types';
+import type { Band, CreditProfile, DocKey, FactorId, FactorResult, PayerType } from './types';
 
 /** Piecewise-linear interpolation over [x, y] points sorted by x; clamps outside the range. */
 export function scale(x: number, points: readonly (readonly [number, number])[]): number {
@@ -18,6 +18,8 @@ export function scale(x: number, points: readonly (readonly [number, number])[])
 export const PAYER_QUALITY: Record<PayerType, number> = {
   government: 1,
   semi_government: 0.9,
+  giga_project: 0.9,
+  main_contractor: 0.55,
   listed: 0.8,
   large_private: 0.6,
   sme: 0.35,
@@ -33,10 +35,10 @@ interface FactorDef {
   whyItMatters: string;
   evidence: DocKey[];
   /** Returns null when the inputs needed are missing. */
-  assess: (c: CreditCase, asOf: string) => { ratio: number; detail: string } | null;
+  assess: (c: CreditProfile, asOf: string) => { ratio: number; detail: string } | null;
 }
 
-const backlog = (c: CreditCase): number => c.contracts.reduce((s, k) => s + k.remainingSar, 0);
+const backlog = (c: CreditProfile): number => c.contracts.reduce((s, k) => s + k.remainingSar, 0);
 const f1 = (n: number): string => n.toFixed(1);
 const f2 = (n: number): string => n.toFixed(2);
 const pct = (n: number): string => `${Math.round(n * 100)}%`;
@@ -95,7 +97,7 @@ export const FACTORS: readonly FactorDef[] = [
       const strong = c.contracts
         .filter((k) => PAYER_QUALITY[k.payerType] >= 0.8)
         .reduce((s, k) => s + k.remainingSar, 0);
-      return { ratio, detail: `${pct(strong / total)} of backlog is owed by government, semi-government or listed payers.` };
+      return { ratio, detail: `${pct(strong / total)} of backlog is owed by government, semi-government, giga-project or listed payers.` };
     },
   },
   {
@@ -222,7 +224,7 @@ export const FACTORS: readonly FactorDef[] = [
   },
 ];
 
-export function topPayerShare(c: CreditCase): number {
+export function topPayerShare(c: CreditProfile): number {
   const total = backlog(c);
   if (total <= 0) return 0;
   const byPayer = new Map<string, number>();
@@ -232,7 +234,7 @@ export function topPayerShare(c: CreditCase): number {
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
-export function scoreFactors(c: CreditCase, asOf: string): FactorResult[] {
+export function scoreFactors(c: CreditProfile, asOf: string): FactorResult[] {
   return FACTORS.map(({ assess, ...def }) => {
     const r = assess(c, asOf);
     const ratio = r ? Math.min(1, Math.max(0, r.ratio)) : 0;

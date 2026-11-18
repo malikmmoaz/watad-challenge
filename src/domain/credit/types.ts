@@ -1,7 +1,14 @@
 /**
  * Credit domain types. Amounts are whole SAR, ratios are 0..1, dates are ISO yyyy-mm-dd.
  * Everything in this folder is pure: no I/O, no clock, no randomness.
+ *
+ * `CreditProfile` is the engine's flattened view of an application (extracted figures),
+ * distinct from the shared `CreditCase` workflow record in `src/domain/types.ts`.
  */
+
+import type { PayerType } from '../types';
+
+export type { PayerType };
 
 export type DocKey =
   | 'cr'
@@ -14,13 +21,6 @@ export type DocKey =
   | 'contractor_classification'
   | 'contracts_in_hand';
 
-export type PayerType =
-  | 'government'
-  | 'semi_government'
-  | 'listed'
-  | 'large_private'
-  | 'sme'
-  | 'individual';
 
 export interface ContractInHand {
   payer: string;
@@ -35,7 +35,7 @@ export interface ContractInHand {
   overdueReceivableSar: number;
 }
 
-export interface CreditCase {
+export interface CreditProfile {
   id: string;
   applicant: {
     name: string;

@@ -1,4 +1,4 @@
-import type { CheckId, CheckResult, ConsistencyResult, CreditCase, DocKey, FailKind } from './types';
+import type { CheckId, CheckResult, ConsistencyResult, CreditProfile, DocKey, FailKind } from './types';
 
 export const VAT_RATE = 0.15;
 
@@ -21,7 +21,7 @@ const daysBetween = (fromIso: string, toIso: string): number =>
   Math.round((Date.parse(toIso) - Date.parse(fromIso)) / 86_400_000);
 
 /** Three-way revenue check: VAT returns vs bank inflows (net of VAT) vs financial statements. */
-export function checkConsistency(c: CreditCase): ConsistencyResult {
+export function checkConsistency(c: CreditProfile): ConsistencyResult {
   const vat = c.vat?.annualRevenueSar ?? null;
   const bank = c.bank ? Math.round(c.bank.annualInflowsSar / (1 + VAT_RATE)) : null;
   const fin = c.financials?.revenueSar ?? null;
@@ -54,7 +54,7 @@ const fromFlags = (flags: string[], ok: string): Outcome =>
   flags.length > 0 ? { status: 'flag', findings: flags } : { status: 'pass', findings: [ok] };
 const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
-type Runner = (c: CreditCase, asOf: string) => Outcome;
+type Runner = (c: CreditProfile, asOf: string) => Outcome;
 
 const RUNNERS: Record<CheckId, Runner> = {
   cr: (c, asOf) => {
@@ -114,7 +114,7 @@ const RUNNERS: Record<CheckId, Runner> = {
  * Runs the checks cheapest first and stops at the first failure: later, more
  * expensive checks (SIMAH last) are reported as skipped rather than paid for.
  */
-export function runGatedChecks(c: CreditCase, asOf: string): CheckResult[] {
+export function runGatedChecks(c: CreditProfile, asOf: string): CheckResult[] {
   let gateClosed = false;
   return CHECK_ORDER.map((id) => {
     const meta = { id, ...CHECK_META[id] };

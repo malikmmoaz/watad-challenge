@@ -4,10 +4,10 @@ import { assessCase, computeLimit } from './engine';
 import { availableCap, quoteMurabaha } from './murabaha';
 import { SAMPLE_AS_OF, SAMPLE_CASES, bunyanAlHijaz, durratAlQassim, rawasiNajd, sahelAlSharq } from './samples';
 import { FACTORS, bandFor, scale, scoreFactors } from './scorecard';
-import type { CreditCase } from './types';
+import type { CreditProfile } from './types';
 
 const asOf = SAMPLE_AS_OF;
-const withCase = (base: CreditCase, patch: Partial<CreditCase>): CreditCase => ({ ...base, ...patch });
+const withCase = (base: CreditProfile, patch: Partial<CreditProfile>): CreditProfile => ({ ...base, ...patch });
 
 describe('scale', () => {
   const pts = [[0, 0], [10, 1]] as const;

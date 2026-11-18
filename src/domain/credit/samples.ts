@@ -1,4 +1,4 @@
-import type { CreditCase, DocKey } from './types';
+import type { CreditProfile, DocKey } from './types';
 
 /**
  * SAMPLE DATA. Fictional companies, registration numbers and figures, written to
@@ -19,7 +19,7 @@ const ALL_DOCS: DocKey[] = [
 ];
 
 /** Strong approve: government-backed backlog, clean SIMAH, comfortable liquidity. */
-export const rawasiNajd: CreditCase = {
+export const rawasiNajd: CreditProfile = {
   id: 'CA-2026-0041',
   applicant: {
     name: 'Rawasi Najd Contracting Co. (sample)',
@@ -64,7 +64,7 @@ export const rawasiNajd: CreditCase = {
 };
 
 /** Approve with conditions: sound but thinner, and dependent on one private developer. */
-export const durratAlQassim: CreditCase = {
+export const durratAlQassim: CreditProfile = {
   id: 'CA-2026-0042',
   applicant: {
     name: 'Durrat Al-Qassim Building Est. (sample)',
@@ -108,7 +108,7 @@ export const durratAlQassim: CreditCase = {
 };
 
 /** Refer: reported revenue far above VAT-declared revenue, GOSI expired, one tamper flag. */
-export const sahelAlSharq: CreditCase = {
+export const sahelAlSharq: CreditProfile = {
   id: 'CA-2026-0043',
   applicant: {
     name: 'Sahel Al-Sharq Contracting Co. (sample)',
@@ -154,7 +154,7 @@ export const sahelAlSharq: CreditCase = {
 };
 
 /** Decline: unsettled SIMAH default, returned cheques, negative working capital. */
-export const bunyanAlHijaz: CreditCase = {
+export const bunyanAlHijaz: CreditProfile = {
   id: 'CA-2026-0044',
   applicant: {
     name: 'Bunyan Al-Hijaz Est. (sample)',
@@ -196,4 +196,4 @@ export const bunyanAlHijaz: CreditCase = {
   openLegalCases: 2,
 };
 
-export const SAMPLE_CASES: CreditCase[] = [rawasiNajd, durratAlQassim, sahelAlSharq, bunyanAlHijaz];
+export const SAMPLE_CASES: CreditProfile[] = [rawasiNajd, durratAlQassim, sahelAlSharq, bunyanAlHijaz];
