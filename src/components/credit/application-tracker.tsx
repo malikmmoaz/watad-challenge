@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { STATUS_LABEL, provideMoreInfo, trackerSteps } from "@/domain/credit-application";
 import { formatSar, murabaha } from "@/domain/money";
-import type { CreditCase, CreditDecisionOutcome, CreditFacility, GateResult } from "@/domain/types";
+import type { CreditCase, CreditFacility, GateResult } from "@/domain/types";
 import { update } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 
@@ -24,12 +24,6 @@ const GATE: Record<GateResult, { text: string; tone: Tone }> = {
   pending: { text: "Queued", tone: "neutral" },
 };
 
-const STAMP: Record<CreditDecisionOutcome, "approved" | "referred" | "declined"> = {
-  approve: "approved",
-  request_info: "referred",
-  decline: "declined",
-};
-
 const date = (iso?: string) => (iso ? iso.slice(0, 10) : "");
 
 export function StatusBadge({ status }: { status: CreditCase["status"] }) {
@@ -44,7 +38,7 @@ export function StatusBadge({ status }: { status: CreditCase["status"] }) {
 export function ApplicationTracker({ c, facility, readOnly = false }: { c: CreditCase; facility?: CreditFacility; readOnly?: boolean }) {
   const steps: TimelineStep[] = trackerSteps(c).map((s) => ({
     label: s.label,
-    state: s.state === "skipped" ? "upcoming" : s.key === "more_info" && s.state === "current" ? "problem" : s.state,
+    state: s.key === "more_info" && s.state === "current" ? "problem" : s.state,
     note: s.state === "skipped" ? "Not needed" : s.state === "current" ? s.description : undefined,
   }));
   return (
@@ -106,7 +100,7 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
   const approved = d.outcome === "approve";
   return (
     <section data-testid="credit-outcome" className="space-y-3">
-      <DecisionStamp decision={STAMP[d.outcome]} by={d.decidedBy} at={date(d.decidedAt)} />
+      <DecisionStamp decision={d.outcome} by={d.decidedBy} at={date(d.decidedAt)} />
       {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
       <p className="text-sm text-ink">{d.reasonText}</p>
       {d.conditions && d.conditions.length > 0 && (
