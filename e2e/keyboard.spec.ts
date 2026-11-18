@@ -59,6 +59,9 @@ test("keyboard only: compare offers blind and place a PO on credit", async ({ pa
   await tabTo(page, tid(page, "po-place"), "Place purchase order");
   await page.keyboard.press("Enter");
   await expect(tid(page, "po-confirmation")).toBeVisible();
+  // Focus lands on the result, not on <body> (#75).
+  await expect(tid(page, "po-confirmation-heading")).toBeFocused();
+  await expect(page.getByTestId("po-announcement")).toHaveText(/Purchase order issued: po_\w+, total SAR [\d,]+\.\d\d/);
 });
 
 test("keyboard only: the credit manager records a decision with reasons", async ({ page }) => {
