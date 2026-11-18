@@ -8,8 +8,6 @@ on:
       base_url:
         description: URL to test
         default: https://watad-challenge.vercel.app
-  push:
-    branches: ["qa/cross-browser"]
 
 permissions:
   contents: read
