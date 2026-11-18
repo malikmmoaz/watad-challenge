@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { demoPersona, reference } from "@/data";
 import { RfqList } from "@/components/procurement/rfq-list";
-import { Badge, buttonClass, CreditCapMeter, Facts, Icon, PageHeader, Panel, SampleDataLabel, StatusTimeline, type TimelineStep } from "@/components/ui";
+import { Badge, buttonClass, CreditCapMeter, Facts, Icon, PageHeader, Panel, SampleDataLabel, StatStrip, StatusTimeline, type TimelineStep } from "@/components/ui";
 import { formatSar, halalas } from "@/domain/money";
 import type { PoStatus, PurchaseOrder } from "@/domain/types";
 import { formatDate, formatDateTime, formatPercent } from "@/lib/format";
@@ -30,11 +30,16 @@ function poSteps(po: PurchaseOrder): TimelineStep[] {
 /** First view for the contractor: open RFQs with offers, the credit cap, and the latest PO. */
 export function ContractorHome() {
   const pos = useDemo((s) => s.purchaseOrders);
+  const rfqs = useDemo((s) => s.rfqs);
+  const offers = useDemo((s) => s.offers);
   const facilities = useDemo((s) => s.creditFacilities);
   const me = reference.contractors.find((c) => c.id === demoPersona.contractor);
   const facility = facilities.find((f) => f.contractorId === demoPersona.contractor);
   const po = pos.filter((p) => p.contractorId === demoPersona.contractor).sort((a, b) => b.placedAt.localeCompare(a.placedAt))[0];
   const supplier = po ? reference.suppliers.find((s) => s.id === po.supplierId) : undefined;
+  const openRfqs = rfqs.filter((r) => r.contractorId === demoPersona.contractor && (r.status === "draft" || r.status === "sent" || r.status === "offers_received"));
+  const toCompare = offers.filter((o) => o.status === "submitted" && openRfqs.some((r) => r.id === o.rfqId)).length;
+  const posInProgress = pos.filter((p) => p.contractorId === demoPersona.contractor && !["delivered", "paid", "cancelled", "invoiced"].includes(p.status)).length;
 
   const creditLink = (
     <Link href="/contractor/credit" data-testid="contractor-credit-link" className={buttonClass("secondary", "sm", "self-start")}>
@@ -46,6 +51,7 @@ export function ContractorHome() {
   return (
     <>
       <PageHeader
+        eyebrow="Contractor"
         title="Contractor workspace"
         status={<SampleDataLabel />}
         meta={
@@ -60,6 +66,15 @@ export function ContractorHome() {
             New RFQ
           </Link>
         }
+      />
+
+      <StatStrip
+        items={[
+          { label: "Open RFQs", value: openRfqs.length, note: "drafts, sent and with offers" },
+          { label: "Offers to compare", value: toCompare },
+          { label: "POs on the way", value: posInProgress, note: "placed, confirmed or out for delivery" },
+          { label: "Credit cap left", value: facility ? formatSar(facility.available) : "Not applied", compact: true, note: facility ? `of ${formatSar(facility.cap)}` : undefined },
+        ]}
       />
 
       <section aria-labelledby="rfqs-h" className="flex flex-col gap-3">

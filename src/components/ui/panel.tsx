@@ -69,3 +69,31 @@ export function Facts({ items, columns = 2, className }: { items: Fact[]; column
     </dl>
   );
 }
+
+export interface Stat {
+  label: string;
+  value: ReactNode;
+  /** One short line under the label, e.g. what the number includes. */
+  note?: string;
+  /** Long values such as SAR amounts: set smaller so they never wrap. */
+  compact?: boolean;
+}
+
+/**
+ * The figures a screen opens on: big numbers on an ink rule, two to four per
+ * row. Values are exact (money through formatSar, never abbreviated).
+ */
+export function StatStrip({ items, className }: { items: Stat[]; className?: string }) {
+  const cols = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" }[Math.min(4, Math.max(2, items.length)) as 2 | 3 | 4];
+  return (
+    <dl className={cx("grid gap-x-8 gap-y-6", cols, className)}>
+      {items.map((s) => (
+        <div key={s.label} className="flex min-w-0 flex-col border-t-2 border-ink pt-3">
+          <dt className="order-2 mt-1 text-sm text-ink-muted">{s.label}</dt>
+          <dd className={cx("order-1 flex h-11 items-end font-semibold tabular-nums text-ink", s.compact ? "text-2xl tracking-[-0.02em]" : "text-4xl tracking-[-0.035em]")}>{s.value}</dd>
+          {s.note ? <dd className="order-3 text-xs text-ink-subtle">{s.note}</dd> : null}
+        </div>
+      ))}
+    </dl>
+  );
+}
