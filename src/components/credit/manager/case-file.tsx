@@ -11,7 +11,7 @@ import { runChecks } from "@/domain/credit/workflow";
 import { update, useDemo } from "@/store";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, PageHeader, Panel, SampleDataLabel, ScoreScale, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
-import { CaseStatus, ENGINE_BANDS, shortDate } from "./shared";
+import { CaseStatus, shortDate } from "./shared";
 
 const GATE: Record<GateResult, Tone> = { pass: "positive", flag: "caution", fail: "negative", pending: "neutral" };
 const GATE_WORD: Record<GateResult, string> = { pass: "Pass", flag: "Flag", fail: "Fail", pending: "Not run" };
@@ -135,7 +135,7 @@ export function CaseFile({ id }: { id: string }) {
           {card && (
             <Panel title="Scorecard" aside={<span className="text-sm text-ink-muted">10 factors, weights sum to 100</span>}>
               <div className="space-y-6">
-                <ScoreScale score={card.total} bands={ENGINE_BANDS} />
+                <ScoreScale score={card.total} />
                 <ul className="space-y-5" data-testid="credit-factors">
                   {card.factors.map((f) => (
                     <li key={f.id} className="space-y-1.5">

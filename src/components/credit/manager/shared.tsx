@@ -1,14 +1,5 @@
-import { BAND_FLOORS } from "@/domain/credit/scorecard";
 import type { CreditCase } from "@/domain/types";
-import { Badge, type Band, type Tone } from "@/components/ui";
-
-/** Bands as the engine defines them (A-D). */
-export const ENGINE_BANDS: Band[] = [
-  { name: "D", from: BAND_FLOORS.D, color: "bg-band-e", meaning: "Decline" },
-  { name: "C", from: BAND_FLOORS.C, color: "bg-band-c", meaning: "Approve with conditions" },
-  { name: "B", from: BAND_FLOORS.B, color: "bg-band-b", meaning: "Approve" },
-  { name: "A", from: BAND_FLOORS.A, color: "bg-band-a", meaning: "Approve" },
-];
+import { Badge, type Tone } from "@/components/ui";
 
 const STATUS: Record<CreditCase["status"], { text: string; tone: Tone }> = {
   draft: { text: "Draft", tone: "neutral" },

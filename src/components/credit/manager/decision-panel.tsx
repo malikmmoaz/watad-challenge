@@ -14,7 +14,6 @@ const OUTCOMES: { value: CreditDecisionOutcome; label: string }[] = [
   { value: "request_info", label: "Request more information" },
   { value: "decline", label: "Decline" },
 ];
-const STAMP = { approve: "approved", request_info: "referred", decline: "declined" } as const;
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
 /** Approve / request more information / decline with structured reasons that go back to the contractor. */
@@ -33,7 +32,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     return (
       <Panel title="Decision">
         <div className="space-y-3 text-sm" data-testid="credit-decision">
-          <DecisionStamp decision={STAMP[d.outcome]} by={d.decidedBy} at={shortDate(d.decidedAt)} />
+          <DecisionStamp decision={d.outcome} by={d.decidedBy} at={shortDate(d.decidedAt)} />
           {d.approvedCap !== undefined && <p className="font-medium text-ink">Credit cap {formatSar(d.approvedCap)}</p>}
           <p className="text-ink">{d.reasonText}</p>
           {d.overrodeAi && <p className="text-xs text-caution">Departed from the AI proposal: {d.overrideReason}</p>}
