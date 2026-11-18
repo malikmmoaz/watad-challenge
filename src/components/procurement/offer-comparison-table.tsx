@@ -9,7 +9,7 @@ const FACTOR_LABEL: Record<ComparisonFactor, string> = {
   lead_time: "Lead time",
   reliability: "Reliability",
   payment_terms: "Payment terms",
-  local_content: "Local content",
+  local_content: "Made in Saudi",
 };
 
 const BADGE_LABEL: Record<OfferBadge, string> = {
@@ -45,6 +45,7 @@ export interface OfferComparisonTableProps {
  * Multi-factor offer comparison. Every offer shows the same fields in the same
  * order, and its score opens into the factors behind it, so the contractor can
  * see why an offer ranks where it does. The ranking informs; the contractor chooses.
+ * The table brings its own frame: put it on the page or in a `<Panel flush>`, not in a padded panel.
  */
 export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, chosenOfferId, onChoose, acceptsCredit }: OfferComparisonTableProps) {
   const sorted = [...rows].sort((a, b) => a.rank - b.rank);
@@ -52,7 +53,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
   const columns = onChoose ? 7 : 6;
 
   return (
-    <Table caption={`Offers for ${rfqLabel}, best score first`} minWidth={980}>
+    <Table caption={`Offers for ${rfqLabel}, best score first`} minWidth={880}>
       <THead>
         <tr>
           <Th>Offer</Th>
@@ -77,7 +78,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
         return (
           <tbody key={r.offerId} className="border-b border-line last:border-b-0">
             <Tr state={state} data-testid="offer-row" data-offer={r.offerId} className="border-b-0">
-              <Td className="min-w-60">
+              <Td className="min-w-48">
                 <span className="font-medium text-ink" data-testid="offer-supplier">{nameOf(r)}</span>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {r.rank === 1 ? <Badge tone="positive">Best overall score</Badge> : null}
@@ -99,7 +100,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                   </span>
                 </CellNote>
               </Td>
-              <Td className="whitespace-nowrap">
+              <Td className="min-w-28">
                 <span className={full ? "text-ink" : "font-medium text-caution"}>
                   {r.linesCovered} of {r.linesRequested} lines in full
                 </span>
@@ -108,7 +109,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
               <Td>
                 <LeadTimeBar days={r.leadTimeDays} maxDays={maxDays} requiredInDays={requiredInDays} />
               </Td>
-              <Td className="min-w-40">
+              <Td className="min-w-36 max-w-48">
                 {r.termsLabel}
                 {acceptsCredit ? <CellNote>{acceptsCredit(r) ? "Accepts your credit cap" : "No platform credit"}</CellNote> : null}
               </Td>
