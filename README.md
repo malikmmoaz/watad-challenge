@@ -4,7 +4,7 @@ A three-role demo for Saudi construction materials procurement: **contractor**, 
 
 All companies, prices and credit files are **sample data**. AI features are **simulated** and labelled.
 
-Live link: _added once Malik imports the repo on Vercel (#3)._
+Live link: **https://watad-challenge.vercel.app** (production, deploys from `main`).
 
 ## Run
 

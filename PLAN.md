@@ -6,7 +6,7 @@ Kickoff 14:20 UTC 18 Nov 2026 · code freeze 12:20 UTC 19 Nov · submission 14:0
 |---|------|-------|--------|
 | 1 | Scaffold, shared types, sample data, role switcher | Tariq | done (types frozen) |
 | 2 | CI: lint, typecheck, unit tests, build | Tariq | done |
-| 3 | Vercel deploy with per-PR previews | Tariq | build verified; waiting on Malik's import via the Vercel GitHub integration |
+| 3 | Vercel deploy with per-PR previews | Tariq | live at watad-challenge.vercel.app; PR #26 pins Node 22 |
 | 4 | Better Stack: errors, logs, uptime, status page | Tariq | not started |
 | 5 | PostHog analytics and funnels | Tariq | not started |
 | 6 | Design system and DESIGN.md | Layla | in progress |
