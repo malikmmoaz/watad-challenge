@@ -50,7 +50,8 @@ export default defineConfig({
     : {
         command: process.env.E2E_PREBUILT ? start : `pnpm build && ${start}`,
         url: baseURL,
-        reuseExistingServer: !isCI,
+        // Never reuse: a server left over from an earlier run can serve a stale build.
+        reuseExistingServer: false,
         timeout: 180_000,
         stdout: "ignore",
         stderr: "pipe",
