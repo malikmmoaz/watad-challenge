@@ -94,6 +94,8 @@ export async function settled(page: Page, target?: Locator) {
   await page
     .waitForFunction(() => performance.now() - ((window as unknown as { __lastMutation: number }).__lastMutation ?? 0) > 500, undefined, { timeout: 5000, polling: 100 })
     .catch(() => {});
+  // Detach before axe or the next step runs: nothing should be watching the page meanwhile.
+  await page.evaluate(() => (window as unknown as { __quietObserver?: MutationObserver }).__quietObserver?.disconnect());
   if (target) {
     // Same whole-pixel position 300 ms apart (up to ~6 s): late layout has finished.
     const top = () => target.evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY));
