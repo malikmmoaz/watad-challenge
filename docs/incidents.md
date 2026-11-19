@@ -49,6 +49,8 @@ Hana's runs all used local builds.
 - Rebase stacked branches with `--onto`; if a branch has merged its base more than once, replay its diff instead of its history.
 - During a merge train, only the merger pushes to the branches in the train (announced in the team channel), after two concurrent pushes crossed.
 
+**It happened again (19 Nov, ~00:30 UTC).** Tariq merged the i18n foundation (#108) with `--delete-branch` while Omar's #109 was stacked on it; #109 closed. Same recovery (branch restored, PR reopened, whole stack retargeted to `main` before anything else merged), no work lost, about 10 minutes. The rule existed but wasn't applied mechanically. **Guard now:** before any merge, `gh pr list --base <head-branch> --state open` must be empty, otherwise retarget those PRs first or merge without `--delete-branch`. After a squash merge, rebase the next PR in a stack with `git rebase --onto origin/main <old-commit>`.
+
 ## 2026-11-18 · Accessibility check failed on text caught mid-animation
 
 **What happened.** After the landing redesign (#60) added entrance animations, the axe accessibility check failed on another PR (#69) with colour-contrast errors on the landing's showcase tabs. #60's own run had passed. The check had sampled text while it was still fading in.
