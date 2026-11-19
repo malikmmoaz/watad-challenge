@@ -53,6 +53,6 @@ export function msg<T extends Messages>(dict: Dictionary<T>, pick: (m: SameShape
 /**
  * Inline script for <head>: applies the stored locale to <html> before the
  * first paint. For Arabic it also hides the body until React has re-rendered in
- * Arabic (LocaleSync removes the class), with a 3 s safety net.
+ * Arabic (LocaleSync removes the class), with an 8 s safety net (for JavaScript that fails to load, not for slow loading).
  */
-export const LOCALE_BOOT_SCRIPT = `(function(){try{var l=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});if(l==="ar"){var h=document.documentElement;h.lang="ar";h.dir="rtl";h.classList.add("i18n-pending");setTimeout(function(){h.classList.remove("i18n-pending")},3000)}}catch(e){}})();`;
+export const LOCALE_BOOT_SCRIPT = `(function(){try{var l=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});if(l==="ar"){var h=document.documentElement;h.lang="ar";h.dir="rtl";h.classList.add("i18n-pending");setTimeout(function(){h.classList.remove("i18n-pending")},8000)}}catch(e){}})();`;
