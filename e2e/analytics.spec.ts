@@ -115,6 +115,8 @@ test("over the credit cap: po_placed says it did not fit", async ({ page }) => {
   await page.reload();
   await tid(page, "offer-row").filter({ hasText: "Rawasi" }).getByTestId("offer-choose").click();
   await expect(tid(page, "po-credit-blocked")).toBeVisible();
+  // Never silent: bank transfer is a choice the contractor makes.
+  await tid(page, "po-pay-bank").check();
   await tid(page, "po-place").click();
   await expect(tid(page, "po-confirmation")).toBeVisible();
   expect(await once(page, "po_placed", ["po_id", "payment_method", "within_credit_cap"])).toMatchObject({ payment_method: "bank_transfer", within_credit_cap: false });
