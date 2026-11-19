@@ -62,9 +62,16 @@ test("after placing a PO, Back and reload cannot place a second one", async ({ p
   await tid(page, "po-place").click();
   await expect(tid(page, "po-confirmation")).toBeVisible();
 
+  // Wait for each history step to land: in WebKit an unawaited Forward can fire before Back
+  // commits, and the reload then lands on the role home instead of the RFQ (#184).
   await page.goBack();
+  await expect(page).toHaveURL(/\/contractor$/);
   await page.goForward();
+  await expect(page).toHaveURL(/\/contractor\/rfq\/rfq_1042$/);
+  // Before the reload too: a page restored from the back/forward cache must not offer Choose again.
+  await expect(tid(page, "offer-choose")).toHaveCount(0);
   await page.reload();
+  await expect(page).toHaveURL(/\/contractor\/rfq\/rfq_1042$/);
   // The RFQ is awarded: no Choose buttons, one PO for it.
   await expect(tid(page, "po-row")).toHaveCount(1);
   await expect(tid(page, "offer-choose")).toHaveCount(0);
