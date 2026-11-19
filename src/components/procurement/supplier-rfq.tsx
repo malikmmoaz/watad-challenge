@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Alert, Badge, Button, Checkbox, EmptyState, Facts, Icon, Input, PageHeader, Panel, Select, Textarea, buttonClass, type Tone } from "@/components/ui";
 import { demoPersona, reference } from "@/data";
 import { add, halalas, sar, vatOn } from "@/domain/money";
@@ -208,6 +208,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
   const [errors, setErrors] = useState<OfferErrors>({});
   const { s, f, fill, terms: termsLabel, qty, name, logic } = useProcurementI18n();
   const err = (text: string | undefined) => (text ? { error: logic("supplierErrors", text) } : {});
+  const benchHintId = useId();
   /** This line's 90-day benchmark in SAR (2 decimals), or null when the material has none. */
   const benchmarkSar = (rfqLineId: string): number | null => {
     const id = rfq.lines.find((x) => x.id === rfqLineId)?.materialId;
@@ -249,6 +250,9 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
             size="sm"
             variant="secondary"
             data-testid="offer-start-benchmark"
+            aria-describedby={benchHintId}
+            // The Arabic label is long: let it wrap instead of overflowing a 320 px screen.
+            className="h-auto min-h-8 whitespace-normal! py-1.5 text-start"
             disabled={!draft.lines.some((l) => Number.isNaN(l.unitPriceSar) && benchmarkSar(l.rfqLineId) !== null)}
             onClick={() =>
               setDraft((d) => ({
@@ -262,7 +266,9 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
           >
             {s.form.startBenchmark}
           </Button>
-          <span className="text-xs text-ink-muted">{s.form.startBenchmarkHint}</span>
+          <span id={benchHintId} className="text-xs text-ink-muted">
+            {s.form.startBenchmarkHint}
+          </span>
         </div>
         {errors.form && <Alert tone="negative" title={s.form.cannotSubmit}>{logic("supplierErrors", errors.form)}</Alert>}
         {errors.lines && <p className="text-sm text-negative">{logic("supplierErrors", errors.lines)}</p>}
