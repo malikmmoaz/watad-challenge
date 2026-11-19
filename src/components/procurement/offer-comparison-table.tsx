@@ -1,29 +1,13 @@
 import type { ReactNode } from "react";
 import { Badge, Button, CellNote, cx, FactorBar, LeadTimeBar } from "@/components/ui";
-import { formatSar } from "@/domain/money";
-import type { ComparisonFactor, OfferId } from "@/domain/types";
-import type { OfferBadge, OfferComparisonRow } from "@/lib/procurement/comparison";
-
-const FACTOR_LABEL: Record<ComparisonFactor, string> = {
-  cost: "Landed cost",
-  coverage: "Coverage of the RFQ",
-  lead_time: "Lead time",
-  reliability: "Reliability",
-  payment_terms: "Payment terms",
-  local_content: "Made in Saudi",
-};
-
-const BADGE_LABEL: Record<OfferBadge, string> = {
-  lowest_landed_cost: "Lowest landed cost",
-  fastest: "Fastest delivery",
-  best_terms: "Best payment terms",
-  most_reliable: "Most reliable",
-};
+import { useProcurementI18n } from "./use-procurement-i18n";
+import type { OfferId } from "@/domain/types";
+import type { OfferComparisonRow } from "@/lib/procurement/comparison";
 
 const PRICE_FLAG = {
-  below_market: { label: "below benchmark", tone: "positive" },
-  in_line: { label: "in line with benchmark", tone: "neutral" },
-  above_market: { label: "above benchmark", tone: "caution" },
+  below_market: { tone: "positive" },
+  in_line: { tone: "neutral" },
+  above_market: { tone: "caution" },
 } as const;
 
 export interface OfferComparisonTableProps {
@@ -58,7 +42,19 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
   const sorted = [...rows].sort((a, b) => a.rank - b.rank);
   const maxDays = Math.max(requiredInDays, ...sorted.map((r) => r.leadTimeDays), 1);
   const columns = onChoose ? 7 : 6;
-  const caption = `Offers for ${rfqLabel}, best score first`;
+  const { m, f, fill, terms, ar } = useProcurementI18n();
+  const c = m.comparison;
+  const caption = fill(c.caption, { rfq: rfqLabel });
+  /** A score note in the reader's locale, from the note's message key and raw values. */
+  const noteText = (x: OfferComparisonRow["scoreBreakdown"][number]): string => {
+    const { key, values: v } = x.msg;
+    if (key === "terms") return terms(v.kind === "net" || v.kind === "platform_credit" ? ({ kind: v.kind, days: v.days } as never) : ({ kind: v.kind } as never));
+    if (key === "aboveLowest") return fill(c.notes.aboveLowest, { pct: f.percent(Number(v.pct) / 100, 1) }) + (v.local ? c.notes.afterPreference : "");
+    if (key === "lowestCost") return c.notes.lowestCost + (v.local ? c.notes.afterPreference : "");
+    if (key === "reliability") return fill(c.notes.reliability, { onTime: f.percent(Number(v.onTime)), complete: f.percent(Number(v.complete)), orders: v.orders ?? 0 });
+    const template = (c.notes as Record<string, string>)[key];
+    return template ? fill(template, v) : x.note;
+  };
 
   return (
     <div className="rounded-xl border border-line bg-surface shadow-card lg:overflow-x-auto" role="region" aria-label={caption} tabIndex={0}>
@@ -66,15 +62,15 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-line-strong bg-panel text-xs text-ink-muted max-lg:hidden">
           <tr>
-            <Head>Offer</Head>
-            <Head end>Landed cost incl. 15% VAT</Head>
-            <Head>Coverage</Head>
-            <Head>Lead time</Head>
-            <Head>Payment terms</Head>
-            <Head end>Score</Head>
+            <Head>{c.offer}</Head>
+            <Head end>{c.landedCost}</Head>
+            <Head>{c.coverage}</Head>
+            <Head>{c.leadTime}</Head>
+            <Head>{c.paymentTerms}</Head>
+            <Head end>{c.score}</Head>
             {onChoose ? (
               <Head>
-                <span className="sr-only">Choose</span>
+                <span className="sr-only">{c.choose}</span>
               </Head>
             ) : null}
           </tr>
@@ -98,24 +94,24 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                     <span className="font-medium text-ink" data-testid="offer-supplier">
                       {nameOf(r)}
                     </span>
-                    <span className="whitespace-nowrap text-right lg:hidden">
+                    <span className="whitespace-nowrap text-end lg:hidden">
                       <span className="text-lg font-semibold text-ink">{Math.round(r.score)}</span>
-                      <span className="text-xs text-ink-muted"> of 100</span>
+                      <span className="text-xs text-ink-muted"> {c.ofHundred}</span>
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    {r.rank === 1 ? <Badge tone="positive">Best overall score</Badge> : null}
+                    {r.rank === 1 ? <Badge tone="positive">{c.badges.best}</Badge> : null}
                     {r.badges.map((b) => (
                       <Badge key={b} icon={false}>
-                        {BADGE_LABEL[b]}
+                        {c.badges[b]}
                       </Badge>
                     ))}
-                    {r.localContent ? <Badge icon={false}>Made in Saudi</Badge> : null}
+                    {r.localContent ? <Badge icon={false}>{m.common.madeInSaudi}</Badge> : null}
                   </div>
                 </Cell>
-                <Cell end label="Landed cost incl. 15% VAT">
-                  <span className="whitespace-nowrap font-medium text-ink">{formatSar(r.landedCostInclVat)}</span>
-                  <CellNote>incl. delivery {formatSar(r.deliveryFee)}</CellNote>
+                <Cell end label={c.landedCost}>
+                  <span className="whitespace-nowrap font-medium text-ink">{f.money(r.landedCostInclVat)}</span>
+                  <CellNote>{fill(c.inclDelivery, { fee: f.money(r.deliveryFee) })}</CellNote>
                   {(() => {
                     const fit = creditFit?.(r);
                     return fit ? (
@@ -128,34 +124,35 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                   })()}
                   <CellNote>
                     <span className={flag.tone === "caution" ? "text-caution" : flag.tone === "positive" ? "text-positive" : undefined}>
-                      {r.vsBenchmarkPct > 0 ? "+" : ""}
-                      {r.vsBenchmarkPct.toFixed(1)}%, {flag.label}
+                      {fill(r.priceFlag === "below_market" ? c.benchmarkBelow : r.priceFlag === "above_market" ? c.benchmarkAbove : c.benchmarkInLine, {
+                        pct: `${r.vsBenchmarkPct > 0 ? "+" : ""}${r.vsBenchmarkPct.toFixed(1)}${ar ? "٪" : "%"}`,
+                      })}
                     </span>
                   </CellNote>
                 </Cell>
-                <Cell label="Coverage">
+                <Cell label={c.coverage}>
                   <span className={`whitespace-nowrap ${full ? "text-ink" : "font-medium text-caution"}`}>
-                    {r.linesCovered} of {r.linesRequested} lines in full
+                    {fill(c.linesInFull, { covered: r.linesCovered, requested: r.linesRequested })}
                   </span>
-                  <CellNote>{Math.round(r.coverage * 100)}% of requested value</CellNote>
+                  <CellNote>{fill(c.ofRequestedValue, { pct: Math.round(r.coverage * 100) })}</CellNote>
                 </Cell>
-                <Cell label="Lead time" className="lg:min-w-28">
+                <Cell label={c.leadTime} className="lg:min-w-28">
                   <LeadTimeBar days={r.leadTimeDays} maxDays={maxDays} requiredInDays={requiredInDays} />
                 </Cell>
-                <Cell label="Payment terms" className="lg:min-w-32 lg:max-w-44">
-                  {r.termsLabel}
-                  {acceptsCredit ? <CellNote>{acceptsCredit(r) ? "Accepts your credit cap" : "No platform credit"}</CellNote> : null}
+                <Cell label={c.paymentTerms} className="lg:min-w-32 lg:max-w-44">
+                  {noteText(r.scoreBreakdown.find((x) => x.factor === "payment_terms")!)}
+                  {acceptsCredit ? <CellNote>{acceptsCredit(r) ? c.acceptsCap : c.noCredit}</CellNote> : null}
                 </Cell>
                 <Cell end className="max-lg:hidden">
                   <span className="text-lg font-semibold text-ink" data-testid="offer-score">
                     {Math.round(r.score)}
                   </span>
-                  <CellNote>of 100</CellNote>
+                  <CellNote>{c.ofHundred}</CellNote>
                 </Cell>
                 {onChoose ? (
                   <Cell end className="max-lg:col-span-2">
                     {chosen ? (
-                      <Badge tone="positive">Chosen</Badge>
+                      <Badge tone="positive">{c.chosen}</Badge>
                     ) : (
                       <Button
                         size="sm"
@@ -164,7 +161,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                         data-testid="offer-choose"
                         className="max-lg:h-10 max-lg:w-full"
                       >
-                        Choose offer
+                        {c.chooseOffer}
                       </Button>
                     )}
                   </Cell>
@@ -174,16 +171,15 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                 <td colSpan={columns} className="px-3 pb-3 max-lg:block max-lg:px-4 max-lg:pb-4 max-lg:pt-3">
                   <details className="group" open={r.rank === 1}>
                     <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm text-xs font-medium text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp [&::-webkit-details-marker]:hidden">
-                      <span className="group-open:hidden">Show how the score of {Math.round(r.score)} is made up</span>
-                      <span className="hidden group-open:inline">Hide how the score is made up</span>
+                      <span className="group-open:hidden">{fill(c.showScore, { score: Math.round(r.score) })}</span>
+                      <span className="hidden group-open:inline">{c.hideScore}</span>
                     </summary>
                     <p className="mt-3 text-xs text-ink-muted">
-                      Goods {formatSar(r.subtotal)} + delivery {formatSar(r.deliveryFee)} + 15% VAT {formatSar(r.vat)} ={" "}
-                      <span className="font-medium text-ink">{formatSar(r.landedCostInclVat)}</span>
+                      {fill(c.breakdownSum, { goods: f.money(r.subtotal), delivery: f.money(r.deliveryFee), vat: f.money(r.vat), total: f.money(r.landedCostInclVat) })}
                     </p>
                     <div className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {r.scoreBreakdown.map((f) => (
-                        <FactorBar key={f.factor} label={FACTOR_LABEL[f.factor]} points={Math.round(f.points * 10) / 10} weight={f.weight} note={f.note} />
+                      {r.scoreBreakdown.map((x) => (
+                        <FactorBar key={x.factor} label={c.factors[x.factor]} points={Math.round(x.points * 10) / 10} weight={x.weight} note={noteText(x)} />
                       ))}
                     </div>
                   </details>

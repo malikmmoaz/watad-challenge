@@ -86,6 +86,7 @@ export interface OfferComparisonRow extends OfferComparison {
   localContent: boolean;
   /** What stands out about this offer among those that cover the whole RFQ. */
   badges: OfferBadge[];
+  scoreBreakdown: (OfferComparison["scoreBreakdown"][number] & { msg: NoteMsg })[];
 }
 
 export type OfferBadge = "lowest_landed_cost" | "fastest" | "best_terms" | "most_reliable";
@@ -94,13 +95,20 @@ const DAY_MS = 86_400_000;
 const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
-const reliabilityOf = (s: Supplier | undefined): { share: number; note: string } => {
-  if (!s || s.performance.ordersCompleted < 5) return { share: 0.5, note: "New to the platform, not enough history to rate" };
+/** Which message a score note uses and its raw values, so screens can render it in any locale (ADR 0005). */
+export interface NoteMsg {
+  key: string;
+  values: Record<string, string | number>;
+}
+
+const reliabilityOf = (s: Supplier | undefined): { share: number; note: string; msg: NoteMsg } => {
+  if (!s || s.performance.ordersCompleted < 5) return { share: 0.5, note: "New to the platform, not enough history to rate", msg: { key: "newSupplier", values: {} } };
   const p = s.performance;
   const blended = 0.6 * p.onTimeRate + 0.4 * p.fillRate;
   return {
     share: clamp01((blended - 0.8) / (0.97 - 0.8)),
     note: `${Math.round(p.onTimeRate * 100)}% on time, ${Math.round(p.fillRate * 100)}% complete over ${p.ordersCompleted} orders`,
+    msg: { key: "reliability", values: { onTime: p.onTimeRate, complete: p.fillRate, orders: p.ordersCompleted } },
   };
 };
 
@@ -152,7 +160,7 @@ export function compareOffers(rfq: Rfq, offers: Offer[], ctx: ComparisonContext)
     const rel = reliabilityOf(supplier.get(offer.supplierId));
     const premium = b.costIndex / bestIndex - 1;
 
-    const parts: { factor: ComparisonFactor; share: number; note: string }[] = [
+    const parts: { factor: ComparisonFactor; share: number; note: string; msg: NoteMsg }[] = [
       {
         factor: "cost",
         // Full points for the best evaluated cost; none at 20% dearer.
@@ -160,22 +168,30 @@ export function compareOffers(rfq: Rfq, offers: Offer[], ctx: ComparisonContext)
         note:
           (premium < 0.0005 ? "Lowest evaluated cost" : `${round1(premium * 100)}% above the lowest evaluated cost`) +
           (offer.localContent ? " (after 10% local-content preference)" : ""),
+        msg: { key: premium < 0.0005 ? "lowestCost" : "aboveLowest", values: { pct: round1(premium * 100), local: offer.localContent ? 1 : 0 } },
       },
       {
         factor: "coverage",
         share: b.coverage,
         note: b.coverage === 1 ? "Covers the full quantity of every line" : `Covers ${Math.round(b.coverage * 100)}% of the requested value (${b.linesCovered} of ${rfq.lines.length} lines in full)`,
+        msg: { key: b.coverage === 1 ? "fullCoverage" : "partialCoverage", values: { pct: Math.round(b.coverage * 100), covered: b.linesCovered, requested: rfq.lines.length } },
       },
       {
         factor: "lead_time",
         share: meets ? 0.5 + 0.5 * (fastest / Math.max(offer.leadTimeDays, 1)) : 0,
         note: meets ? `${offer.leadTimeDays} days, in time for your required-by date` : `${offer.leadTimeDays} days, later than your required-by date`,
+        msg: { key: meets ? "inTime" : "late", values: { days: offer.leadTimeDays } },
       },
-      { factor: "reliability", share: rel.share, note: rel.note },
-      { factor: "payment_terms", share: termsScore(offer.paymentTerms), note: describeTerms(offer.paymentTerms) },
-      { factor: "local_content", share: offer.localContent ? 1 : 0, note: offer.localContent ? "Made in Saudi" : "Not local content" },
+      { factor: "reliability", share: rel.share, note: rel.note, msg: rel.msg },
+      {
+        factor: "payment_terms",
+        share: termsScore(offer.paymentTerms),
+        note: describeTerms(offer.paymentTerms),
+        msg: { key: "terms", values: { kind: offer.paymentTerms.kind, days: "days" in offer.paymentTerms ? offer.paymentTerms.days : 0 } },
+      },
+      { factor: "local_content", share: offer.localContent ? 1 : 0, note: offer.localContent ? "Made in Saudi" : "Not local content", msg: { key: offer.localContent ? "local" : "notLocal", values: {} } },
     ];
-    const scoreBreakdown = parts.map((p) => ({ factor: p.factor, weight: W[p.factor], points: round1(clamp01(p.share) * W[p.factor]), note: p.note }));
+    const scoreBreakdown = parts.map((p) => ({ factor: p.factor, weight: W[p.factor], points: round1(clamp01(p.share) * W[p.factor]), note: p.note, msg: p.msg }));
 
     return {
       offerId: offer.id,

@@ -3,29 +3,42 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Alert, Badge, Button, EmptyState, Facts, PageHeader, Panel, StatusTimeline, buttonClass, type TimelineStep } from "@/components/ui";
-import { formatDate, formatDateTime } from "@/lib/format";
 import { PO_STATUS } from "@/lib/status";
 import { reference } from "@/data";
-import { formatSar } from "@/domain/money";
 import type { PurchaseOrder } from "@/domain/types";
-import { formatQuantity } from "@/lib/procurement/labels";
 import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
+import { useProcurementI18n } from "./use-procurement-i18n";
+
+type I18n = ReturnType<typeof useProcurementI18n>;
+
+/** A timeline note in the reader's locale: the ones procurement logic writes are recognised; seed notes are data. */
+const noteText = (i: I18n, note: string): string => {
+  if (!i.ar) return note;
+  const split = note.match(/^Part (\d+) of (\d+) of a split order$/);
+  if (split) return i.fill(i.m.poNotes.splitPart, { i: split[1]!, n: split[2]! });
+  if (note === "Supplier paid directly from the contractor's credit cap") return i.m.poNotes.paidFromCap;
+  const inv = note.match(/^ZATCA e-invoice (\S+)$/);
+  if (inv) return i.fill(i.m.poPage.einvoice, { number: inv[1]! });
+  return note;
+};
+
+/** The action label for the party whose step it is, by PO status. */
+const actionLabel = (i: I18n, status: string): string =>
+  status === "placed" ? i.m.poActions.accept : status === "confirmed" ? i.m.poActions.dispatch : status === "dispatched" ? i.m.poActions.confirmDelivery : status === "delivered" ? i.m.poActions.invoice : i.m.poActions.markPaid;
 import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
 import { track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 
-const ACTOR: Record<string, string> = { contractor: "You", supplier: "Supplier", platform: "Platform", credit: "Credit manager" };
-const when = (iso: string) => formatDateTime(iso);
 
-export function timelineSteps(po: PurchaseOrder): TimelineStep[] {
+export function timelineSteps(po: PurchaseOrder, i: I18n): TimelineStep[] {
   const at = stepIndex(po.status);
-  return PO_STEPS.map((step, i) => {
+  return PO_STEPS.map((step, idx) => {
     const event = po.timeline.find((e) => e.status === step.status);
     return {
-      label: step.label,
-      state: po.status === "cancelled" ? "problem" : i <= at ? "done" : i === at + 1 ? "current" : "upcoming",
-      ...(event ? { at: when(event.at), actor: ACTOR[event.actor] ?? event.actor } : {}),
-      ...(event?.note ? { note: event.note } : i === at + 1 ? { note: PO_STEPS[at]?.next } : {}),
+      label: i.m.poSteps[step.status as keyof I18n["m"]["poSteps"]].label,
+      state: po.status === "cancelled" ? "problem" : idx <= at ? "done" : idx === at + 1 ? "current" : "upcoming",
+      ...(event ? { at: i.f.dateTime(event.at), actor: (i.m.poPage.actors as Record<string, string>)[event.actor] ?? event.actor } : {}),
+      ...(event?.note ? { note: noteText(i, event.note) } : idx === at + 1 && PO_STEPS[at] ? { note: i.m.poSteps[PO_STEPS[at]!.status as keyof I18n["m"]["poSteps"]].next } : {}),
     };
   });
 }
@@ -36,13 +49,15 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const offers = useDemo((s) => s.offers);
   const po = pos.find((p) => p.id === poId);
   const [justDone, setJustDone] = useState<{ status: string; label: string; by: string } | null>(null);
+  const i = useProcurementI18n();
+  const pp = i.m.poPage;
 
   if (!po) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow={viewer === "supplier" ? "Supplier" : "Contractor"} title="Purchase order not found" />
-        <EmptyState title="This purchase order is not in this browser" action={<Link href={`/${viewer}`} className={buttonClass("secondary", "sm")}>Back</Link>}>
-          It may have been placed in another browser, or the demo data was reset.
+        <PageHeader eyebrow={viewer === "supplier" ? i.m.common.supplier : i.m.common.contractor} title={pp.notFound} />
+        <EmptyState title={pp.notInBrowser} action={<Link href={`/${viewer}`} className={buttonClass("secondary", "sm")}>{i.m.common.back}</Link>}>
+          {pp.notInBrowserBody}
         </EmptyState>
       </div>
     );
@@ -64,44 +79,45 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
     const after = getState().purchaseOrders.find((p) => p.id === po.id);
     if (after && after.status !== po.status) {
       track("po_status_changed", { po_id: po.id, status: after.status });
-      setJustDone({ status: after.status, label: PO_STATUS[after.status].label, by: role });
+      setJustDone({ status: after.status, label: i.m.poStatus[after.status], by: role });
     }
   };
   const d = po.creditDraw;
-  const nextStep = PO_STEPS[stepIndex(po.status)]?.next;
+  const stepNow = PO_STEPS[stepIndex(po.status)];
+  const nextStep = stepNow ? i.m.poSteps[stepNow.status as keyof typeof i.m.poSteps].next : undefined;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow={viewer === "supplier" ? "Supplier · purchase order" : "Contractor · purchase order"}
-        title={supplier?.name ?? "Purchase order"}
+        eyebrow={viewer === "supplier" ? pp.eyebrowSupplier : pp.eyebrowContractor}
+        title={i.name(supplier, i.m.poList.po)}
         serial={po.id}
         status={
           <span data-testid="po-status" data-status={po.status}>
-            <Badge tone={PO_STATUS[po.status].tone}>{PO_STATUS[po.status].label}</Badge>
+            <Badge tone={PO_STATUS[po.status].tone}>{i.m.poStatus[po.status]}</Badge>
           </span>
         }
         meta={
           <>
-            <span>Placed {when(po.placedAt)}</span>
+            <span>{i.fill(pp.placed, { when: i.f.dateTime(po.placedAt) })}</span>
             {rfq ? (
               <Link href={`/${viewer}/rfq/${rfq.id}`} className="underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
                 {rfq.title}
               </Link>
             ) : null}
-            <span className="font-semibold tabular-nums text-ink">{formatSar(po.totalInclVat)}</span>
+            <span className="font-semibold tabular-nums text-ink">{i.f.money(po.totalInclVat)}</span>
           </>
         }
         actions={
           mine ? (
             <Button variant="primary" data-testid="po-action" onClick={() => act(viewer)}>
-              {mine.label}
+              {actionLabel(i, po.status)}
             </Button>
           ) : theirs ? (
             <span className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-              Waiting for the {other}: {theirs.label.toLowerCase()}
-              <Button size="sm" variant="quiet" data-testid="po-advance" onClick={() => act(other)} title="Demo shortcut: act as the other party without switching role">
-                Demo: do it as the {other}
+              {i.fill(other === "supplier" ? pp.waitingForSupplier : pp.waitingForContractor, { step: i.ar ? actionLabel(i, po.status) : actionLabel(i, po.status).toLowerCase() })}
+              <Button size="sm" variant="quiet" data-testid="po-advance" onClick={() => act(other)} title={pp.demoTitle}>
+                {other === "supplier" ? pp.demoAsSupplier : pp.demoAsContractor}
               </Button>
             </span>
           ) : null
@@ -110,26 +126,26 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
       {justDone && justDone.status === po.status ? (
         <div key={po.status} className="motion-safe:animate-rise" data-testid="po-step-done">
           <Alert tone="positive" title={justDone.label}>
-            {nextStep ? `Next: ${nextStep}` : "This order is complete."}
+            {nextStep ? i.fill(pp.next, { step: nextStep }) : pp.complete}
           </Alert>
         </div>
       ) : null}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Status" className="lg:col-span-1">
-          <StatusTimeline label="Purchase order status" steps={timelineSteps(po)} />
+        <Panel title={pp.statusPanel} className="lg:col-span-1">
+          <StatusTimeline label={pp.timelineLabel} steps={timelineSteps(po, i)} />
         </Panel>
         <div className="space-y-4 lg:col-span-2">
-          <Panel title="Order">
+          <Panel title={pp.order}>
             <Facts
               items={[
-                { label: "Supplier", value: supplier?.name ?? po.supplierId },
-                { label: "Deliver to", value: rfq ? (rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${rfq.deliveryCity}`) : "" },
-                { label: "Expected delivery", value: formatDate(po.expectedDelivery) },
-                { label: "Goods", value: formatSar(po.subtotal) },
-                { label: "Delivery", value: formatSar(po.deliveryFee) },
-                { label: "VAT 15%", value: formatSar(po.vat) },
-                { label: "Total incl. VAT", value: <strong data-testid="po-total">{formatSar(po.totalInclVat)}</strong> },
-                { label: "Payment", value: po.paymentMethod === "platform_credit" ? "Pay with credit, supplier paid directly" : "Bank transfer" },
+                { label: i.m.common.supplier, value: i.name(supplier, po.supplierId) },
+                { label: i.m.common.deliverTo, value: rfq ? (rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${i.city(rfq.deliveryCity)}`) : "" },
+                { label: pp.expectedDelivery, value: i.f.date(po.expectedDelivery) },
+                { label: pp.goods, value: i.f.money(po.subtotal) },
+                { label: pp.delivery, value: i.f.money(po.deliveryFee) },
+                { label: pp.vat, value: i.f.money(po.vat) },
+                { label: i.m.common.totalInclVatShort, value: <strong data-testid="po-total">{i.f.money(po.totalInclVat)}</strong> },
+                { label: i.m.common.payment, value: po.paymentMethod === "platform_credit" ? pp.paymentCredit : i.m.common.bankTransfer },
               ]}
             />
             {offer && rfq && (
@@ -144,7 +160,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                           {line.description} <span className="text-ink-muted">· {ol.brand}</span>
                         </span>
                         <span className="tabular-nums text-ink-muted">
-                          {formatQuantity(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {formatSar(ol.unitPrice)}
+                          {i.qty(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {i.f.money(ol.unitPrice)}
                         </span>
                       </li>
                     );
@@ -153,14 +169,14 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
             )}
           </Panel>
           {d && (
-            <Panel title="Credit draw (Murabaha)">
+            <Panel title={pp.creditDrawTitle}>
               <Facts
                 items={[
-                  { label: "Drawn from credit cap", value: formatSar(d.principal) },
-                  { label: "Markup", value: `${formatSar(d.markup)} (${(d.profitRate * 100).toFixed(1)}% profit rate for ${d.tenorDays} days, ${(d.apr * 100).toFixed(1)}% APR)` },
-                  { label: "You repay", value: formatSar(d.totalRepayable) },
-                  { label: "Due", value: formatDate(d.dueDate) },
-                  { label: "Supplier paid", value: d.supplierPaidAt ? `Directly by the financier, ${when(d.supplierPaidAt)}` : "Directly by the financier once invoiced" },
+                  { label: pp.drawn, value: i.f.money(d.principal) },
+                  { label: pp.markup, value: i.fill(pp.markupValue, { markup: i.f.money(d.markup), rate: i.f.percent(d.profitRate, 1), days: d.tenorDays, apr: i.f.percent(d.apr, 1) }) },
+                  { label: pp.youRepay, value: i.f.money(d.totalRepayable) },
+                  { label: pp.due, value: i.f.date(d.dueDate) },
+                  { label: pp.supplierPaid, value: d.supplierPaidAt ? i.fill(pp.paidOn, { when: i.f.dateTime(d.supplierPaidAt) }) : pp.paidOnInvoice },
                 ]}
               />
             </Panel>
