@@ -40,11 +40,11 @@ export function Badge({ tone = "neutral", icon, children, className }: { tone?: 
 }
 
 /** Required wherever simulated AI produced what is shown. */
-export function AiLabel({ agent, confidence, className }: { agent?: string; confidence?: number; className?: string }) {
+export function AiLabel({ agent, confidence, className }: { agent?: ReactNode; confidence?: number; className?: string }) {
   return (
     <span className={cx("inline-flex min-h-6 max-w-full flex-wrap items-center gap-x-1.5 rounded-sm border border-dashed border-ai-line bg-ai-soft px-2 py-0.5 text-xs font-medium text-ai", className)}>
       <T m={msg(common, (m) => m.ui.simulatedAi)} />
-      {agent ? ` · ${agent}` : ""}
+      {agent ? <> · {agent}</> : null}
       {confidence === undefined ? null : (
         <span className="font-normal">
           <T m={msg(common, (m) => m.ui.confident)} values={{ n: Math.round(confidence * 100) }} />

@@ -68,7 +68,7 @@ const decisionStyle: Record<Decision, { word: Localized; cls: string }> = {
  * A human decision, printed like a stamp in the decision log. Only for
  * decisions a named person made; AI proposals use AiLabel and plain text.
  */
-export function DecisionStamp({ decision, by, at, animate = false }: { decision: DecisionInput; by: string; at: string; animate?: boolean }) {
+export function DecisionStamp({ decision, by, at, animate = false }: { decision: DecisionInput; by: ReactNode; at: ReactNode; animate?: boolean }) {
   const d = decisionStyle[fromOutcome[decision]];
   return (
     <div className={cx("inline-flex max-w-[calc(100%-1rem)] -rotate-2 flex-col rounded-md border-2 px-3 py-1.5 outline outline-1 -outline-offset-4 outline-current/40", d.cls, animate && "motion-safe:animate-[seal-press_240ms_var(--ease-out)_both]")}>

@@ -1,42 +1,44 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { DateText, Money, T } from "@/components/i18n/t";
+import { LocaleToggle } from "@/components/i18n/locale-toggle";
 import { ProductShowcase, type ShowcaseData } from "@/components/landing/showcase";
 import { RoleLink } from "@/components/role-link";
 import { ROLES } from "@/components/roles";
 import { AiLabel, buttonClass, CreditCapMeter, DecisionStamp, Icon, LeadTimeBar, cx, type IconName } from "@/components/ui";
 import { demoPersona, reference, seedState } from "@/data";
-import { formatSar, halalas } from "@/domain/money";
 import type { Role } from "@/domain/types";
 import { COMPARISON_WEIGHTS, compareOffers } from "@/lib/procurement/comparison";
 import { formatQuantity } from "@/lib/procurement/labels";
+import { common } from "@/i18n/common";
+import { msg, type Localized } from "@/i18n/core";
+import { landing } from "@/i18n/landing";
 
 /** Fixed "today" for the seeded sample data, so the page renders the same everywhere. */
 const TODAY = "2026-11-18";
 const DAY_MS = 86_400_000;
-const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
-const money = (n: number) => formatSar(halalas(n));
 
 /** What is waiting for each role right now, read from the seeded data. */
-function waitingFor(role: Role): string {
+function waitingFor(role: Role) {
   const { rfqs, offers, creditCases } = seedState;
   if (role === "contractor") {
     const mine = rfqs.filter((r) => r.contractorId === demoPersona.contractor && r.status !== "awarded");
     const toCompare = offers.filter((o) => o.status === "submitted" && mine.some((r) => r.id === o.rfqId)).length;
-    return `${mine.length} open RFQs, ${toCompare} offers to compare`;
+    return <T m={msg(landing, (m) => m.waiting.contractor)} values={{ rfqs: mine.length, offers: toCompare }} />;
   }
   if (role === "supplier") {
     const invited = rfqs.filter((r) => r.invitedSupplierIds.some((id) => id === demoPersona.supplier) && r.status !== "awarded").length;
-    return `${invited} ${invited === 1 ? "request" : "requests"} matched to you`;
+    return <T m={invited === 1 ? msg(landing, (m) => m.waiting.supplierOne) : msg(landing, (m) => m.waiting.supplierMany)} values={{ n: invited }} />;
   }
   const waiting = creditCases.filter((c) => c.status === "submitted" || c.status === "documents_review" || c.status === "in_assessment").length;
-  return `${waiting} applications waiting for a decision`;
+  return <T m={msg(landing, (m) => m.waiting.credit)} values={{ n: waiting }} />;
 }
 
 const ROLE_ICON: Record<Role, IconName> = { contractor: "document", supplier: "truck", credit: "check" };
-const SAUDI_DOCUMENTS = ["CR", "ZATCA VAT", "Zakat", "SIMAH", "Qawaem", "Bank statements", "GOSI", "Classification"];
+const SAUDI_DOCUMENTS = ["cr", "vat", "zakat", "simah", "qawaem", "bank", "gosi", "classification"] as const;
 
-function BentoCard({ n, title, lead, className, dark = false, children }: { n: number; title: string; lead: string; className?: string; dark?: boolean; children: ReactNode }) {
+function BentoCard({ n, title, lead, className, dark = false, children }: { n: number; title: Localized; lead: Localized; className?: string; dark?: boolean; children: ReactNode }) {
   return (
     <li
       className={cx(
@@ -46,23 +48,39 @@ function BentoCard({ n, title, lead, className, dark = false, children }: { n: n
       )}
     >
       <div>
-        <p className={cx("font-mono text-xs", dark ? "text-on-pine-muted" : "text-ink-muted")}>[ {String(n).padStart(2, "0")} / 04 ]</p>
-        <h3 className={cx("mt-3 text-2xl font-semibold tracking-[-0.025em]", dark ? "text-on-pine" : "text-ink")}>{title}</h3>
-        <p className={cx("mt-1.5 max-w-md text-sm", dark ? "text-on-pine-muted" : "text-ink-muted")}>{lead}</p>
+        <p dir="ltr" className={cx("font-mono text-xs rtl:text-end", dark ? "text-on-pine-muted" : "text-ink-muted")}><T m={msg(landing, (m) => m.how.step)} values={{ n: String(n).padStart(2, "0") }} /></p>
+        <h3 className={cx("mt-3 text-2xl font-semibold tracking-[var(--tracking-heading)]", dark ? "text-on-pine" : "text-ink")}>
+          <T m={title} />
+        </h3>
+        <p className={cx("mt-1.5 max-w-md text-sm", dark ? "text-on-pine-muted" : "text-ink-muted")}>
+          <T m={lead} />
+        </p>
       </div>
       <div className={cx("mt-auto rounded-xl p-4 text-sm", dark ? "bg-surface text-ink" : "bg-paper")}>{children}</div>
     </li>
   );
 }
 
-const accent = "font-serif font-normal italic tracking-[-0.01em]";
+const accent = "font-serif font-normal italic";
 
 export default function Home() {
   const rfq = seedState.rfqs.find((r) => r.id === "rfq_1042")!;
   const po = seedState.purchaseOrders[0];
   const facility = seedState.creditFacilities.find((f) => f.contractorId === demoPersona.contractor);
   const creditCase = seedState.creditCases.find((c) => c.id === facility?.creditCaseId);
-  const supplierName = new Map(reference.suppliers.map((s) => [s.id, s.name]));
+  const supplierName = new Map(reference.suppliers.map((s) => [s.id, { en: s.name, ar: s.nameAr ?? s.name }]));
+  const contractorName = (id: string | undefined): Localized => {
+    const c = reference.contractors.find((x) => x.id === id);
+    return { en: c?.name ?? "", ar: c?.nameAr ?? c?.name ?? "" };
+  };
+  const materialName = (id: string, fallback: string): Localized => {
+    const mat = reference.materials.find((x) => x.id === id);
+    return { en: fallback, ar: mat?.nameAr ?? fallback };
+  };
+  const title = (id: string, en: string): Localized => {
+    const t = landing.ar.data.titles as Record<string, string>;
+    return { en, ar: t[id] ?? en };
+  };
   const offers = compareOffers(rfq, seedState.offers.filter((o) => o.rfqId === rfq.id), {
     materials: reference.materials,
     suppliers: reference.suppliers,
@@ -76,41 +94,40 @@ export default function Home() {
   const showcase: ShowcaseData = {
     contractor: {
       rfqId: rfq.id,
-      rfqTitle: rfq.title,
+      rfqTitle: title(rfq.id, rfq.title),
       requiredInDays,
       maxDays,
-      offers: offers.map((o) => ({ name: supplierName.get(o.supplierId) ?? o.supplierId, landed: o.landedCostInclVat, days: o.leadTimeDays, score: Math.round(o.score), best: o.rank === 1 })),
+      offers: offers.map((o) => ({ name: supplierName.get(o.supplierId) ?? { en: o.supplierId, ar: o.supplierId }, landed: o.landedCostInclVat, days: o.leadTimeDays, score: Math.round(o.score), best: o.rank === 1 })),
       cap: facility?.cap ?? 0,
       drawn: facility?.drawn ?? 0,
       thisPo: offers[0]?.landedCostInclVat ?? 0,
     },
     supplier: {
-      title: supplierRfq.title,
+      title: title(supplierRfq.id, supplierRfq.title),
       rfqId: supplierRfq.id,
-      contractor: reference.contractors.find((c) => c.id === supplierRfq.contractorId)?.name ?? "",
-      reasons: ["You stock rebar, steel and cement", `You deliver to ${supplierRfq.deliveryCity}`, "Paid directly from the contractor's credit cap"],
-      closes: date.format(new Date(supplierRfq.closesAt)),
-      lines: supplierRfq.lines.map((l) => ({ name: l.description, qty: formatQuantity(l.quantity, l.unit) })),
+      contractor: contractorName(supplierRfq.contractorId),
+      city: supplierRfq.deliveryCity,
+      closesAt: supplierRfq.closesAt,
+      lines: supplierRfq.lines.map((l) => ({ name: materialName(l.materialId, l.description), quantity: l.quantity, unit: l.unit })),
     },
     credit: {
-      applicant: reference.contractors.find((c) => c.id === creditCase?.contractorId)?.name ?? "",
+      applicant: contractorName(creditCase?.contractorId),
       caseId: creditCase?.id ?? "",
       score: creditCase?.scorecard?.total ?? 0,
       factors: [...factors]
         .sort((a, b) => b.weight - a.weight)
         .slice(0, 3)
-        .map((f) => ({ label: f.label, points: f.points, weight: f.weight, note: f.rationale })),
-      memo: creditCase?.aiProposal?.memo.replace(/[#*_`>]/g, "").replace(/\s+/g, " ").trim() ?? "",
-      decidedBy: creditCase?.decision?.decidedBy.split(",")[0] ?? "Credit manager",
-      decidedAt: creditCase?.decision ? date.format(new Date(creditCase.decision.decidedAt)) : "",
+        .map((f) => ({ id: f.id, points: f.points, weight: f.weight, noteEn: f.rationale })),
+      memoEn: creditCase?.aiProposal?.memo.replace(/[#*_`>]/g, "").replace(/\s+/g, " ").trim() ?? "",
+      decidedAt: creditCase?.decision?.decidedAt ?? TODAY,
     },
   };
 
-  const stats: [string, string][] = [
-    [String(Object.keys(COMPARISON_WEIGHTS).length), "factors behind every offer score, each one shown"],
-    [String(SAUDI_DOCUMENTS.length), "Saudi documents read for each credit file"],
-    [String(factors.length), "credit factors, each tied to the document it came from"],
-    ["1", "PO at a time drawn from the credit cap, supplier paid directly"],
+  const stats: [string, Localized][] = [
+    [String(Object.keys(COMPARISON_WEIGHTS).length), msg(landing, (m) => m.stats.factors)],
+    [String(SAUDI_DOCUMENTS.length), msg(landing, (m) => m.stats.documents)],
+    [String(factors.length), msg(landing, (m) => m.stats.creditFactors)],
+    ["1", msg(landing, (m) => m.stats.perPo)],
   ];
 
   return (
@@ -121,23 +138,25 @@ export default function Home() {
             <span aria-hidden="true" className="grid size-7 place-items-center rounded-lg bg-pine-deep text-on-pine shadow-button">
               <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45 rtl:rotate-45" />
             </span>
-            Watad challenge demo
+            <T m={msg(common, (m) => m.product)} />
           </Link>
           <nav aria-label="On this page" className="hidden items-center gap-1 text-sm md:flex">
-            {[
-              ["#product", "Product"],
-              ["#how", "How it works"],
-              ["#trust", "Why trust it"],
-              ["/about", "About"],
-            ].map(([href, label]) => (
+            {(
+            [
+              ["#product", msg(landing, (m) => m.nav.product)],
+              ["#how", msg(landing, (m) => m.nav.how)],
+              ["#trust", msg(landing, (m) => m.nav.trust)],
+              ["/about", msg(landing, (m) => m.nav.about)],
+            ] as [string, Localized][]).map(([href, label]) => (
               <a key={href} href={href} className="rounded-md px-3 py-1.5 text-ink-muted transition-colors duration-150 hover:bg-surface hover:text-ink">
-                {label}
+                <T m={label} />
               </a>
             ))}
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LocaleToggle />
             <a href="#roles" className={buttonClass("primary", "sm", "rounded-full px-4")}>
-              Try the demo
+              <T m={msg(landing, (m) => m.cta.tryDemo)} />
             </a>
           </div>
         </div>
@@ -148,23 +167,23 @@ export default function Home() {
         <section className="relative isolate overflow-hidden px-4 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-line)_1px,transparent_1px)] bg-[size:56px_56px] opacity-60 [mask-image:radial-gradient(ellipse_70%_55%_at_50%_25%,black,transparent)]" />
-            <div className="absolute left-1/2 top-[-14rem] h-[36rem] w-[60rem] -translate-x-1/2 rounded-full bg-glow/45 blur-3xl motion-safe:animate-drift" />
-            <div className="absolute right-[-12rem] top-[16rem] h-[24rem] w-[30rem] rounded-full bg-glow-warm/60 blur-3xl motion-safe:animate-drift motion-safe:[animation-delay:-7s]" />
+            <div className="absolute start-1/2 top-[-14rem] h-[36rem] w-[60rem] -translate-x-1/2 rtl:translate-x-1/2 rounded-full bg-glow/45 blur-3xl motion-safe:animate-drift" />
+            <div className="absolute end-[-12rem] top-[16rem] h-[24rem] w-[30rem] rounded-full bg-glow-warm/60 blur-3xl motion-safe:animate-drift motion-safe:[animation-delay:-7s]" />
           </div>
 
           <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
             <h1 className="max-w-5xl text-5xl font-semibold tracking-[var(--tracking-display)] text-ink motion-safe:animate-rise motion-safe:[animation-delay:80ms] sm:text-6xl lg:text-7xl">
-              From RFQ to paid PO,
-              <span className={cx("block text-action", accent)}>with credit you can trace.</span>
+              <T m={msg(landing, (m) => m.hero.title)} />
+              <span className={cx("block text-action", accent)}><T m={msg(landing, (m) => m.hero.accent)} /></span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-ink-muted motion-safe:animate-rise motion-safe:[animation-delay:160ms] sm:text-xl">
-              A neutral platform for construction materials. Suppliers compete on comparable offers, an independent credit manager sets the credit cap, and every number shows the document behind it.
+              <T m={msg(landing, (m) => m.hero.lead)} />
             </p>
 
             <div id="roles" className="mt-10 w-full max-w-4xl scroll-mt-24 motion-safe:animate-rise motion-safe:[animation-delay:240ms]">
               <p className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-ink-muted">
-                <span className="rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs font-medium text-ink-muted">Sample data · simulated AI</span>
-                Enter as one of the three parties. No login; switch at any time.
+                <span className="rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs font-medium text-ink-muted"><T m={msg(common, (m) => m.sampleData)} /></span>
+                <T m={msg(landing, (m) => m.hero.enterLine)} />
               </p>
               <ul className="grid gap-3 sm:grid-cols-3">
                 {ROLES.map((r) => (
@@ -180,13 +199,17 @@ export default function Home() {
                         <span className="grid size-9 place-items-center rounded-lg bg-action-soft text-action">
                           <Icon name={ROLE_ICON[r.role]} />
                         </span>
-                        <span className="grid size-8 place-items-center rounded-full bg-pine-deep text-on-pine transition-transform duration-200 ease-out group-hover:translate-x-0.5">
+                        <span className="grid size-8 place-items-center rounded-full bg-pine-deep text-on-pine transition-transform duration-200 ease-out group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">
                           <Icon name="arrow-right" size={14} strokeWidth={2} />
                         </span>
                       </span>
                       <span>
-                        <span className="block text-lg font-semibold tracking-[-0.015em] text-ink">Enter as {r.label.toLowerCase()}</span>
-                        <span className="block text-xs text-ink-muted">as {r.persona}</span>
+                        <span className="block text-lg font-semibold tracking-[var(--tracking-heading)] text-ink">
+                          <T m={msg(landing, (m) => m.hero.enterAs[r.role])} />
+                        </span>
+                        <span className="block text-xs text-ink-muted">
+                          <T m={msg(landing, (m) => m.hero.asPersona)} values={{ persona: <T m={msg(common, (m) => m.personas[r.role])} /> }} />
+                        </span>
                       </span>
                       <span className="mt-auto flex items-center gap-2 text-sm font-medium text-ink">
                         <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-caution-mark" />
@@ -205,12 +228,12 @@ export default function Home() {
         </section>
 
         {/* What it runs on: the Saudi paper trail */}
-        <section aria-label="What the platform reads" className="border-y border-line bg-surface/70">
+        <section aria-label="Saudi documents" className="border-y border-line bg-surface/70">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4 py-6 sm:px-8">
-            <span className="font-mono text-xs uppercase tracking-[var(--tracking-eyebrow)] text-ink-muted">Reads the Saudi paper trail</span>
+            <span className="font-mono text-xs uppercase tracking-[var(--tracking-eyebrow)] text-ink-muted"><T m={msg(landing, (m) => m.strip.title)} /></span>
             {SAUDI_DOCUMENTS.map((d) => (
-              <span key={d} className="text-sm font-semibold tracking-[-0.01em] text-ink-subtle">
-                {d}
+              <span key={d} className="text-sm font-semibold text-ink-subtle">
+                <T m={msg(landing, (m) => m.strip.docs[d])} />
               </span>
             ))}
           </div>
@@ -220,8 +243,10 @@ export default function Home() {
         <section aria-label="In numbers" className="px-4 py-16 sm:px-8 sm:py-20">
           <dl className="mx-auto grid max-w-6xl gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map(([n, label]) => (
-              <div key={label} className="flex flex-col border-t border-ink pt-5">
-                <dt className="order-2 mt-2 max-w-[16rem] text-sm text-ink-muted">{label}</dt>
+              <div key={label.en} className="flex flex-col border-t border-ink pt-5">
+                <dt className="order-2 mt-2 max-w-[16rem] text-sm text-ink-muted">
+                  <T m={label} />
+                </dt>
                 <dd className="order-1 text-6xl font-semibold tracking-[var(--tracking-display)] text-ink">{n}</dd>
               </div>
             ))}
@@ -233,33 +258,35 @@ export default function Home() {
           <div className="mx-auto flex max-w-6xl flex-col gap-10">
             <div className="flex flex-col gap-4">
               <h2 id="how-h" className="max-w-3xl text-4xl font-semibold tracking-[-0.035em] text-ink sm:text-5xl">
-                One order, four steps,
-                <span className="text-action"> nothing hidden.</span>
+                <T m={msg(landing, (m) => m.how.title)} />
+                <span className="text-action"> <T m={msg(landing, (m) => m.how.accent)} /></span>
               </h2>
-              <p className="max-w-2xl text-lg text-ink-muted">Every step below is the app&apos;s own component on the sample data, not a screenshot.</p>
+              <p className="max-w-2xl text-lg text-ink-muted"><T m={msg(landing, (m) => m.how.lead)} /></p>
             </div>
             <ol className="grid gap-4 lg:grid-cols-6">
-              <BentoCard n={1} title="Send an RFQ" lead="Upload an RFQ or pick from the catalog. Simulated AI reads the file; you confirm every line." className="lg:col-span-3">
+              <BentoCard n={1} title={msg(landing, (m) => m.how.rfqTitle)} lead={msg(landing, (m) => m.how.rfqLead)} className="lg:col-span-3">
                 <ul className="flex flex-col gap-2">
                   {rfq.lines.map((l) => (
                     <li key={l.id} className="flex items-baseline justify-between gap-3">
-                      <span className="text-ink">{l.description}</span>
+                      <span className="text-ink">
+                        <T m={materialName(l.materialId, l.description)} />
+                      </span>
                       <span className="whitespace-nowrap tabular-nums text-ink-muted">
-                        {formatQuantity(l.quantity, l.unit)}
+                        <T m={{ en: formatQuantity(l.quantity, l.unit), ar: `${l.quantity.toLocaleString("en-US")} ${landing.ar.units[l.unit]}` }} />
                       </span>
                     </li>
                   ))}
                 </ul>
-                {rfq.lines[0]?.parsedBy ? <AiLabel agent={rfq.lines[0].parsedBy.agent} className="mt-3" /> : null}
+                {rfq.lines[0]?.parsedBy ? <AiLabel agent={<T m={msg(landing, (m) => m.data.boqReader)} />} className="mt-3" /> : null}
               </BentoCard>
 
-              <BentoCard n={2} title="Compare offers" lead="Price, stock, lead time and payment terms side by side, scored on six factors you can open." className="lg:col-span-3">
+              <BentoCard n={2} title={msg(landing, (m) => m.how.offersTitle)} lead={msg(landing, (m) => m.how.offersLead)} className="lg:col-span-3">
                 <ul className="flex flex-col gap-3">
                   {offers.map((o) => (
                     <li key={o.offerId} className="flex flex-col gap-1.5">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="truncate text-ink">{supplierName.get(o.supplierId)}</span>
-                        <span className="whitespace-nowrap font-medium tabular-nums text-ink">{formatSar(o.landedCostInclVat)}</span>
+                        <span className="truncate text-ink"><T m={supplierName.get(o.supplierId) ?? { en: o.supplierId, ar: o.supplierId }} /></span>
+                        <span className="whitespace-nowrap font-medium tabular-nums text-ink"><Money h={o.landedCostInclVat} /></span>
                       </div>
                       <LeadTimeBar days={o.leadTimeDays} maxDays={maxDays} requiredInDays={requiredInDays} />
                     </li>
@@ -267,31 +294,33 @@ export default function Home() {
                 </ul>
               </BentoCard>
 
-              <BentoCard n={3} title="Place a PO" lead="Choose an offer, place the purchase order and follow it to site." className="lg:col-span-2">
+              <BentoCard n={3} title={msg(landing, (m) => m.how.poTitle)} lead={msg(landing, (m) => m.how.poLead)} className="lg:col-span-2">
                 {po ? (
                   <ol className="flex flex-col gap-1.5">
                     {po.timeline.map((e) => (
                       <li key={e.status} className="flex items-center gap-2 text-ink">
                         <Icon name="check" size={14} className="shrink-0 text-positive" strokeWidth={2} />
-                        <span className="capitalize">{e.status}</span>
-                        <span className="ml-auto whitespace-nowrap text-xs text-ink-muted">{date.format(new Date(e.at))}</span>
+                        <span>{e.status in landing.en.how.poStatus ? <T m={msg(landing, (m) => m.how.poStatus[e.status as "placed" | "confirmed" | "dispatched" | "delivered"])} /> : e.status}</span>
+                        <span className="ms-auto whitespace-nowrap text-xs text-ink-muted">
+                          <DateText iso={e.at} />
+                        </span>
                       </li>
                     ))}
                   </ol>
                 ) : null}
               </BentoCard>
 
-              <BentoCard n={4} dark title="Draw credit per PO" lead="Pay from an approved credit cap. The supplier is paid directly; you repay cost plus a Murabaha markup on the due date." className="lg:col-span-4">
+              <BentoCard n={4} dark title={msg(landing, (m) => m.how.creditTitle)} lead={msg(landing, (m) => m.how.creditLead)} className="lg:col-span-4">
                 <div className="grid gap-5 sm:grid-cols-[minmax(0,1.4fr)_auto] sm:items-end">
                   <div className="flex flex-col gap-3">
-                    {facility ? <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={money} /> : null}
+                    {facility ? <CreditCapMeter cap={facility.cap} drawn={facility.drawn} /> : null}
                     {po?.creditDraw ? (
                       <p className="text-xs text-ink-muted">
-                        Markup {formatSar(po.creditDraw.markup)} for {po.creditDraw.tenorDays} days: {pct(po.creditDraw.profitRate)} profit rate, {pct(po.creditDraw.apr)} APR.
+                        <T m={msg(landing, (m) => m.how.markup)} values={{ markup: <Money h={po.creditDraw.markup} />, days: po.creditDraw.tenorDays, rate: pct(po.creditDraw.profitRate), apr: pct(po.creditDraw.apr) }} />
                       </p>
                     ) : null}
                   </div>
-                  {creditCase?.decision ? <DecisionStamp decision="approve" by={creditCase.decision.decidedBy.split(",")[0] ?? "Credit manager"} at={date.format(new Date(creditCase.decision.decidedAt))} /> : null}
+                  {creditCase?.decision ? <DecisionStamp decision="approve" by={<T m={msg(landing, (m) => m.data.decidedBy)} />} at={<DateText iso={creditCase.decision.decidedAt} />} /> : null}
                 </div>
               </BentoCard>
             </ol>
@@ -304,25 +333,27 @@ export default function Home() {
           <div className="mx-auto flex max-w-6xl flex-col gap-12">
             <div className="flex flex-col gap-4">
               <h2 id="trust-h" className="max-w-3xl text-4xl font-semibold tracking-[-0.035em] text-on-pine sm:text-5xl">
-                Agents prepare.
-                <span className="text-glow"> Humans decide.</span>
+                <T m={msg(landing, (m) => m.trust.title)} />
+                <span className="text-glow"> <T m={msg(landing, (m) => m.trust.accent)} /></span>
               </h2>
-              <p className="max-w-2xl text-lg text-on-pine-muted">The platform sells no materials and lends no money. It shows its reasons, and a named person signs every credit decision.</p>
+              <p className="max-w-2xl text-lg text-on-pine-muted"><T m={msg(landing, (m) => m.trust.lead)} /></p>
             </div>
             <ul className="grid gap-4 md:grid-cols-3">
               {(
                 [
-                  ["Neutral by construction", "Every supplier and every offer shows the same fields in the same order. No one is favoured by the layout.", "info"],
-                  ["Reasons beside results", "A shortlist match, an offer score and a credit score each open into the factors and documents behind them.", "search"],
-                  ["People sign decisions", "Simulated AI reads documents and drafts the memo. An independent credit manager approves, declines or asks for more.", "check"],
-                ] as [string, string, IconName][]
+                  [msg(landing, (m) => m.trust.neutralTitle), msg(landing, (m) => m.trust.neutralText), "info"],
+                  [msg(landing, (m) => m.trust.reasonsTitle), msg(landing, (m) => m.trust.reasonsText), "search"],
+                  [msg(landing, (m) => m.trust.peopleTitle), msg(landing, (m) => m.trust.peopleText), "check"],
+                 ] as [Localized, Localized, IconName][]
               ).map(([title, text, icon]) => (
-                <li key={title} className="flex flex-col gap-4 rounded-2xl border border-on-pine/10 bg-pine/60 p-6 transition-colors duration-200 hover:border-on-pine/25">
+                <li key={title.en} className="flex flex-col gap-4 rounded-2xl border border-on-pine/10 bg-pine/60 p-6 transition-colors duration-200 hover:border-on-pine/25">
                   <h3 className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.015em] text-on-pine">
                     <Icon name={icon} className="shrink-0 text-glow" />
-                    {title}
+                    <T m={title} />
                   </h3>
-                  <p className="text-sm text-on-pine-muted">{text}</p>
+                  <p className="text-sm text-on-pine-muted">
+                    <T m={text} />
+                  </p>
                 </li>
               ))}
             </ul>
@@ -334,20 +365,20 @@ export default function Home() {
           <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[28rem] w-[56rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-glow/30 blur-3xl" />
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
             <h2 id="close-h" className="text-4xl font-semibold tracking-[-0.035em] text-ink sm:text-5xl">
-              See one order from
-              <span className="text-action"> all three sides.</span>
+              <T m={msg(landing, (m) => m.close.title)} />
+              <span className="text-action"> <T m={msg(landing, (m) => m.close.accent)} /></span>
             </h2>
-            <p className="max-w-xl text-lg text-ink-muted">Start as the contractor, answer as the supplier, decide as the credit manager. The demo keeps one shared state.</p>
+            <p className="max-w-xl text-lg text-ink-muted"><T m={msg(landing, (m) => m.close.lead)} /></p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/contractor" className={buttonClass("primary", "lg", "rounded-full")}>
-                Start as contractor
+                <T m={msg(landing, (m) => m.close.start)} />
                 <Icon name="arrow-right" />
               </Link>
               <Link href="/supplier" className={buttonClass("secondary", "lg", "rounded-full")}>
-                Supplier
+                <T m={msg(common, (m) => m.roles.supplier)} />
               </Link>
               <Link href="/credit" className={buttonClass("secondary", "lg", "rounded-full")}>
-                Credit manager
+                <T m={msg(common, (m) => m.roles.credit)} />
               </Link>
             </div>
           </div>
@@ -357,18 +388,18 @@ export default function Home() {
       <footer className="border-t border-line bg-surface/60">
         <div className="mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-x-10 gap-y-6 px-4 py-10 text-sm sm:px-8">
           <div className="max-w-md">
-            <p className="font-semibold text-ink">Watad challenge demo</p>
-            <p className="mt-1 text-ink-muted">All companies, prices and credit files are sample data. AI features are simulated and labelled where they appear.</p>
+            <p className="font-semibold text-ink"><T m={msg(common, (m) => m.product)} /></p>
+            <p className="mt-1 text-ink-muted"><T m={msg(landing, (m) => m.footer.note)} /></p>
           </div>
           <nav aria-label="About this demo" className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/about" data-testid="landing-about" className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
-              About this demo
+              <T m={msg(landing, (m) => m.footer.about)} />
             </Link>
             <Link href="/how-we-built" data-testid="landing-how-we-built" className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
-              How we built it
+              <T m={msg(landing, (m) => m.footer.how)} />
             </Link>
             <Link href="/design-system" className="text-ink-muted underline decoration-line-strong underline-offset-[3px] hover:text-ink">
-              Design system
+              <T m={msg(landing, (m) => m.footer.designSystem)} />
             </Link>
           </nav>
         </div>
