@@ -61,6 +61,14 @@ export function tid(page: Page, id: string) {
  */
 export async function ready(page: Page) {
   await expect(page.locator("html")).not.toHaveClass(/i18n-pending/);
+  // The boot script's safety net can lift i18n-pending before React has rendered Arabic
+  // (seen under heavy load). In Arabic, also wait until the page header reads Arabic.
+  if ((await page.locator("html").getAttribute("lang")) === "ar") {
+    await page.waitForFunction(() => {
+      const header = document.querySelector("header");
+      return !header || /[\u0600-\u06FF]/.test(header.innerText);
+    });
+  }
 }
 
 /** Pick the expected text for the current locale. */
