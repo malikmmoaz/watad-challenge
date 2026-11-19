@@ -466,6 +466,12 @@ export const credit = defineMessages(
     },
 
     data: {
+      projects: {
+        prj_school: { name: "Al Narjis Schools Complex", payer: "Ministry of Education (via Tatweer Buildings)" },
+        prj_villas: { name: "Al Malqa Residential Villas (24 units)", payer: "Dar Al Wessam Development (fictional)" },
+        prj_clinic: { name: "Obhur Primary Care Clinic", payer: "Red Sea Build Group (fictional main contractor)" },
+        prj_warehouse: { name: "Jubail Logistics Warehouses Phase 2", payer: "Giga-project logistics package (fictional)" },
+      },
       sampleSuffix: " (sample)",
       seed: {
         s01: "Active CR, owners match application.",
@@ -1005,6 +1011,12 @@ export const credit = defineMessages(
     },
 
     data: {
+      projects: {
+        prj_school: { name: "مجمّع مدارس النرجس", payer: "وزارة التعليم (عبر شركة تطوير للمباني)" },
+        prj_villas: { name: "فلل الملقا السكنية (24 وحدة)", payer: "دار الوسام للتطوير (خيالية)" },
+        prj_clinic: { name: "مركز أبحر للرعاية الصحية الأولية", payer: "مجموعة البحر الأحمر للبناء (مقاول رئيسي خيالي)" },
+        prj_warehouse: { name: "المرحلة الثانية من مستودعات الجبيل اللوجستية", payer: "حزمة لوجستية لمشروع عملاق (خيالية)" },
+      },
       sampleSuffix: " (تجريبية)",
       seed: {
         s01: "السجل التجاري نشط، والملّاك مطابقون للطلب.",

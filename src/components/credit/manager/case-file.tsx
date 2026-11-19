@@ -24,7 +24,7 @@ import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
 import { logAction, logDetail } from "../log-text";
 import { fieldLabel, fieldValue } from "../field-text";
-import { applicantText, purposeText, seedText } from "../data-text";
+import { applicantText, isolateLtr, purposeText, seedText } from "../data-text";
 
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
@@ -44,7 +44,7 @@ function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[];
         // The seal is a link to the field; its click bubbles here so opening evidence is counted.
         return (
           <span key={`${r.documentId}-${r.fieldKey}`} onClick={() => d && track("credit_evidence_opened", { case_id: caseId, document_type: d.type })}>
-            <EvidenceSeal source={`${d?.fileName || (d ? m.documents[d.type].label : "")}${f ? `, ${fieldLabel(f, m, ar)}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
+            <EvidenceSeal source={`${d?.fileName ? isolateLtr(d.fileName, ar) : d ? m.documents[d.type].label : ""}${f ? `${ar ? "، " : ", "}${fieldLabel(f, m, ar)}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
           </span>
         );
       })}
@@ -271,7 +271,7 @@ export function CaseFile({ id }: { id: string }) {
               {c.documents.map((d) => (
                 <li key={d.id} className="space-y-2 py-3 first:pt-0">
                   <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-ink">{d.fileName || all.documents[d.type].label}</span>
+                    <span className="font-medium text-ink" dir={d.fileName ? "ltr" : undefined}>{d.fileName || all.documents[d.type].label}</span>
                     <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{all.documentStatus[d.status]}</Badge>
                   </div>
                   {d.extracted.length > 0 && (

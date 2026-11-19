@@ -39,3 +39,11 @@ export function seedText(text: string, en: M, m: M): string {
 export function applicantText(name: string, en: M, m: M): string {
   return name.endsWith(en.data.sampleSuffix) ? name.slice(0, -en.data.sampleSuffix.length) + m.data.sampleSuffix : name;
 }
+
+/** A sample project's name and payer in the reader's language, by project id; unknown ids keep their data. */
+export function projectText(id: string, fallback: { name: string; payer: string }, m: M): { name: string; payer: string } {
+  return (m.data.projects as Record<string, { name: string; payer: string }>)[id] ?? fallback;
+}
+
+/** Isolates a Latin run (file name, id, code) inside right-to-left text so it is not reordered. */
+export const isolateLtr = (text: string, rtl: boolean): string => (rtl && text ? `\u2066${text}\u2069` : text);
