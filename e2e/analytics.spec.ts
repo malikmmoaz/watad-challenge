@@ -23,8 +23,17 @@ test.beforeEach(async ({ page }) => {
 const events = async (page: Page): Promise<Entry[]> => page.evaluate(() => JSON.parse(sessionStorage.getItem("__sink") ?? "[]"));
 const only = async (page: Page, name: string) => (await events(page)).filter((e) => e.event === name);
 
-/** Exactly one event of this name, with exactly these property keys. */
+/** The properties of every event of this name, in order. */
+const props = async (page: Page, name: string) => (await only(page, name)).map((e) => e.properties);
+
+/**
+ * Exactly one event of this name, with exactly these property keys. Events fired from effects
+ * after hydration land later in WebKit (#181), so wait for the first one, then check that no
+ * second one follows within 300 ms.
+ */
 async function once(page: Page, name: string, keys: string[]) {
+  await expect.poll(async () => (await only(page, name)).length, { message: `${name} fires exactly once` }).toBe(1);
+  await page.waitForTimeout(300);
   const list = await only(page, name);
   expect(list, `${name} fires exactly once`).toHaveLength(1);
   expect(Object.keys(list[0]!.properties).sort(), `${name} properties`).toEqual([...keys].sort());
@@ -97,8 +106,7 @@ test("procurement funnel: offer -> compared -> awarded -> PO with credit -> ever
   await page.goto(`/supplier/po/${poId}`);
   await tid(page, "po-action").click();
   await expect(tid(page, "po-status")).toHaveAttribute("data-status", "paid");
-  const statuses = (await only(page, "po_status_changed")).map((e) => e.properties);
-  expect(statuses).toEqual(["confirmed", "dispatched", "delivered", "paid"].map((status) => ({ po_id: poId, status })));
+  await expect.poll(() => props(page, "po_status_changed")).toEqual(["confirmed", "dispatched", "delivered", "paid"].map((status) => ({ po_id: poId, status })));
 });
 
 test("over the credit cap: po_placed says it did not fit", async ({ page }) => {
@@ -146,7 +154,8 @@ test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> a
   await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-sample-docs").click(); // attaching the same files again adds nothing
-  const uploaded = (await only(page, "credit_document_uploaded")).map((e) => e.properties);
+  await expect.poll(async () => (await only(page, "credit_document_uploaded")).length).toBe(8);
+  const uploaded = await props(page, "credit_document_uploaded");
   expect(uploaded).toHaveLength(8);
   expect(new Set(uploaded.map((p) => p.document_type)).size).toBe(8);
   for (const p of uploaded) expect(Object.keys(p)).toEqual(["document_type"]);
@@ -231,8 +240,8 @@ test("activity feed, tax invoice and printing: one event per action, enums and i
   await tid(page, "locale-toggle").click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await tid(page, "invoice-print").click();
-  expect(await only(page, "invoice_viewed")).toHaveLength(1);
-  expect((await only(page, "po_printed")).map((e) => e.properties)).toEqual([
+  await expect.poll(async () => (await only(page, "invoice_viewed")).length).toBe(1);
+  await expect.poll(() => props(page, "po_printed")).toEqual([
     { po_id: "po_3007", document: "po", locale: "en" },
     { po_id: "po_3007", document: "invoice", locale: "ar" },
   ]);
@@ -251,8 +260,7 @@ test("credit what-if: one event per committed lever change and on reset, never t
   await tid(page, "credit-what-if-simah").focus();
   for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowLeft");
   await tid(page, "credit-what-if-vat").click();
-  const changed = await only(page, "credit_whatif_changed");
-  expect(changed.map((e) => e.properties)).toEqual([
+  await expect.poll(() => props(page, "credit_whatif_changed")).toEqual([
     { case_id: "cc_511", lever: "simah_score" },
     { case_id: "cc_511", lever: "simah_score" },
     { case_id: "cc_511", lever: "simah_score" },
@@ -270,5 +278,5 @@ test("credit what-if: no event when a lever does not actually move", async ({ pa
   await page.keyboard.press("Home");
   await page.keyboard.press("Home"); // already at the start: no change, no event
   await page.keyboard.press("ArrowLeft");
-  expect((await only(page, "credit_whatif_changed")).map((e) => e.properties)).toEqual([{ case_id: "cc_511", lever: "years_trading" }]);
+  await expect.poll(() => props(page, "credit_whatif_changed")).toEqual([{ case_id: "cc_511", lever: "years_trading" }]);
 });
