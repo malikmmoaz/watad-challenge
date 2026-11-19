@@ -59,3 +59,16 @@ test("within the cap nothing changes: credit is preselected and the order places
   await tid(page, "po-place").click();
   await expect(tid(page, "po-confirmation")).toContainText("supplier paid directly");
 });
+
+test("a supplier that refuses credit: the alert says so, and does not suggest a split or a higher cap", async ({ page }) => {
+  await enterAs(page, "contractor");
+  await page.goto("/contractor/rfq/rfq_1042");
+  await tid(page, "offer-row").filter({ hasText: "Khaleej" }).getByTestId("offer-choose").click();
+  const alert = tid(page, "po-credit-blocked");
+  await expect(alert).toContainText("does not accept platform credit");
+  await expect(alert.getByTestId("po-blocked-split")).toHaveCount(0);
+  await expect(alert.getByTestId("po-blocked-apply")).toHaveCount(0);
+  await expect(tid(page, "po-place")).toBeDisabled();
+  await tid(page, "po-pay-bank").check();
+  await expect(tid(page, "po-place")).toBeEnabled();
+});

@@ -227,7 +227,8 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
                 <span className="block">{i.logic("poErrors", eligibility.reason)}</span>
                 <span className="mt-1 block">{d.youCan}</span>
                 <span className="block">· {d.altBank}</span>
-                {onUseSplit && (
+                {/* A split or a higher cap only helps when the order is too big for the cap. */}
+                {onUseSplit && !eligibility.ok && eligibility.kind === "over_cap" && (
                   <span className="block">
                     ·{" "}
                     <button type="button" className="underline" data-testid="po-blocked-split" onClick={onUseSplit}>
@@ -236,13 +237,15 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
                     {d.altSplitTail}
                   </span>
                 )}
-                <span className="block">
-                  ·{" "}
-                  <Link href="/contractor/credit/apply" className="underline" data-testid="po-blocked-apply">
-                    {facility ? d.altApplyHigher : d.altApply}
-                  </Link>
-                  .
-                </span>
+                {!eligibility.ok && eligibility.kind !== "supplier_refuses" && (
+                  <span className="block">
+                    ·{" "}
+                    <Link href="/contractor/credit/apply" className="underline" data-testid="po-blocked-apply">
+                      {eligibility.kind === "over_cap" ? d.altApplyHigher : d.altApply}
+                    </Link>
+                    .
+                  </span>
+                )}
               </Alert>
             </div>
           )}
