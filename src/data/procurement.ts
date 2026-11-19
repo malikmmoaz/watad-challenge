@@ -462,4 +462,18 @@ const po1039 = (() => {
   return po;
 })();
 
+/**
+ * Arabic for the seed offer lines whose "brand" is a description rather than a company or brand
+ * name (names such as "Saudi Cement" stay as written). Used by the UI's seed lookup.
+ */
+export const seedBrandAr: Record<string, string> = {
+  Imported: "مستورد",
+  "Imported (Türkiye)": "مستورد (تركيا)",
+  "Imported clinker blend": "خليط كلنكر مستورد",
+  "Imported porcelain (India)": "بورسلان مستورد (الهند)",
+  "Local block factories": "مصانع بلوك محلية",
+  "Own batching plants (Riyadh South, Riyadh North)": "محطات خلط خاصة (جنوب الرياض، شمال الرياض)",
+  "Sahra batching plant, Riyadh North": "محطة خلط صحراء، شمال الرياض",
+};
+
 export const purchaseOrders: PurchaseOrder[] = [po1039, po1038];

@@ -69,7 +69,7 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
           const line = rfq.lines.find((l) => l.id === ol.rfqLineId);
           if (!line) return [];
           const qty = Math.min(line.quantity, ol.quantityAvailable);
-          return [{ id: ol.rfqLineId, name: i.lineName(line), brand: ol.brand, qty: i.qty(qty, line.unit), unit: ol.unitPrice, total: Math.round(ol.unitPrice * qty) as Halalas }];
+          return [{ id: ol.rfqLineId, name: i.lineName(line), brand: i.seedText(ol.brand), qty: i.qty(qty, line.unit), unit: ol.unitPrice, total: Math.round(ol.unitPrice * qty) as Halalas }];
         })
       : [];
 
@@ -100,6 +100,10 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
             <span>
               {m.poRef}: <bdi className="font-mono">{po.id}</bdi>
             </span>
+            {/* ZATCA invoices carry Arabic: in English the Arabic title rides along, and the reverse. */}
+            <span lang={i.ar ? "en" : "ar"} dir={i.ar ? "ltr" : "rtl"} data-testid="invoice-title-alt">
+              {i.ar ? invoice.en.title : invoice.ar.title}
+            </span>
           </>
         }
         actions={
@@ -113,7 +117,7 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
         {m.title} {number}
       </h2>
 
-      <div data-testid="invoice-sample">
+      <div data-testid="invoice-sample" className="print:[&>*]:bg-transparent print:[&>*]:shadow-none">
         <Alert tone="caution" title={m.sample}>
           {m.sampleBody}
         </Alert>
@@ -163,24 +167,30 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
         </tbody>
       </Table>
 
-      <div className="flex flex-col items-end gap-3">
-        <dl className="grid w-full max-w-sm grid-cols-[1fr_auto] gap-x-6 gap-y-2 text-sm [&_dt]:whitespace-nowrap" data-testid="invoice-totals">
-          <dt className="text-ink-muted">{m.delivery}</dt>
-          <dd className="text-end tabular-nums">
-            <bdi>{i.f.money(po.deliveryFee)}</bdi>
-          </dd>
-          <dt className="text-ink-muted">{m.subtotal}</dt>
-          <dd className="text-end tabular-nums">
-            <bdi>{i.f.money(net)}</bdi>
-          </dd>
-          <dt className="text-ink-muted">{m.vat}</dt>
-          <dd className="text-end tabular-nums" data-testid="invoice-vat">
-            <bdi>{i.f.money(po.vat)}</bdi>
-          </dd>
-          <dt className="border-t border-line pt-2 font-semibold text-ink">{m.total}</dt>
-          <dd className="border-t border-line pt-2 text-end font-semibold tabular-nums text-ink" data-testid="invoice-total">
-            <bdi>{i.f.money(po.totalInclVat)}</bdi>
-          </dd>
+      {/* Rows of dt/dd pairs (valid dl children): the total's rule spans the whole row, and the block
+          keeps the table's inline padding so amounts never touch the page edge in either direction. */}
+      <div className="flex flex-col items-end gap-3 px-4">
+        <dl className="w-full max-w-sm space-y-2 text-sm" data-testid="invoice-totals">
+          {(
+            [
+              [m.delivery, po.deliveryFee, undefined],
+              [m.subtotal, net, undefined],
+              [m.vat, po.vat, "invoice-vat"],
+            ] as const
+          ).map(([label, amount, testId]) => (
+            <div key={label} className="flex items-baseline justify-between gap-6">
+              <dt className="text-ink-muted">{label}</dt>
+              <dd className="whitespace-nowrap text-end tabular-nums" data-testid={testId}>
+                <bdi>{i.f.money(amount)}</bdi>
+              </dd>
+            </div>
+          ))}
+          <div className="flex items-baseline justify-between gap-6 border-t border-line pt-2 font-semibold text-ink">
+            <dt>{m.total}</dt>
+            <dd className="whitespace-nowrap text-end tabular-nums" data-testid="invoice-total">
+              <bdi>{i.f.money(po.totalInclVat)}</bdi>
+            </dd>
+          </div>
         </dl>
         <p className="w-full max-w-sm text-sm text-ink-muted" data-testid="invoice-payment">
           <span className="font-medium text-ink">{m.payment}:</span> {po.paymentMethod === "platform_credit" ? m.paidFromCap : m.bankTransfer}
