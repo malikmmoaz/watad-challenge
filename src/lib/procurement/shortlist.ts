@@ -56,6 +56,7 @@ export interface ShortlistRow extends ShortlistEntry {
   shortlisted: boolean;
   /** Holds the reserved slot for a vetted supplier new to the platform. */
   newSupplierSlot: boolean;
+  reasons: LocalizableReason[];
   why: string[];
   whyNot: string[];
 }
@@ -65,6 +66,14 @@ const scale = (value: number, low: number, high: number): number => clamp01((val
 const pct = (n: number): string => `${Math.round(n * 100)}%`;
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 const label = (c: MaterialCategory): string => c.replace(/_/g, " ");
+
+/** Which message a reason uses and its raw values, so screens can render it in any locale (ADR 0005). */
+export interface ReasonMsg {
+  key: string;
+  values: Record<string, string | number>;
+}
+export type LocalizableReason = ShortlistReason & { msg: ReasonMsg };
+const withMsg = (r: ShortlistReason, key: string, values: Record<string, string | number> = {}): LocalizableReason => ({ ...r, msg: { key, values } });
 
 const reason = (code: ShortlistReasonCode, share: number, max: number, text: string, positiveFrom = 0.6): ShortlistReason => ({
   code,
@@ -95,10 +104,10 @@ export function assessSupplier(supplier: Supplier, rfq: Rfq, ctx: ShortlistConte
   const delivers = supplier.serviceCities.includes(rfq.deliveryCity);
   const perf = supplier.performance;
   const isNew = isNewSupplier(supplier);
-  const reasons: ShortlistReason[] = [];
+  const reasons: LocalizableReason[] = [];
 
   reasons.push(
-    reason(
+    withMsg(reason(
       "stocks_category",
       coverage,
       W.category,
@@ -108,45 +117,45 @@ export function assessSupplier(supplier: Supplier, rfq: Rfq, ctx: ShortlistConte
           ? "Stocks none of the requested categories"
           : `Stocks ${covered.length} of ${requested.length} requested categories (missing: ${requested.filter((c) => !covered.includes(c)).map(label).join(", ")})`,
       1,
-    ),
+    ), coverage === 1 ? "stocksAll" : coverage === 0 ? "stocksNone" : "stocksSome", { categories: requested.join(","), covered: covered.length, requested: requested.length, missing: requested.filter((c) => !covered.includes(c)).join(",") }),
   );
 
   reasons.push(
     delivers
-      ? reason("delivers_to_city", 1, W.delivery, `Delivers to ${rfq.deliveryCity}`)
-      : reason("does_not_deliver", 0, W.delivery, `Does not deliver to ${rfq.deliveryCity}`),
+      ? withMsg(reason("delivers_to_city", 1, W.delivery, `Delivers to ${rfq.deliveryCity}`), "deliversTo", { city: rfq.deliveryCity })
+      : withMsg(reason("does_not_deliver", 0, W.delivery, `Does not deliver to ${rfq.deliveryCity}`), "doesNotDeliver", { city: rfq.deliveryCity }),
   );
 
   // No track record is scored neutrally and said plainly, not treated as a bad record.
   if (isNew) {
     reasons.push(
-      reason("on_time_record", 0.5, W.onTime + W.fillRate, `New to the platform: ${perf.ordersCompleted} completed orders, not enough history to rate reliability`),
+      withMsg(reason("on_time_record", 0.5, W.onTime + W.fillRate, `New to the platform: ${perf.ordersCompleted} completed orders, not enough history to rate reliability`), "newSupplier", { orders: perf.ordersCompleted }),
     );
   } else {
     reasons.push(
-      reason("on_time_record", scale(perf.onTimeRate, 0.75, 0.97), W.onTime, `${pct(perf.onTimeRate)} of ${perf.ordersCompleted} orders delivered on time`),
-      reason("fill_rate", scale(perf.fillRate, 0.85, 0.98), W.fillRate, `${pct(perf.fillRate)} of orders delivered complete and to spec`),
+      withMsg(reason("on_time_record", scale(perf.onTimeRate, 0.75, 0.97), W.onTime, `${pct(perf.onTimeRate)} of ${perf.ordersCompleted} orders delivered on time`), "onTime", { pct: perf.onTimeRate, orders: perf.ordersCompleted }),
+      withMsg(reason("fill_rate", scale(perf.fillRate, 0.85, 0.98), W.fillRate, `${pct(perf.fillRate)} of orders delivered complete and to spec`), "fillRate", { pct: perf.fillRate }),
     );
   }
 
   reasons.push(
-    reason(
+    withMsg(reason(
       "responsiveness",
       1 - scale(perf.avgResponseHours, 4, 36),
       W.responsiveness,
       perf.avgResponseHours <= 12
         ? `Likely to respond: usually answers within ${perf.avgResponseHours} h`
         : `Slow to respond: usually takes about ${perf.avgResponseHours} h`,
-    ),
+    ), perf.avgResponseHours <= 12 ? "fastResponse" : "slowResponse", { hours: perf.avgResponseHours }),
   );
 
   const index = ctx.priceIndex?.[supplier.id];
   if (index === undefined) {
-    reasons.push(reason("price_history", 0.5, W.price, "No price history against the 90-day benchmark yet"));
+    reasons.push(withMsg(reason("price_history", 0.5, W.price, "No price history against the 90-day benchmark yet"), "noPriceHistory"));
   } else {
     const delta = Math.round((index - 1) * 100);
     reasons.push(
-      reason(
+      withMsg(reason(
         "price_history",
         1 - scale(index, 0.94, 1.1),
         W.price,
@@ -154,7 +163,7 @@ export function assessSupplier(supplier: Supplier, rfq: Rfq, ctx: ShortlistConte
           ? "Usually prices in line with the 90-day benchmark"
           : `Usually prices ${Math.abs(delta)}% ${delta < 0 ? "below" : "above"} the 90-day benchmark`,
         0.5,
-      ),
+      ), delta === 0 ? "priceInLine" : delta < 0 ? "priceBelow" : "priceAbove", { pct: Math.abs(delta) }),
     );
   }
 
@@ -162,35 +171,35 @@ export function assessSupplier(supplier: Supplier, rfq: Rfq, ctx: ShortlistConte
   let fitsCreditCap: boolean | null = null;
   if (!supplier.acceptsPlatformCredit) {
     // Only a real drawback when the contractor wants to pay this order with credit.
-    reasons.push(reason("no_credit_acceptance", rfq.wantsCredit ? 0 : 0.5, W.credit, "Does not accept platform credit; you would pay this supplier directly"));
+    reasons.push(withMsg(reason("no_credit_acceptance", rfq.wantsCredit ? 0 : 0.5, W.credit, "Does not accept platform credit; you would pay this supplier directly"), "noCreditAcceptance"));
   } else if (ctx.facility === null) {
-    reasons.push(reason("accepts_credit", 0.7, W.credit, "Accepts platform credit (you have no approved credit cap yet)"));
+    reasons.push(withMsg(reason("accepts_credit", 0.7, W.credit, "Accepts platform credit (you have no approved credit cap yet)"), "creditNoCap"));
   } else if (estimate > ctx.facility.available) {
     fitsCreditCap = false;
     reasons.push(
-      reason("exceeds_credit_cap", 0.4, W.credit, `Accepts platform credit, but this order (about ${formatSar(estimate)} incl. VAT) is above your available credit cap of ${formatSar(ctx.facility.available)}`),
+      withMsg(reason("exceeds_credit_cap", 0.4, W.credit, `Accepts platform credit, but this order (about ${formatSar(estimate)} incl. VAT) is above your available credit cap of ${formatSar(ctx.facility.available)}`), "creditOver", { estimate, available: ctx.facility.available }),
     );
   } else {
     fitsCreditCap = true;
     reasons.push(
-      reason("accepts_credit", 1, W.credit, `Accepts your credit cap: about ${formatSar(estimate)} incl. VAT fits within ${formatSar(ctx.facility.available)} available, and the supplier is paid directly`),
+      withMsg(reason("accepts_credit", 1, W.credit, `Accepts your credit cap: about ${formatSar(estimate)} incl. VAT fits within ${formatSar(ctx.facility.available)} available, and the supplier is paid directly`), "creditFits", { estimate, available: ctx.facility.available }),
     );
   }
 
   const termsOk = supplier.acceptedTerms.some((t) => sameTerms(t, rfq.preferredTerms));
   reasons.push(
     termsOk
-      ? reason("accepts_terms", 1, W.terms, "Accepts your preferred payment terms")
-      : reason("terms_mismatch", 0, W.terms, "Does not usually accept your preferred payment terms"),
+      ? withMsg(reason("accepts_terms", 1, W.terms, "Accepts your preferred payment terms"), "acceptsTerms")
+      : withMsg(reason("terms_mismatch", 0, W.terms, "Does not usually accept your preferred payment terms"), "termsMismatch"),
   );
 
   reasons.push(
-    reason(
+    withMsg(reason(
       "local_content",
       supplier.localContent ? 1 : 0,
       W.localContent,
       supplier.localContent ? "Made in Saudi / local supplier" : "Not a local-content supplier",
-    ),
+    ), supplier.localContent ? "localContent" : "notLocal"),
   );
 
   const eligible = coverage > 0 && delivers;
