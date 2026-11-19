@@ -58,6 +58,8 @@ for (const p of PAGES.concat([{ name: "404", path: "/does-not-exist" }])) {
     const names = sampleDataNames();
     await page.goto(p.path);
     await ready(page);
+    // Streamed parts of a page can arrive after it is shown; scan once they have.
+    await page.waitForLoadState("networkidle");
     const found = await page.evaluate(() => {
       const out: { word: string; where: string; text: string }[] = [];
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -75,5 +77,34 @@ for (const p of PAGES.concat([{ name: "404", path: "/does-not-exist" }])) {
     const english = found.filter((f) => !allowed(f.word, names) && !inPhrase(f.word, f.text));
     const summary = [...new Map(english.map((f) => [f.word, f.where])).entries()].slice(0, 15).map(([w, where]) => `"${w}" in "${where}"`);
     expect(summary, `English words on ${p.path} in Arabic`).toEqual([]);
+  });
+}
+
+/** Pages where Arabic still renders in the mono face (#134); remove with the fix. */
+const MONO_KNOWN: Record<string, string> = Object.fromEntries(
+  ["/", "/contractor", "/contractor/rfq/new", "/contractor/rfq/rfq_1042", "/contractor/credit", "/contractor/credit/apply", "/supplier", "/supplier/rfq/rfq_1044", "/credit/cases/cc_502", "/how-we-built"].map(
+    (path) => [path, "#134: font-mono labels (eyebrow, landing hero, timeline) render Arabic in a system monospace face"],
+  ),
+);
+
+// Arabic set in a monospace face loses its letter joins (each letter gets a fixed-width cell).
+for (const p of PAGES) {
+  test(`mono: ${p.name} sets no Arabic text in a monospace face`, async ({ page, appLocale }) => {
+    test.skip(appLocale !== "ar", "Arabic projects only");
+    test.fixme(p.path in MONO_KNOWN, MONO_KNOWN[p.path]);
+    await page.goto(p.path);
+    await ready(page);
+    const mono = await page.evaluate(() => {
+      const out: string[] = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const el = n.parentElement;
+        if (!el || !el.offsetParent || !/[\u0600-\u06FF]/.test(n.textContent ?? "")) continue;
+        const first = getComputedStyle(el).fontFamily.split(",")[0].toLowerCase();
+        if (/mono|courier|monospace/.test(first)) out.push(`"${(n.textContent ?? "").trim().slice(0, 30)}" in ${el.tagName.toLowerCase()}.${String(el.className).split(" ").slice(0, 3).join(".")}`);
+      }
+      return out;
+    });
+    expect(mono, `Arabic in a monospace face on ${p.path}`).toEqual([]);
   });
 }

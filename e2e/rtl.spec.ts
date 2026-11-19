@@ -21,7 +21,10 @@ for (const p of PAGES) {
         await document.fonts.ready;
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       });
-      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+      // Finite animations only: the landing's background shapes drift forever.
+      await page.waitForFunction(() =>
+        document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
+      );
       const result = await page.evaluate(() => {
         const vw = document.documentElement.clientWidth;
         const out: string[] = [];
