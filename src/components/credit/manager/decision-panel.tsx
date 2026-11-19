@@ -3,24 +3,27 @@
 import { useState } from "react";
 import { demoPersona } from "@/data";
 import { decide, validateDecision, type DecisionInput } from "@/domain/credit/workflow";
-import { formatSar } from "@/domain/money";
 import type { CreditCase, CreditDecisionOutcome } from "@/domain/types";
 import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
 import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/components/ui";
-import { formatDateTime } from "@/lib/format";
+import { fill } from "@/i18n/core";
+import { credit } from "@/i18n/credit";
+import { useFormat, useMessages } from "@/i18n/locale";
 
-const OUTCOMES: { value: CreditDecisionOutcome; label: string }[] = [
-  { value: "approve", label: "Approve" },
-  { value: "request_info", label: "Request more information" },
-  { value: "decline", label: "Decline" },
-];
+const OUTCOMES: CreditDecisionOutcome[] = ["approve", "request_info", "decline"];
+
+/** validateDecision() speaks English; show each error in the reader's language. */
+const ERROR_KEY = new Map(Object.entries(credit.en.decision.errors).map(([k, v]) => [v as string, k as keyof typeof credit.en.decision.errors]));
 /** Cases decided in this tab, so their stamp is pressed in once, not on every visit. */
 const justDecided = new Set<string>();
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
 /** Approve / request more information / decline with structured reasons that go back to the contractor. */
 export function DecisionPanel({ c }: { c: CreditCase }) {
+  const all = useMessages(credit);
+  const m = all.decision;
+  const f = useFormat();
   const ai = c.aiProposal;
   const [outcome, setOutcome] = useState<CreditDecisionOutcome>(ai?.outcome ?? "approve");
   const proposedCap = ai?.proposedCap ?? c.scorecard?.proposedCap;
@@ -36,29 +39,29 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
     const d = c.decision;
     const fresh = justDecided.has(c.id);
     return (
-      <Panel title="Decision" aside={<span className="text-xs text-ink-muted">Recorded · sent to the contractor</span>}>
+      <Panel title={m.decidedTitle} aside={<span className="text-xs text-ink-muted">{m.recorded}</span>}>
         <div className="space-y-4 text-sm" data-testid="credit-decision">
           <div className="flex justify-center overflow-x-clip rounded-xl bg-paper px-2 py-6">
-            <DecisionStamp decision={d.outcome} by={d.decidedBy} at={formatDateTime(d.decidedAt)} animate={fresh} />
+            <DecisionStamp decision={d.outcome} by={d.decidedBy} at={f.dateTime(d.decidedAt)} animate={fresh} />
           </div>
           {d.approvedCap !== undefined && (
             <p className="flex items-baseline justify-between gap-3 border-b border-line pb-3">
-              <span className="text-ink-muted">Credit cap</span>
-              <span className="text-xl font-semibold tabular-nums text-ink">{formatSar(d.approvedCap)}</span>
+              <span className="text-ink-muted">{m.capHeadline}</span>
+              <span className="text-xl font-semibold tabular-nums text-ink">{f.money(d.approvedCap)}</span>
             </p>
           )}
           <div>
-            <p className="text-xs font-medium text-ink-muted">Reason given to the contractor</p>
+            <p className="text-xs font-medium text-ink-muted">{m.reasonGiven}</p>
             <p className="mt-1 text-ink">{d.reasonText}</p>
           </div>
           {d.requestedItems && d.requestedItems.length > 0 && (
-            <ul className="list-disc pl-5 text-ink-muted">
+            <ul className="list-disc ps-5 text-ink-muted">
               {d.requestedItems.map((x) => (
                 <li key={x}>{x}</li>
               ))}
             </ul>
           )}
-          {d.overrodeAi && <p className="text-xs text-caution">Departed from the AI proposal: {d.overrideReason}</p>}
+          {d.overrodeAi && <p className="text-xs text-caution">{fill(m.departed, { why: d.overrideReason ?? "" })}</p>}
         </div>
       </Panel>
     );
@@ -93,60 +96,61 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
   };
 
   return (
-    <Panel title="Your decision">
+    <Panel title={m.title}>
       <div className="space-y-4" data-testid="credit-decision-form">
         {ai && (
           <p className="text-sm text-ink-muted">
-            AI proposes <span className="font-medium text-ink">{OUTCOMES.find((o) => o.value === ai.outcome)?.label.toLowerCase()}</span>
-            {ai.proposedCap ? ` at ${formatSar(ai.proposedCap)}` : ""}. You decide.
+            {ai.proposedCap
+              ? fill(m.aiProposesCap, { outcome: m.outcomes[ai.outcome].toLowerCase(), cap: f.money(ai.proposedCap) })
+              : fill(m.aiProposes, { outcome: m.outcomes[ai.outcome].toLowerCase() })}
           </p>
         )}
         <fieldset className="flex flex-wrap gap-2">
-          <legend className="sr-only">Outcome</legend>
+          <legend className="sr-only">{m.outcomesLegend}</legend>
           {OUTCOMES.map((o) => (
             <label
-              key={o.value}
-              className={`flex h-10 cursor-pointer items-center rounded-md border px-3 text-sm ${outcome === o.value ? "border-pine bg-pine text-on-pine" : "border-line-control bg-surface text-ink"}`}
+              key={o}
+              className={`flex h-10 cursor-pointer items-center rounded-md border px-3 text-sm ${outcome === o ? "border-pine bg-pine text-on-pine" : "border-line-control bg-surface text-ink"}`}
             >
-              <input type="radio" name="outcome" className="sr-only" checked={outcome === o.value} onChange={() => setOutcome(o.value)} data-testid={`credit-outcome-${o.value}`} />
-              {o.label}
+              <input type="radio" name="outcome" className="sr-only" checked={outcome === o} onChange={() => setOutcome(o)} data-testid={`credit-outcome-${o}`} />
+              {m.outcomes[o]}
             </label>
           ))}
         </fieldset>
         {outcome === "approve" && (
           <>
             <Input
-              label="Approved credit cap"
-              suffix="SAR"
+              label={m.capLabel}
+              suffix={all.apply.capSuffix}
               type="number"
               value={Number.isNaN(cap) ? "" : cap}
               onChange={(e) => setCap(e.target.valueAsNumber)}
-              hint={proposedCap ? `Proposed: ${formatSar(proposedCap)}, never above the ${formatSar(c.requestedCap)} requested.` : `No proposed cap yet: run the checks, or enter one up to ${formatSar(c.requestedCap)}.`}
+              hint={proposedCap ? fill(m.capHintProposed, { cap: f.money(proposedCap), requested: f.money(c.requestedCap) }) : fill(m.capHintNone, { requested: f.money(c.requestedCap) })}
               data-testid="credit-decision-cap"
             />
-            <Textarea label="Conditions, one per line" optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
+            <Textarea label={m.conditionsLabel} optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
           </>
         )}
         {outcome === "request_info" && (
-          <Textarea label="What the contractor must provide, one per line" value={items} onChange={(e) => setItems(e.target.value)} data-testid="credit-decision-items" />
+          <Textarea label={m.itemsLabel} value={items} onChange={(e) => setItems(e.target.value)} data-testid="credit-decision-items" />
         )}
         <Textarea
-          label="Reason shown to the contractor"
-          hint="Plain words: what drove the decision and what would change it."
+          label={m.reasonLabel}
+          hint={m.reasonHint}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           data-testid="credit-decision-reason"
         />
         {overriding && (
-          <Textarea label="Why you are departing from the AI proposal" value={override} onChange={(e) => setOverride(e.target.value)} data-testid="credit-decision-override" />
+          <Textarea label={m.overrideLabel} value={override} onChange={(e) => setOverride(e.target.value)} data-testid="credit-decision-override" />
         )}
         {errors.length > 0 && (
-          <Alert tone="negative" title="Not recorded yet">
-            {errors.join(" ")}
+          <Alert tone="negative" title={m.notRecorded}>
+            {errors.map((e) => (ERROR_KEY.has(e) ? m.errors[ERROR_KEY.get(e)!] : e)).join(" ")}
           </Alert>
         )}
         <Button variant="primary" onClick={submit} data-testid="credit-decision-submit">
-          Record decision
+          {m.record}
         </Button>
       </div>
     </Panel>
