@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { test, expect, tid } from "./fixtures";
+import { test, expect, tid, settled } from "./fixtures";
 
 // What-if on the credit manager's scorecard: move a few facts, see score, band, limit and
 // Murabaha pricing respond. A simulation: labelled, resettable, no layout shift, axe-clean.
@@ -27,7 +27,9 @@ for (const locale of ["en", "ar"] as const) {
 
     // Keyboard: SIMAH score to its minimum. No layout shift while the result changes.
     // Position in the document (not the viewport: focusing the slider may scroll the page).
-    const box = () => panel.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top + window.scrollY, height: r.height }; });
+    // Whole pixels: engines differ by fractions of a pixel (Firefox: 3591.3999 vs 3591.4001).
+    const box = () => panel.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: Math.round(r.top + window.scrollY), height: Math.round(r.height) }; });
+    await settled(page, panel);
     const before = await box();
     await tid(page, "credit-what-if-simah").focus();
     await page.keyboard.press("Home");

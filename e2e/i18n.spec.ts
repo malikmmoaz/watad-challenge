@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test as plain } from "@playwright/test";
-import { test, expect, tid, enterAs, expectNoHorizontalScroll } from "./fixtures";
+import { test, expect, tid, enterAs, expectNoHorizontalScroll, settled } from "./fixtures";
 
 // Arabic and right-to-left (ADR 0005): the EN / ع toggle in the app bar.
 
@@ -41,6 +41,8 @@ plain("Arabic pages have no serious or critical accessibility issues", async ({ 
   for (const path of ["/contractor", "/does-not-exist"]) {
     await page.goto(path);
     await expect(page.locator("html")).not.toHaveClass(/i18n-pending/);
+    // axe runs over several ticks: start it only once nothing is still being revealed (WebKit).
+    await settled(page);
     const { violations } = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .analyze();

@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Locator, type Page } from "@playwright/test";
 
 export type Role = "contractor" | "supplier" | "credit";
 /** App language (ADR 0005). The Arabic projects in playwright.config.ts set "ar". */
@@ -68,6 +68,33 @@ export async function ready(page: Page) {
       const header = document.querySelector("header");
       return !header || /[\u0600-\u06FF]/.test(header.innerText);
     });
+  }
+}
+
+/**
+ * Wait until the page has stopped moving: web fonts loaded (WebKit fetches a font file only
+ * when a glyph first needs it, and the swap can re-wrap a line), no streamed boundary still
+ * hidden for the Arabic switch (`data-i18n-hydrated="false"`), and two frames painted.
+ * With `target`, also wait until its position in the document holds still (whole pixels).
+ * Use before axe (it runs over several ticks) and before any "nothing moved" measurement.
+ */
+export async function settled(page: Page, target?: Locator) {
+  await page.waitForFunction(() => document.querySelectorAll('[data-i18n-hydrated="false"]').length === 0);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+  });
+  if (target) {
+    // Same whole-pixel position 300 ms apart (up to ~6 s): late layout has finished.
+    const top = () => target.evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY));
+    let last = await top();
+    for (let i = 0; i < 20; i++) {
+      await page.waitForTimeout(300);
+      const now = await top();
+      if (now === last) return;
+      last = now;
+    }
+    throw new Error(`settled(): ${target} kept moving`);
   }
 }
 
