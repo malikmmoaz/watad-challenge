@@ -11,6 +11,7 @@ import { estimateRfqValue } from "@/lib/procurement/shortlist";
 import { AiLabel, Badge, Facts, PageHeader, Panel, buttonClass } from "@/components/ui";
 import { update } from "@/store";
 import { useProcurementI18n } from "./use-procurement-i18n";
+import { MAX_LINE_QUANTITY, WHOLE_UNITS, quantityProblem, rfqDraftProblems } from "@/lib/procurement/rfq-draft";
 
 const TERMS: { key: string; terms: PaymentTerms }[] = [
   { key: "net30", terms: { kind: "net", days: 30 } },
@@ -75,14 +76,12 @@ export function RfqBuilder() {
   };
 
   const estimate = estimateRfqValue({ lines } as Rfq, reference.materials);
-  const problems = [
-    lines.length === 0 ? b.needLine : null,
-    lines.some((l) => !(l.quantity > 0)) ? b.needQuantity : null,
-    site.trim() === "" ? b.needSite : null,
-    requiredBy === "" ? b.needDate : null,
-  ].filter((p): p is string => p !== null);
+  const problems = rfqDraftProblems({ lines, site, requiredBy }).map((k) => (k === "quantityTooLarge" ? fill(b.quantityTooLarge, { max: f.number(MAX_LINE_QUANTITY) }) : b[k]));
 
+  // A fast double click must not create two RFQs (ids come from the clock).
+  const submitted = useRef(false);
   const confirm = () => {
+    if (submitted.current || problems.length > 0) return;
     const now = Date.now();
     if (Date.parse(`${requiredBy}T00:00:00Z`) <= now) {
       setError(b.dateInPast);
@@ -94,7 +93,7 @@ export function RfqBuilder() {
       id: `rfq_${now.toString(36)}` as RfqId,
       contractorId: contractor.id as OrgId,
       projectId: project.id,
-      title: fill(b.rfqTitle, { project: name(project), n: lines.length }),
+      title: lines.length === 1 ? fill(b.rfqTitleOne, { project: name(project) }) : fill(b.rfqTitle, { project: name(project), n: lines.length }),
       source: fromUpload ? "upload" : "catalog",
       ...(fromUpload && extraction ? { sourceFileName: extraction.fileName } : {}),
       status: "draft",
@@ -110,6 +109,7 @@ export function RfqBuilder() {
       createdAt: new Date(now).toISOString(),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
     };
+    submitted.current = true;
     update((prev) => ({ ...prev, rfqs: [rfq, ...prev.rfqs] }));
     setError(null);
     setCreated(rfq);
@@ -296,8 +296,10 @@ export function RfqBuilder() {
                         <input
                           type="number"
                           min={0}
-                          step="any"
-                          inputMode="decimal"
+                          max={MAX_LINE_QUANTITY}
+                          step={WHOLE_UNITS.has(l.unit) ? 1 : "any"}
+                          inputMode={WHOLE_UNITS.has(l.unit) ? "numeric" : "decimal"}
+                          aria-invalid={quantityProblem(l.quantity, l.unit) ? true : undefined}
                           data-testid="rfq-line-qty"
                           aria-label={fill(b.quantityFor, { item: l.description })}
                           className={`${input} w-28 tabular-nums`}

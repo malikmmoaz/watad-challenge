@@ -179,3 +179,47 @@ describe("supplierNextStep", () => {
     expect(supplierNextStep(base("paid")).text).toBe("Paid");
   });
 });
+
+describe("offer edge cases a reviewer might try", () => {
+  it("caps huge unit prices and delivery fees", () => {
+    const d = draft({ deliveryFeeSar: 2_000_000 });
+    d.lines[0]!.unitPriceSar = 5_000_000;
+    const e = validateOfferDraft(open, d);
+    expect(e["line:rebar:price"]).toBe("A unit price is at most SAR 1,000,000.");
+    expect(e.deliveryFee).toBe("A delivery fee is at most SAR 1,000,000.");
+  });
+
+  it("refuses part of a bag, but accepts decimal tonnes", () => {
+    const d = draft();
+    d.lines[1]!.quantityAvailable = 999.5; // cement, in 50 kg bags
+    d.lines[0]!.quantityAvailable = 9.5; // rebar, in tonnes
+    const e = validateOfferDraft(open, d);
+    expect(e["line:cement:qty"]).toBe("Bags, pieces and rolls are supplied in whole numbers.");
+    expect(e["line:rebar:qty"]).toBeUndefined();
+  });
+
+  it("validity is whole days", () => {
+    expect(validateOfferDraft(open, draft({ validDays: 7.5 })).validDays).toBe("Valid for 1 to 60 days.");
+  });
+
+  it("an offer cannot be withdrawn once it has won, and the RFQ takes no new offers", () => {
+    const sent = submitOffer(state(), open.id, me, draft(), now);
+    if (!sent.ok) throw new Error(JSON.stringify(sent.errors));
+    const placed = placePurchaseOrders(sent.state, { rfqId: open.id, orders: [{ offerId: sent.offer.id }], method: "bank_transfer", suppliers: [supplier(me)], now });
+    if (!placed.ok) throw new Error(placed.error);
+    const after = withdrawOffer(placed.state, sent.offer.id);
+    expect(after.offers.find((o) => o.id === sent.offer.id)!.status).toBe("awarded");
+    const awardedRfq = placed.state.rfqs.find((r) => r.id === open.id)!;
+    expect(canOffer(awardedRfq, me)).toEqual({ ok: false, reason: "The contractor has already awarded this request." });
+  });
+
+  it("placing a PO twice (e.g. back button, then Place again) is refused", () => {
+    const sent = submitOffer(state(), open.id, me, draft(), now);
+    if (!sent.ok) throw new Error(JSON.stringify(sent.errors));
+    const first = placePurchaseOrders(sent.state, { rfqId: open.id, orders: [{ offerId: sent.offer.id }], method: "bank_transfer", suppliers: [supplier(me)], now });
+    if (!first.ok) throw new Error(first.error);
+    const again = placePurchaseOrders(first.state, { rfqId: open.id, orders: [{ offerId: sent.offer.id }], method: "bank_transfer", suppliers: [supplier(me)], now });
+    expect(again.ok).toBe(false);
+    expect(first.state.purchaseOrders).toHaveLength(1);
+  });
+});

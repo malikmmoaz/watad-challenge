@@ -102,7 +102,10 @@ export const supplier = defineMessages(
     "requestNotFound": "Request not found.",
     "notInvited": "You were not invited to this request.",
     "alreadyAwarded": "The contractor has already awarded this request.",
-    "notOpen": "This request is not open for offers."
+    "notOpen": "This request is not open for offers.",
+    "priceTooHigh": "A unit price is at most SAR 1,000,000.",
+    "qtyWhole": "Bags, pieces and rolls are supplied in whole numbers.",
+    "feeTooHigh": "A delivery fee is at most SAR 1,000,000."
   },
   "pos": {
     "title": "Purchase orders",
@@ -263,7 +266,10 @@ export const supplier = defineMessages(
     "requestNotFound": "الطلب غير موجود.",
     "notInvited": "لم تُدعَ إلى هذا الطلب.",
     "alreadyAwarded": "رسّى المقاول هذا الطلب مسبقًا.",
-    "notOpen": "هذا الطلب غير مفتوح لتلقي العروض."
+    "notOpen": "هذا الطلب غير مفتوح لتلقي العروض.",
+    "priceTooHigh": "الحد الأقصى لسعر الوحدة 1,000,000 ر.س.",
+    "qtyWhole": "تُورَّد الأكياس والقطع واللفات بأعداد صحيحة.",
+    "feeTooHigh": "الحد الأقصى لرسوم التوصيل 1,000,000 ر.س."
   },
   "pos": {
     "title": "أوامر الشراء",
