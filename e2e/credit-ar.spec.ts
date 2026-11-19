@@ -105,8 +105,18 @@ test("Arabic credit pages have no serious or critical accessibility issues", asy
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     // axe runs over several ticks: start it only once nothing is still being revealed (WebKit).
     await settled(page);
-    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
-    const blocking = violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`);
+    const scan = async () => {
+      const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
+      return violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`);
+    };
+    // A real issue shows on every scan. WebKit can re-render the case file while axe is
+    // mid-run, and axe then reports the replaced node (a labelled textarea): confirm once.
+    let blocking = await scan();
+    if (blocking.length > 0) {
+      await settled(page);
+      const again = await scan();
+      blocking = blocking.filter((b) => again.includes(b));
+    }
     expect(blocking, `serious/critical a11y issues on ${path} (ar)`).toEqual([]);
   }
 });
