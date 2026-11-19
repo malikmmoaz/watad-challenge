@@ -99,3 +99,16 @@ test("demo state saved by an older build (missing collections, no Arabic fields)
   await page.goto("/contractor/po/po_3011");
   await expect(page.getByText("حديد التسليح في 20 نوفمبر، والإسمنت في 21 نوفمبر")).toBeVisible();
 });
+
+test("offer errors reach Arabic: a SAR 5,000,000 unit price is refused in the reader's language", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("watad-locale", "ar"));
+  await enterAs(page, "supplier");
+  await page.goto("/supplier/rfq/rfq_1044");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await tid(page, "offer-line-price").first().fill("5000000");
+  await tid(page, "offer-lead-time").fill("3");
+  await tid(page, "offer-submit").click();
+  // Same English string as src/i18n/supplier.ts (errors.priceTooHigh), shown in Arabic.
+  await expect(page.getByText("الحد الأقصى لسعر الوحدة 1,000,000 ر.س.").first()).toBeVisible();
+  await expect(page.getByText("A unit price is at most SAR 1,000,000.")).toHaveCount(0);
+});
