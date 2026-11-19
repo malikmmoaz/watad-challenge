@@ -144,9 +144,12 @@ test("comparison reads consistently: whole-order badge, partial offers say what 
   await expect(page.getByText("Lowest landed cost")).toHaveCount(0);
   // Offers are in: the footer no longer says they will appear.
   await expect(tid(page, "shortlist-sent")).toHaveText("Sent to 3 suppliers.");
-  // The reasons toggle counts what it will reveal.
+  // The reasons toggle counts what it will reveal (on phones the invited list is folded first: open it).
+  const invited = tid(page, "shortlist-invited-toggle");
+  if (await invited.count()) await invited.click();
   await expect(page.getByRole("button", { name: /^Show all \d+ reasons$/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Show (\d+ more reasons|1 more reason)$/ }).first()).toBeVisible();
+});
 
 test("Arabic phone comparison: invited list folded, breakdown closed, Latin digits, a shorter page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -166,7 +169,7 @@ test("Arabic phone comparison: invited list folded, breakdown closed, Latin digi
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   expect(height, "page height at 390 px (was 4,758)").toBeLessThan(3400);
   // Latin digits everywhere (ADR 0005), material names included.
-  expect(await page.evaluate(() => /[٠-٩۰-۹]/.test(document.body.innerText))).toBe(false);
+  expect(await page.evaluate(() => /[٠-٩۰-۹\u066B]/.test(document.body.innerText))).toBe(false);
   await toggle.click();
   await expect(tid(page, "shortlist-row").first()).toBeVisible();
 });

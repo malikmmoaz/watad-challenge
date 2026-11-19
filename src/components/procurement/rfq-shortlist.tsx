@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { track } from "@/lib/analytics";
 import { reference } from "@/data";
 import { murabaha } from "@/domain/money";
@@ -156,6 +156,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [blind, setBlind] = useState<boolean | null>(null);
   const [showInvited, setShowInvited] = useState(false);
+  const invitedId = useId();
 
   if (!rfq || !shortlist) {
     return (
@@ -274,13 +275,14 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             type="button"
             data-testid="shortlist-invited-toggle"
             aria-expanded={showInvited}
+            aria-controls={invitedId}
             onClick={() => setShowInvited((v) => !v)}
             className="text-sm text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp sm:hidden"
           >
             {showInvited ? m.rfqPage.hideInvited : fill(m.rfqPage.showInvited, { n: shown.length })}
           </button>
         ) : null}
-        <div className={!isDraft && !showInvited ? "hidden sm:block" : ""}>
+        <div id={invitedId} className={!isDraft && !showInvited ? "hidden sm:block" : ""}>
         <p className="mb-2 max-w-3xl text-sm text-ink-muted">
           {fill(m.rfqPage.rankedOn, { city: city(rfq.deliveryCity) })}
         </p>
