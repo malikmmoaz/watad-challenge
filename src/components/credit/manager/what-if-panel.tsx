@@ -135,9 +135,9 @@ export function WhatIfPanel({ caseId, profile, asOf }: { caseId: string; profile
               {rows.map((r) => (
                 <tr key={r.key} className="border-t border-line align-top">
                   <th scope="row" className="py-1.5 text-start font-normal text-ink-muted">{r.label}</th>
-                  <td className="whitespace-nowrap py-1.5 text-end text-xs tabular-nums text-ink-muted sm:text-sm">{r.now}</td>
+                  <td className={`${r.key === "decision" ? "" : "whitespace-nowrap "}py-1.5 text-end text-xs tabular-nums text-ink-muted sm:text-sm`}>{r.now}</td>
                   <td
-                    className={`whitespace-nowrap rounded-md px-1.5 py-1.5 text-end text-xs font-semibold tabular-nums transition-colors motion-reduce:transition-none sm:text-sm ${r.m ? "text-ink" : "text-ink-muted"} ${TINT[r.m]}`}
+                    className={`${r.key === "decision" ? "" : "whitespace-nowrap "}rounded-md px-1.5 py-1.5 text-end text-xs font-semibold tabular-nums transition-colors motion-reduce:transition-none sm:text-sm ${r.m ? "text-ink" : "text-ink-muted"} ${TINT[r.m]}`}
                     data-testid={`credit-what-if-sim-${r.key}`}
                     data-move={r.m === 1 ? "better" : r.m === -1 ? "worse" : "same"}
                   >
@@ -187,7 +187,7 @@ function Slider({ id, label, value, display, range, format, onChange, onCommit }
         max={range.max}
         step={range.step}
         value={value}
-        onChange={(e) => onChange(e.target.valueAsNumber)}
+        onChange={(e) => onChange(Number(e.target.value))}
         onPointerDown={begin}
         onKeyDown={(e) => !e.repeat && begin()}
         onPointerUp={commit}
