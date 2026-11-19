@@ -155,6 +155,7 @@ test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> a
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-sample-docs").click(); // attaching the same files again adds nothing
   await expect.poll(async () => (await only(page, "credit_document_uploaded")).length).toBe(8);
+  await page.waitForTimeout(300); // as in once(): no late duplicates after the eighth
   const uploaded = await props(page, "credit_document_uploaded");
   expect(uploaded).toHaveLength(8);
   expect(new Set(uploaded.map((p) => p.document_type)).size).toBe(8);
