@@ -27,7 +27,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+      # Same tests as `pnpm test`, plus a coverage report for src/lib/procurement (report only, no gate).
+      - run: pnpm test:coverage
+      - name: Coverage summary (src/lib/procurement)
+        if: always()
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
       - run: pnpm build
 
   e2e:
