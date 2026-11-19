@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductShowcase, type ShowcaseData } from "@/components/landing/showcase";
 import { RoleLink } from "@/components/role-link";
-import { ROLES } from "@/components/role-nav";
+import { ROLES } from "@/components/roles";
 import { AiLabel, buttonClass, CreditCapMeter, DecisionStamp, Icon, LeadTimeBar, cx, type IconName } from "@/components/ui";
 import { demoPersona, reference, seedState } from "@/data";
 import { formatSar, halalas } from "@/domain/money";

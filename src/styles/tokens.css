@@ -220,6 +220,11 @@
   [lang="ar"] * {
     letter-spacing: 0 !important;
   }
+  /* Set by the locale boot script until React has rendered in Arabic (ADR 0005):
+     no English flash. A 3 s safety net in the script removes it regardless. */
+  html.i18n-pending body {
+    visibility: hidden;
+  }
   /* The display accent: italic serif in English, Naskh in Arabic. */
   :lang(ar) .font-serif {
     font-style: normal !important;

@@ -1,3 +1,6 @@
+import { T } from "@/components/i18n/t";
+import { common } from "@/i18n/common";
+import { msg, type Localized } from "@/i18n/core";
 import type { ReactNode } from "react";
 import type { CreditDecisionOutcome } from "@/domain/types";
 import { cx } from "./cx";
@@ -40,8 +43,8 @@ export function EvidenceSeal({ source, href, onOpen, className }: { source: stri
 }
 
 /** A value that nothing on file supports yet. Never styled as a seal. */
-export function NoEvidence({ children = "No document on file" }: { children?: ReactNode }) {
-  return <span className="inline-flex items-center gap-1.5 text-xs text-caution">{children}</span>;
+export function NoEvidence({ children }: { children?: ReactNode }) {
+  return <span className="inline-flex items-center gap-1.5 text-xs text-caution">{children ?? <T m={msg(common, (m) => m.ui.noEvidence)} />}</span>;
 }
 
 type Decision = "approved" | "referred" | "declined";
@@ -55,10 +58,10 @@ const fromOutcome: Record<DecisionInput, Decision> = {
   request_info: "referred",
   decline: "declined",
 };
-const decisionStyle: Record<Decision, { word: string; cls: string }> = {
-  approved: { word: "Approved", cls: "border-positive text-positive" },
-  referred: { word: "More information requested", cls: "border-caution text-caution" },
-  declined: { word: "Declined", cls: "border-negative text-negative" },
+const decisionStyle: Record<Decision, { word: Localized; cls: string }> = {
+  approved: { word: msg(common, (m) => m.ui.stamp.approved), cls: "border-positive text-positive" },
+  referred: { word: msg(common, (m) => m.ui.stamp.referred), cls: "border-caution text-caution" },
+  declined: { word: msg(common, (m) => m.ui.stamp.declined), cls: "border-negative text-negative" },
 };
 
 /**
@@ -69,7 +72,9 @@ export function DecisionStamp({ decision, by, at, animate = false }: { decision:
   const d = decisionStyle[fromOutcome[decision]];
   return (
     <div className={cx("inline-flex max-w-[calc(100%-1rem)] -rotate-2 flex-col rounded-md border-2 px-3 py-1.5 outline outline-1 -outline-offset-4 outline-current/40", d.cls, animate && "motion-safe:animate-[seal-press_240ms_var(--ease-out)_both]")}>
-      <span className="whitespace-nowrap text-sm font-bold uppercase tracking-wide">{d.word}</span>
+      <span className="whitespace-nowrap text-sm font-bold uppercase tracking-wide">
+        <T m={d.word} />
+      </span>
       <span className="text-xs font-medium">
         {by} · {at}
       </span>

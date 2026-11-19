@@ -1,11 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { buttonClass } from "@/components/ui";
+import type { Role } from "@/domain/types";
+import { common } from "@/i18n/common";
+import { useMessages } from "@/i18n/locale";
 
-const ROLE_LINKS = [
-  { href: "/contractor", label: "Contractor" },
-  { href: "/supplier", label: "Supplier" },
-  { href: "/credit", label: "Credit manager" },
+const ROLE_LINKS: { href: string; role: Role }[] = [
+  { href: "/contractor", role: "contractor" },
+  { href: "/supplier", role: "supplier" },
+  { href: "/credit", role: "credit" },
 ];
 
 /**
@@ -20,18 +25,19 @@ export function StatusPage({
   action,
   testId,
 }: {
-  code: string;
-  title: string;
+  code: ReactNode;
+  title: ReactNode;
   children: ReactNode;
   action?: ReactNode;
   testId: string;
 }) {
+  const m = useMessages(common);
   return (
     <div className="flex min-h-full flex-1 flex-col bg-paper" data-testid={testId}>
       <header className="bg-pine">
         <div className="mx-auto max-w-6xl px-4 py-3">
           <Link href="/" className="rounded-sm text-base font-semibold text-on-pine focus-visible:outline-on-pine">
-            Watad challenge demo
+            {m.product}
           </Link>
         </div>
       </header>
@@ -42,17 +48,17 @@ export function StatusPage({
         <div className="flex flex-wrap items-center gap-3">
           {action ?? (
             <Link href="/" className={buttonClass("primary")}>
-              Back to the start
+              {m.system.backToStart}
             </Link>
           )}
         </div>
-        <nav aria-label="Go to a role" className="border-t border-line pt-6 text-sm text-ink-muted">
-          Or go straight to a role:{" "}
+        <nav aria-label={m.system.goToRole} className="border-t border-line pt-6 text-sm text-ink-muted">
+          {m.system.orGoToRole}{" "}
           {ROLE_LINKS.map((r, i) => (
             <span key={r.href}>
               {i > 0 ? " · " : ""}
               <Link href={r.href} className="font-medium text-stamp underline decoration-stamp/30 underline-offset-2 hover:decoration-stamp">
-                {r.label}
+                {m.roles[r.role]}
               </Link>
             </span>
           ))}

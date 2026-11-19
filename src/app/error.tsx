@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui";
 import { StatusPage } from "@/components/system/status-page";
+import { common } from "@/i18n/common";
+import { useMessages } from "@/i18n/locale";
 import { captureError } from "@/lib/analytics";
 import { resetDemo } from "@/store";
 
@@ -11,19 +13,20 @@ const digestOf = (e: unknown): string | undefined =>
 
 /** Route-level error boundary: everything below the root layout. */
 export default function RouteError({ error, retry }: { error: unknown; retry: () => void }) {
+  const m = useMessages(common);
   useEffect(() => {
     captureError(error, "route", digestOf(error));
   }, [error]);
 
   return (
     <StatusPage
-      code="Error"
-      title="Something went wrong on this page"
+      code={m.system.errorCode}
+      title={m.system.errorTitle}
       testId="route-error"
       action={
         <>
           <Button variant="primary" onClick={() => retry()}>
-            Try again
+            {m.system.tryAgain}
           </Button>
           <Button
             variant="secondary"
@@ -32,13 +35,12 @@ export default function RouteError({ error, retry }: { error: unknown; retry: ()
               retry();
             }}
           >
-            Reset demo data and try again
+            {m.system.resetAndTryAgain}
           </Button>
         </>
       }
     >
-      The error has been reported. If it keeps happening, the demo data saved in this browser may be out of date: resetting it restores the
-      sample data and keeps nothing else.
+      {m.system.errorBody}
     </StatusPage>
   );
 }
