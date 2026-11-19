@@ -1,8 +1,17 @@
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { Badge, Button, CellNote, cx, FactorBar, LeadTimeBar } from "@/components/ui";
 import { useProcurementI18n } from "./use-procurement-i18n";
 import type { OfferId } from "@/domain/types";
 import type { OfferComparisonRow } from "@/lib/procurement/comparison";
+
+/** Wider than a phone (Tailwind sm). On the server and first render we assume wide, as before. */
+const WIDE = "(min-width: 640px)";
+const subscribeWide = (cb: () => void) => {
+  const mq = window.matchMedia(WIDE);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const useWide = () => useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches, () => true);
 
 const PRICE_FLAG = {
   below_market: { tone: "positive" },
@@ -43,6 +52,8 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
   const maxDays = Math.max(requiredInDays, ...sorted.map((r) => r.leadTimeDays), 1);
   const columns = onChoose ? 7 : 6;
   const { m, f, fill, terms, ar } = useProcurementI18n();
+  // The score breakdown of the top offer is open on wider screens; on phones it starts closed (shorter page).
+  const wide = useWide();
   const c = m.comparison;
   const caption = fill(c.caption, { rfq: rfqLabel });
   /** A score note in the reader's locale, from the note's message key and raw values. */
@@ -177,7 +188,7 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
               </tr>
               <tr className="max-lg:block">
                 <td colSpan={columns} className="px-3 pb-3 max-lg:block max-lg:px-4 max-lg:pb-4 max-lg:pt-3">
-                  <details className="group" open={r.rank === 1}>
+                  <details className="group" open={r.rank === 1 && wide}>
                     <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm text-xs font-medium text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp [&::-webkit-details-marker]:hidden">
                       <span className="group-open:hidden">{fill(c.showScore, { score: Math.round(r.score) })}</span>
                       <span className="hidden group-open:inline">{c.hideScore}</span>

@@ -86,3 +86,26 @@ describe("seed data in Arabic", () => {
     expect(confirmed?.noteAr).toBe("حديد التسليح في 20 نوفمبر، والإسمنت في 21 نوفمبر");
   });
 });
+
+describe("digits (ADR 0005: Latin digits in both languages)", () => {
+  const ARABIC_INDIC = /[٠-٩۰-۹٫]/;
+  const strings = (v: unknown, path = ""): [string, string][] =>
+    typeof v === "string"
+      ? [[path, v]]
+      : Array.isArray(v)
+        ? v.flatMap((x, i) => strings(x, `${path}[${i}]`))
+        : v && typeof v === "object"
+          ? Object.entries(v).flatMap(([k, x]) => strings(x, path ? `${path}.${k}` : k))
+          : [];
+
+  it("no Arabic-Indic digits or decimal separator in the procurement, supplier, activity or invoice Arabic", () => {
+    for (const [name, dict] of [["procurement", procurement], ["supplier", supplier], ["activity", activity], ["invoice", invoice]] as const) {
+      for (const [path, text] of strings(dict.ar)) expect(ARABIC_INDIC.test(text), `${name}.${path}: ${text}`).toBe(false);
+    }
+  });
+
+  it("no Arabic-Indic digits in the reference or seed data (material, company and RFQ names in Arabic)", async () => {
+    const { reference, seedState, seedBrandAr } = await import("@/data");
+    for (const [path, text] of strings({ reference, seedState, seedBrandAr })) expect(ARABIC_INDIC.test(text), `${path}: ${text}`).toBe(false);
+  });
+});
