@@ -18,9 +18,11 @@ for (const locale of ["en", "ar"] as const) {
     await expect(panel).toBeVisible();
     await expect(panel).toContainText(locale === "ar" ? "محاكاة، لا تُحفظ" : "Simulation, not saved");
 
-    // Today's score in the simulation is the scorecard's score.
+    // Today's score in the simulation is the scorecard's score; nothing is tinted yet.
     const today = (await resultCell(page, 0, 1).innerText()).trim();
-    await expect(resultCell(page, 0, 2)).toHaveText(today);
+    const simScore = tid(page, "credit-what-if-value-score");
+    await expect(simScore).toHaveText(today);
+    await expect(tid(page, "credit-what-if-sim-score")).toHaveAttribute("data-move", "same");
     await expect(tid(page, "credit-what-if-reset")).toBeDisabled();
 
     // Keyboard: SIMAH score to its minimum. No layout shift while the result changes.
@@ -29,8 +31,12 @@ for (const locale of ["en", "ar"] as const) {
     const before = await box();
     await tid(page, "credit-what-if-simah").focus();
     await page.keyboard.press("Home");
-    await expect(resultCell(page, 0, 2)).not.toHaveText(today);
-    expect(Number((await resultCell(page, 0, 2).innerText()).trim())).toBeLessThan(Number(today));
+    await expect(simScore).not.toHaveText(today);
+    const lower = Number((await simScore.innerText()).trim());
+    expect(lower).toBeLessThan(Number(today));
+    // What moved is visible: a signed delta and a "worse" tint on the changed cell.
+    await expect(tid(page, "credit-what-if-delta-score")).toContainText(`\u2212${Number(today) - lower}`);
+    await expect(tid(page, "credit-what-if-sim-score")).toHaveAttribute("data-move", "worse");
     const after = await box();
     expect(after.height).toBe(before.height);
     expect(after.top).toBe(before.top);
@@ -41,13 +47,15 @@ for (const locale of ["en", "ar"] as const) {
     // Fewer years trading than policy allows: the simulated decision turns to decline.
     await tid(page, "credit-what-if-years").focus();
     await page.keyboard.press("Home");
-    await expect(resultCell(page, 2, 2)).toHaveText(locale === "ar" ? "رفض" : "decline");
+    await expect(tid(page, "credit-what-if-value-decision")).toHaveText(locale === "ar" ? "رفض" : "Decline");
+    await expect(tid(page, "credit-what-if-sim-decision")).toHaveAttribute("data-move", "worse");
 
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
     expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`)).toEqual([]);
 
     await tid(page, "credit-what-if-reset").click();
-    await expect(resultCell(page, 0, 2)).toHaveText(today);
+    await expect(simScore).toHaveText(today);
+    await expect(tid(page, "credit-what-if-sim-score")).toHaveAttribute("data-move", "same");
     await expect(tid(page, "credit-what-if-reset")).toBeDisabled();
   });
 }
