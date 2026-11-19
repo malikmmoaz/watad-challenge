@@ -102,6 +102,12 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
       <PageHeader
         eyebrow={eyebrow}
         title={m.title}
+        // Saudi tax invoices are bilingual: the other language's title sits under the heading.
+        subtitle={
+          <span lang={i.ar ? "en" : "ar"} dir={i.ar ? "ltr" : "rtl"} data-testid="invoice-title-alt">
+            {i.ar ? invoice.en.title : invoice.ar.title}
+          </span>
+        }
         serial={number}
         meta={
           <>
@@ -110,10 +116,6 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
             </span>
             <span>
               {m.poRef}: <bdi className="font-mono">{po.id}</bdi>
-            </span>
-            {/* ZATCA invoices carry Arabic: in English the Arabic title rides along, and the reverse. */}
-            <span lang={i.ar ? "en" : "ar"} dir={i.ar ? "ltr" : "rtl"} data-testid="invoice-title-alt">
-              {i.ar ? invoice.en.title : invoice.ar.title}
             </span>
           </>
         }

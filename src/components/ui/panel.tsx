@@ -20,7 +20,8 @@ export function Panel({ title, aside, children, className, flush = false }: { ti
  * Top of every working screen, laid out like the head of an attested document:
  * title, serial number, status, then the one primary action at the end.
  */
-export function PageHeader({ title, serial, status, meta, actions, eyebrow }: { title: string; serial?: string; status?: ReactNode; meta?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
+/** `subtitle` sits directly under the title, e.g. the Arabic title of a bilingual document. */
+export function PageHeader({ title, subtitle, serial, status, meta, actions, eyebrow }: { title: string; subtitle?: ReactNode; serial?: string; status?: ReactNode; meta?: ReactNode; actions?: ReactNode; eyebrow?: string }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-line pb-6">
       <div className="min-w-0">
@@ -29,6 +30,7 @@ export function PageHeader({ title, serial, status, meta, actions, eyebrow }: { 
           <h1 className="text-3xl font-semibold tracking-[var(--tracking-heading)] text-ink">{title}</h1>
           {status}
         </div>
+        {subtitle ? <p className="mt-1 text-lg font-medium text-ink-muted">{subtitle}</p> : null}
         {serial || meta ? (
           <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
             {serial ? <span className="font-mono text-xs text-ink">{serial}</span> : null}
