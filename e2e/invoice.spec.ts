@@ -24,6 +24,9 @@ test("an invoiced PO links to its tax invoice: sample label, QR with the ZATCA f
   const inv = tid(page, "tax-invoice");
   await expect(inv).toContainText("Simplified tax invoice");
   await expect(inv).toContainText("INV-2026-0412");
+  // Bilingual, as Saudi tax invoices are: the Arabic title sits right under the English heading.
+  await expect(tid(page, "invoice-title-alt")).toHaveText("فاتورة ضريبية مبسطة");
+  await expect(tid(page, "invoice-title-alt")).toHaveAttribute("lang", "ar");
   await expect(tid(page, "invoice-sample")).toContainText("Sample: not submitted to ZATCA");
 
   const qr = tid(page, "invoice-qr");
@@ -95,6 +98,7 @@ test("PO and tax invoice have no serious or critical accessibility issues, Engli
       if (path.endsWith("invoice")) {
         await expect(tid(page, "invoice-qr").locator("path")).toHaveCount(1);
         if (locale === "ar") await expect(tid(page, "tax-invoice")).toContainText("فاتورة ضريبية مبسطة");
+        if (locale === "ar") await expect(tid(page, "invoice-title-alt")).toHaveText("Simplified tax invoice");
       }
       const results = await new AxeBuilder({ page }).include("main").analyze();
       const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
