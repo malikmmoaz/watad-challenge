@@ -449,6 +449,22 @@ export const credit = defineMessages(
       noCapacity: "Net worth and working capital do not support a credit cap.",
     },
 
+    fields: {
+      cr_number: "CR number", cr_status: "Status", cr_expiry: "Expires", cr_capital: "Paid-up capital",
+      vat_revenue_12m: "Declared taxable sales, last 4 quarters", vat_late: "Late filings, 12 months",
+      bank_inflows_12m: "Total inflows, 12 months", bank_inflows_6m: "Total inflows, 6 months", bank_months: "Months provided",
+      bank_avg_balance: "Average daily balance", bank_returned_items: "Returned payments", bank_negative_days: "Days overdrawn",
+      fin_revenue: "Revenue", fin_net_profit: "Net profit", fin_current_assets: "Current assets", fin_current_liabilities: "Current liabilities",
+      fin_total_liabilities: "Total liabilities", fin_total_debt: "Total borrowings", fin_net_worth: "Total equity", fin_audited: "Audit opinion",
+      simah_score: "SIMAH score", simah_defaults: "Defaults", simah_late_12m: "Delinquencies, 12 months", simah_late_30: "Payments 30+ days late, last 24 months", simah_facilities: "Active facilities",
+      zakat_valid_until: "Valid until", gosi_valid_until: "Valid until", gosi_headcount: "Registered employees", gosi_nitaqat: "Nitaqat band",
+      class_grade: "Classification grade", contracts_backlog: "Remaining backlog",
+    },
+    fieldValue: {
+      active: "Active", unqualified: "Unqualified", notAudited: "Not audited", grade: "Grade {n}", mediumGreen: "Medium Green",
+      remaining: "{amount} remaining · retention {pct}%",
+    },
+
     log: {
       applicationSubmitted: "Application submitted",
       simahConsent: "SIMAH consent given",
@@ -922,6 +938,22 @@ export const credit = defineMessages(
       bandC: "الفئة C: يُراجَع الحد الائتماني بعد سداد أول ثلاثة أوامر شراء.",
       bandD: "التقييم {score} أقل من الحد الأدنى البالغ 50 لمنح حد ائتماني.",
       noCapacity: "صافي الأصول ورأس المال العامل لا يدعمان منح حد ائتماني.",
+    },
+
+    fields: {
+      cr_number: "رقم السجل التجاري", cr_status: "الحالة", cr_expiry: "تاريخ الانتهاء", cr_capital: "رأس المال المدفوع",
+      vat_revenue_12m: "المبيعات الخاضعة للضريبة المصرّح بها، آخر 4 أرباع", vat_late: "إقرارات متأخرة، 12 شهرًا",
+      bank_inflows_12m: "إجمالي التدفقات الواردة، 12 شهرًا", bank_inflows_6m: "إجمالي التدفقات الواردة، 6 أشهر", bank_months: "عدد الأشهر المقدّمة",
+      bank_avg_balance: "متوسط الرصيد اليومي", bank_returned_items: "مدفوعات مرتجعة", bank_negative_days: "أيام برصيد مكشوف",
+      fin_revenue: "الإيرادات", fin_net_profit: "صافي الربح", fin_current_assets: "الأصول المتداولة", fin_current_liabilities: "الخصوم المتداولة",
+      fin_total_liabilities: "إجمالي الالتزامات", fin_total_debt: "إجمالي القروض", fin_net_worth: "إجمالي حقوق الملكية", fin_audited: "رأي المراجع",
+      simah_score: "درجة سمة", simah_defaults: "حالات التعثّر", simah_late_12m: "حالات التأخر، 12 شهرًا", simah_late_30: "مدفوعات متأخرة 30 يومًا فأكثر، آخر 24 شهرًا", simah_facilities: "التسهيلات القائمة",
+      zakat_valid_until: "سارية حتى", gosi_valid_until: "سارية حتى", gosi_headcount: "الموظفون المسجّلون", gosi_nitaqat: "نطاق نطاقات",
+      class_grade: "درجة التصنيف", contracts_backlog: "الأعمال المتبقية",
+    },
+    fieldValue: {
+      active: "نشط", unqualified: "رأي غير متحفظ", notAudited: "غير مدققة", grade: "الدرجة {n}", mediumGreen: "أخضر متوسط",
+      remaining: "المتبقي {amount} · المحتجزات {pct}%",
     },
 
     log: {

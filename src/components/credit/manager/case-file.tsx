@@ -23,6 +23,7 @@ import { GATE_RESULT } from "@/lib/status";
 import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
 import { logAction, logDetail } from "../log-text";
+import { fieldLabel, fieldValue } from "../field-text";
 
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
@@ -32,6 +33,7 @@ const POLICY: Record<"pass" | "refer" | "fail", Tone> = { pass: "positive", refe
 
 function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[]; docs: CreditDocument[] }) {
   const m = useMessages(credit);
+  const ar = useLocale() === "ar";
   if (refs.length === 0) return <span className="text-xs text-caution">{m.caseFile.noDocument}</span>;
   return (
     <span className="flex flex-wrap gap-x-3 gap-y-1">
@@ -41,7 +43,7 @@ function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[];
         // The seal is a link to the field; its click bubbles here so opening evidence is counted.
         return (
           <span key={`${r.documentId}-${r.fieldKey}`} onClick={() => d && track("credit_evidence_opened", { case_id: caseId, document_type: d.type })}>
-            <EvidenceSeal source={`${d?.fileName || (d ? m.documents[d.type].label : "")}${f ? `, ${f.label}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
+            <EvidenceSeal source={`${d?.fileName || (d ? m.documents[d.type].label : "")}${f ? `, ${fieldLabel(f, m, ar)}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
           </span>
         );
       })}
@@ -275,9 +277,9 @@ export function CaseFile({ id }: { id: string }) {
                     <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
                       {d.extracted.map((x) => (
                         <div key={x.key} id={`${d.id}-${x.key}`} className="flex justify-between gap-2 scroll-mt-24 target:bg-stamp-soft">
-                          <dt className="text-ink-muted">{x.label}</dt>
+                          <dt className="text-ink-muted">{fieldLabel(x, all, locale === "ar")}</dt>
                           <dd className="text-end tabular-nums text-ink">
-                            {x.value} <span className={x.confidence < 0.8 ? "text-caution" : "text-ink-subtle"}>({f.percent(x.confidence)})</span>
+                            {fieldValue(x.value, all, f, locale === "ar")} <span className={x.confidence < 0.8 ? "text-caution" : "text-ink-subtle"}>({f.percent(x.confidence)})</span>
                           </dd>
                         </div>
                       ))}
