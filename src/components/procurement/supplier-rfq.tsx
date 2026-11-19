@@ -26,7 +26,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
   const myPo = pos.find((p) => p.rfqId === rfqId && p.supplierId === me.id);
   const [editing, setEditing] = useState(false);
   const [justSent, setJustSent] = useState(false);
-  const { s, m, f, fill, terms, qty, name, city, category, logic, ar } = useProcurementI18n();
+  const { s, m, f, fill, terms, qty, name, city, category, logic, ar, rfqTitle, site } = useProcurementI18n();
 
   if (!rfq || !rfq.invitedSupplierIds.includes(me.id as OrgId)) {
     return (
@@ -53,7 +53,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
         </Link>
         <PageHeader
           eyebrow={s.request.eyebrow}
-          title={rfq.title}
+          title={rfqTitle(rfq)}
           serial={rfq.id}
           status={<Badge tone={rfq.status === "awarded" ? "neutral" : "info"}>{rfq.status === "awarded" ? s.request.awarded : s.request.open}</Badge>}
           meta={
@@ -85,7 +85,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
           <Facts
             columns={1}
             items={[
-              { label: s.request.deliverTo, value: rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${city(rfq.deliveryCity)}` },
+              { label: s.request.deliverTo, value: site(rfq) },
               { label: s.request.requiredBy, value: f.date(rfq.requiredBy) },
               { label: s.request.preferredTerms, value: terms(rfq.preferredTerms) },
               {

@@ -10,10 +10,27 @@ import { fill } from "@/i18n/core";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { procurement } from "@/i18n/procurement";
 import { supplier } from "@/i18n/supplier";
-import { reference } from "@/data";
-import type { City, MaterialCategory, PaymentTerms, RfqLine, Unit } from "@/domain/types";
+import { offers as seedOffers, purchaseOrders as seedPurchaseOrders, reference, rfqs as seedRfqs } from "@/data";
+import type { City, MaterialCategory, PaymentTerms, Rfq, RfqLine, Unit } from "@/domain/types";
 
 type Named = { name: string; nameAr?: string | undefined };
+
+/**
+ * Arabic for seed text (RFQ titles, delivery sites, notes), keyed by the English. Demo state a
+ * browser saved before the Arabic fields existed still reads in Arabic; text a user types has no
+ * entry and is shown as typed.
+ */
+const SEED_AR = new Map<string, string>();
+const addSeed = (en: string | undefined, ar: string | undefined) => {
+  if (en && ar) SEED_AR.set(en, ar);
+};
+for (const r of seedRfqs) {
+  addSeed(r.title, r.titleAr);
+  addSeed(r.deliverySite, r.deliverySiteAr);
+  addSeed(r.notes, r.notesAr);
+}
+for (const o of seedOffers) addSeed(o.notes, o.notesAr);
+for (const po of seedPurchaseOrders) for (const e of po.timeline) addSeed(e.note, e.noteAr);
 
 /** Find which English message `text` is, so logic-produced text can be shown in the reader's locale. */
 function lookup(enGroup: Record<string, unknown>, arGroup: Record<string, unknown>, text: string): string | null {
@@ -51,6 +68,9 @@ export function useProcurementI18n() {
           : fill(m.terms.platformCredit, { days: t.days });
 
   const name = (o: Named | undefined, fallback = "") => (o ? (ar && o.nameAr ? o.nameAr : o.name) : fallback);
+  /** Seed data in the reader's locale; anything else as written. */
+  const seedText = (en: string, arText?: string): string => (ar ? (arText ?? SEED_AR.get(en) ?? en) : en);
+  const city = (c: City) => m.cities[c];
 
   return {
     locale,
@@ -65,7 +85,14 @@ export function useProcurementI18n() {
     /** "1 tonne", "40 tonnes"; Arabic uses the singular unit after numbers. */
     qty: (n: number, unit: Unit) => `${f.number(n)} ${n === 1 ? m.unitsOne[unit] : m.units[unit]}`,
     unit: (unit: Unit, n = 2) => (n === 1 ? m.unitsOne[unit] : m.units[unit]),
-    city: (c: City) => m.cities[c],
+    city,
+    seedText,
+    rfqTitle: (r: Pick<Rfq, "title" | "titleAr">) => seedText(r.title, r.titleAr),
+    /** Delivery site with its city, unless the site already names it. */
+    site: (r: Pick<Rfq, "deliverySite" | "deliverySiteAr" | "deliveryCity">) => {
+      const site = seedText(r.deliverySite, r.deliverySiteAr);
+      return r.deliverySite.includes(r.deliveryCity) ? site : `${site}${ar ? "، " : ", "}${city(r.deliveryCity)}`;
+    },
     category: (c: MaterialCategory) => m.categories[c],
     /** Company, project and material names: the Arabic name from the data when there is one. */
     name,
