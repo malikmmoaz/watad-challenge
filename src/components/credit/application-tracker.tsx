@@ -177,21 +177,14 @@ function MoreInfoForm({ c }: { c: CreditCase }) {
   );
 }
 
-/** The approved cap, and how it changed the contractor's cap: opened, raised from X to Y, or kept. */
+/** The approved cap, only when "What this means for you" has no terms to show (a decision without a cap change in its log). */
 function CapLine({ c, approved }: { c: CreditCase; approved: NonNullable<NonNullable<CreditCase["decision"]>["approvedCap"]> }) {
-  const all = useMessages(credit);
-  const m = all.tracker;
+  const m = useMessages(credit).tracker;
   const f = useFormat();
-  const change = capChange(c);
-  const text =
-    change?.kind === "raised"
-      ? fill(m.capRaised, { from: f.money(change.from), to: f.money(change.to) })
-      : change?.kind === "kept"
-        ? fill(m.capKept, { cap: f.money(change.at) })
-        : fill(m.capApproved, { cap: f.money(approved) });
+  if (capChange(c)) return null;
   return (
-    <p className="text-sm font-medium text-ink" data-testid="credit-cap-change" data-kind={change?.kind ?? "opened"}>
-      {text}
+    <p className="text-sm font-medium text-ink" data-testid="credit-cap-change">
+      {fill(m.capApproved, { cap: f.money(approved) })}
     </p>
   );
 }
@@ -252,8 +245,9 @@ function ForYou({ c }: { c: CreditCase }) {
             <div key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-3" data-testid={`credit-for-you-${r.key}`} data-changed={changed || undefined}>
               <dt className="text-ink-muted">{r.label}</dt>
               <dd className="text-end tabular-nums">
-                <span className={`font-semibold ${changed ? "text-positive" : "text-ink"}`}>{r.now}</span>
-                {changed && <span className="block text-xs text-ink-muted">{fill(m.forYou.was, { value: r.was! })}</span>}
+                {/* Amounts stay whole on narrow screens; the longer rate line may wrap. */}
+                <span className={`font-semibold ${r.key === "rate" ? "" : "whitespace-nowrap "}${changed ? "text-positive" : "text-ink"}`}>{r.now}</span>
+                {changed && <span className={`block text-xs text-ink-muted ${r.key === "rate" ? "" : "whitespace-nowrap"}`}>{fill(m.forYou.was, { value: r.was! })}</span>}
               </dd>
             </div>
           );

@@ -46,8 +46,10 @@ test("apply for a higher cap, approve it, then pay a purchase order on credit", 
   // The contractor sees the cap raised, not replaced.
   await page.goto(`/contractor/credit#${caseId}`);
   const card = tid(page, `credit-case-${caseId}`);
-  await expect(card.getByTestId("credit-cap-change")).toHaveAttribute("data-kind", "raised");
-  await expect(card.getByTestId("credit-cap-change")).toHaveText("Credit cap raised from SAR 1,500,000.00 to SAR 1,800,000.00");
+  // The block leads with the cap: the new figure, and what it was.
+  await expect(card.getByTestId("credit-for-you-cap")).toContainText("SAR 1,800,000.00");
+  await expect(card.getByTestId("credit-for-you-cap")).toContainText("was SAR 1,500,000.00");
+  await expect(card.getByTestId("credit-cap-change")).toHaveCount(0);
   // What this means for them: the cap before and after, band and Murabaha markup with APR, and the reasons in plain words.
   const forYou = card.getByTestId("credit-for-you");
   await expect(forYou.getByTestId("credit-for-you-cap")).toHaveAttribute("data-changed", "true");
