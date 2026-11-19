@@ -4,9 +4,11 @@
  * The CSP has no nonces: pages are prerendered static, and a nonce would force
  * every page to render per request. Next's inline bootstrap scripts therefore
  * need 'unsafe-inline' for scripts. Everything else is locked to our origin
- * plus the PostHog EU hosts. Add Better Stack hosts here when #4 lands.
+ * plus the PostHog EU hosts and Better Stack's error ingest (#4).
  */
 const POSTHOG = ["https://eu.i.posthog.com", "https://eu-assets.i.posthog.com"];
+/** Better Stack error tracking ingest (Sentry-compatible), per-app subdomain. */
+const BETTER_STACK = ["https://*.betterstackdata.com"];
 /** Vercel's preview toolbar; previews only (production never loads it). */
 const VERCEL_LIVE = ["https://vercel.live"];
 
@@ -24,7 +26,7 @@ export function contentSecurityPolicy({ dev = false, preview = false, local = fa
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...POSTHOG, ...extra],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", ...POSTHOG, ...extra],
+    "connect-src": ["'self'", ...POSTHOG, ...BETTER_STACK, ...extra],
     "worker-src": ["'self'", "blob:"],
     "frame-src": preview ? VERCEL_LIVE : ["'none'"],
     "object-src": ["'none'"],

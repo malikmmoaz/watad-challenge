@@ -79,6 +79,7 @@ export const howWeBuilt: DocPage = {
             { label: "CI runs", href: `${REPO}/actions`, note: "Lint, typecheck, unit and end-to-end tests on every change." },
             { label: "Decision records", href: `${REPO}/tree/main/docs/adr`, note: "Why the main technical choices were made." },
             { label: "Changelog", href: `${REPO}/blob/main/CHANGELOG.md`, note: "What changed, in order." },
+            { label: "Live status", href: "https://watad-challenge-demo.betteruptime.com", note: "Uptime of this demo, checked every 3 minutes by Better Stack." },
           ],
         },
       ],

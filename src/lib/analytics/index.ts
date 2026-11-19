@@ -4,6 +4,7 @@
  */
 import posthog from "posthog-js";
 import type { Role } from "@/domain/types";
+import { reportError } from "@/lib/monitoring";
 import type { AnalyticsEvent, AnalyticsEvents } from "./events";
 
 export type { AnalyticsEvent, AnalyticsEvents, TermsKey } from "./events";
@@ -60,11 +61,12 @@ export function setRole(role: Role): void {
 }
 
 /**
- * Report an error caught by an error boundary. Sent to PostHog error tracking;
- * Better Stack joins here when #4 lands. Only the error itself and where it
- * was caught are sent, never page content.
+ * Report an error caught by an error boundary: to Better Stack error tracking
+ * and to PostHog. Only the error and where it was caught are sent, never page
+ * content. Each sink is a no-op when its key is not set.
  */
 export function captureError(error: unknown, boundary: "route" | "global", digest?: string): void {
+  reportError(error, { boundary, ...(digest ? { digest } : {}) });
   if (!started) return;
   posthog.captureException(error, { boundary, ...(digest ? { digest } : {}) });
 }
