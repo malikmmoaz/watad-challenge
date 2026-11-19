@@ -11,6 +11,7 @@ import { Alert, buttonClass, CreditCapMeter, StatStrip, EmptyState, Facts, Loadi
 import { useHash, useHydrated } from "./client-state";
 import { ApplicationTracker } from "./application-tracker";
 import { DrawLedger } from "./draw-ledger";
+import { seedText } from "./data-text";
 import { useToday } from "./use-today";
 import { utilisation } from "@/domain/credit/draws";
 import { fill } from "@/i18n/core";
@@ -20,7 +21,8 @@ import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 
 /** Contractor credit home: facility summary, application trackers, and a way to apply. */
 export function ContractorCredit() {
-  const m = useMessages(credit).page;
+  const all = useMessages(credit);
+  const m = all.page;
   const f = useFormat();
   const locale = useLocale();
   const fmt = (n: number) => f.money(n as Halalas);
@@ -109,7 +111,7 @@ export function ContractorCredit() {
                       { label: m.supplierPayment, value: m.paidDirectly },
                     ]}
                   />
-                  {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">{fill(m.conditions, { list: facility.conditions.join("; ") })}</p>}
+                  {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">{fill(m.conditions, { list: facility.conditions.map((x) => seedText(x, credit.en as never, all)).join(locale === "ar" ? "؛ " : "; ") })}</p>}
                 </div>
               </Panel>
             </div>

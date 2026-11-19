@@ -23,3 +23,14 @@ export function purposeText(purpose: string, en: M, m: M): string {
   const key = (Object.keys(en.data.purposes) as (keyof M["data"]["purposes"])[]).find((k) => en.data.purposes[k] === purpose);
   return key ? m.data.purposes[key] : purpose;
 }
+
+/**
+ * The hand-written seed cases' free text (findings, rationale, reasons,
+ * conditions, the memo) in the reader's language, matched on the exact
+ * English sentence. Unknown text is shown as written.
+ */
+export function seedText(text: string, en: M, m: M): string {
+  const seed = en.data.seed as Record<string, string>;
+  const key = Object.keys(seed).find((k) => seed[k] === text);
+  return key ? (m.data.seed as Record<string, string>)[key]! : text;
+}

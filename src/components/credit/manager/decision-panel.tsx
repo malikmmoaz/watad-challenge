@@ -10,7 +10,7 @@ import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/componen
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useMessages } from "@/i18n/locale";
-import { personName } from "../data-text";
+import { personName, seedText } from "../data-text";
 
 const OUTCOMES: CreditDecisionOutcome[] = ["approve", "request_info", "decline"];
 
@@ -53,7 +53,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
           )}
           <div>
             <p className="text-xs font-medium text-ink-muted">{m.reasonGiven}</p>
-            <p className="mt-1 text-ink">{d.reasonText}</p>
+            <p className="mt-1 text-ink">{seedText(d.reasonText, credit.en as never, all)}</p>
           </div>
           {d.requestedItems && d.requestedItems.length > 0 && (
             <ul className="list-disc ps-5 text-ink-muted">

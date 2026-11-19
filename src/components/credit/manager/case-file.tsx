@@ -24,7 +24,7 @@ import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
 import { logAction, logDetail } from "../log-text";
 import { fieldLabel, fieldValue } from "../field-text";
-import { purposeText } from "../data-text";
+import { purposeText, seedText } from "../data-text";
 
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
@@ -177,7 +177,7 @@ export function CaseFile({ id }: { id: string }) {
   const card = view && c.scorecard ? { ...c.scorecard, factors: view.scorecard.factors.map((vf) => ({ ...vf, evidence: c.scorecard!.factors.find((x) => x.id === vf.id)?.evidence ?? vf.evidence })), policyChecks: view.scorecard.policyChecks, capBasis: view.scorecard.capBasis } : c.scorecard;
   const memo = view?.memo ?? c.aiProposal?.memo;
   const gateDetail = (g: CreditCase["gates"][number]) =>
-    view?.gates.find((x) => x.id === g.id)?.detail ?? (g.detail === "Queued." ? all.checks.queued : g.detail === "Runs last." ? all.checks.runsLast : g.detail);
+    view?.gates.find((x) => x.id === g.id)?.detail ?? (g.detail === "Queued." ? all.checks.queued : g.detail === "Runs last." ? all.checks.runsLast : seedText(g.detail, credit.en as never, all));
   const contractor = reference.contractors.find((x) => x.id === c.contractorId);
   const title = (locale === "ar" ? contractor?.nameAr : undefined) ?? applicantName(c.contractorId, reference.contractors);
   const pct = (n: number | null) => (n === null ? m.notAvailable : f.percent(n, 1));
@@ -237,7 +237,7 @@ export function CaseFile({ id }: { id: string }) {
                 <ul className="space-y-5" data-testid="credit-factors">
                   {card.factors.map((fa) => (
                     <li key={fa.id} className="space-y-1.5">
-                      <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={fa.rationale} />
+                      <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={seedText(fa.rationale, credit.en as never, all)} />
                       <p className="text-xs text-ink-muted">
                         <span className="font-medium text-ink">{m.whyLabel}</span> {all.factors[factorKey(fa.id)].why}
                       </p>
@@ -256,8 +256,8 @@ export function CaseFile({ id }: { id: string }) {
                 {card.policyChecks.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                     <span>
-                      <span className="font-medium text-ink">{p.rule}</span>
-                      <span className="block text-ink-muted">{p.observed}</span>
+                      <span className="font-medium text-ink">{seedText(p.rule, credit.en as never, all)}</span>
+                      <span className="block text-ink-muted">{seedText(p.observed, credit.en as never, all)}</span>
                     </span>
                     <Badge tone={POLICY[p.result]}>{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
                   </li>
@@ -289,7 +289,7 @@ export function CaseFile({ id }: { id: string }) {
                   {d.findings.map((x, i) => (
                     <p key={i} className={`text-xs ${x.severity === "critical" ? "text-negative" : x.severity === "warning" ? "text-caution" : "text-ink-muted"}`}>
                       {x.kind === "tamper_signal" ? `${m.tamperSignal} ` : ""}
-                      {x.text}
+                      {seedText(x.text, credit.en as never, all)}
                     </p>
                   ))}
                 </li>
@@ -332,7 +332,7 @@ export function CaseFile({ id }: { id: string }) {
                         <h3 className="text-sm font-semibold text-ink">{m.memoTitle}</h3>
                         <AiLabel agent={m.memoDrafter} confidence={c.aiProposal.ai.confidence} />
                       </div>
-                      <Memo text={memo ?? c.aiProposal.memo} />
+                      <Memo text={memo ?? seedText(c.aiProposal.memo, credit.en as never, all)} />
                       <p className="mt-3 border-t border-ai-line pt-2 text-xs text-ai">{m.memoNotDecision}</p>
                     </div>
                   </section>
