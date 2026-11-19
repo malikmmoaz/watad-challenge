@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import type { AppLocale } from "./e2e/fixtures";
 
 /**
  * E2E smoke tests (#15). Three journeys, kept fast and stable.
@@ -21,7 +22,7 @@ const baseURL = externalBaseURL ?? `http://127.0.0.1:${port}`;
 const isCI = !!process.env.CI;
 const start = `pnpm exec next start -H 127.0.0.1 -p ${port}`;
 
-export default defineConfig({
+export default defineConfig<{ appLocale: AppLocale }>({
   testDir: "./e2e",
   outputDir: "./e2e/.results",
   fullyParallel: true,
@@ -50,6 +51,13 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
     // Chromium at a phone viewport: one browser download, still catches layout breaks.
     { name: "mobile", use: { ...devices["Pixel 7"] } },
+    // Arabic, right to left (ADR 0005): the specs that are locale-proof today. Add a spec
+    // here once its journeys select by test id or role and read copy from src/i18n.
+    ...(["desktop", "mobile"] as const).map((name) => ({
+      name: `${name}-ar`,
+      testMatch: /(a11y|rtl|untranslated)\.spec\.ts/,
+      use: { ...(name === "desktop" ? { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } : devices["Pixel 7"]), appLocale: "ar" as const },
+    })),
     // Cross-browser (opt-in with E2E_ALL_BROWSERS=1; run by .github/workflows/cross-browser.yml, not required CI).
     ...(process.env.E2E_ALL_BROWSERS
       ? [
