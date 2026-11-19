@@ -8,6 +8,7 @@ import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useMessages } from "@/i18n/locale";
 import { Badge, Button, Panel, type Tone } from "@/components/ui";
+import { track, type WhatIfLever } from "@/lib/analytics";
 
 const BAND_TONE: Record<WhatIfOutcome["band"], Tone> = { A: "positive", B: "positive", C: "caution", D: "negative" };
 
@@ -17,7 +18,7 @@ const BAND_TONE: Record<WhatIfOutcome["band"], Tone> = { A: "positive", B: "posi
  * saved and the decision panel is untouched. Fixed-size result cells, so
  * sliding causes no layout shift.
  */
-export function WhatIfPanel({ profile, asOf }: { profile: CreditProfile; asOf: string }) {
+export function WhatIfPanel({ caseId, profile, asOf }: { caseId: string; profile: CreditProfile; asOf: string }) {
   const all = useMessages(credit);
   const m = all.whatIf;
   const f = useFormat();
@@ -26,6 +27,8 @@ export function WhatIfPanel({ profile, asOf }: { profile: CreditProfile; asOf: s
   const { current, simulated } = useMemo(() => simulate(profile, asOf, w), [profile, asOf, w]);
   const changed = JSON.stringify(w) !== JSON.stringify(today);
   const set = (patch: Partial<WhatIfLevers>) => setW((prev) => ({ ...prev, ...patch }));
+  // Analytics: the lever name only, never its value; once per committed change, not per slider step.
+  const committed = (lever: WhatIfLever) => track("credit_whatif_changed", { case_id: caseId, lever });
 
   // Rate and APR on two lines, so the cell keeps one height whatever the values.
   const rate = (o: WhatIfOutcome): ReactNode =>
@@ -55,7 +58,10 @@ export function WhatIfPanel({ profile, asOf }: { profile: CreditProfile; asOf: s
         aside={
           <span className="flex items-center gap-2">
             <Badge tone="caution">{m.notSaved}</Badge>
-            <Button size="sm" variant="quiet" onClick={() => setW(today)} disabled={!changed} data-testid="credit-what-if-reset">
+            <Button size="sm" variant="quiet" onClick={() => {
+                setW(today);
+                track("credit_whatif_reset", { case_id: caseId });
+              }} disabled={!changed} data-testid="credit-what-if-reset">
               {m.reset}
             </Button>
           </span>
@@ -72,14 +78,17 @@ export function WhatIfPanel({ profile, asOf }: { profile: CreditProfile; asOf: s
                 type="checkbox"
                 className="size-4"
                 checked={w.vatReconciled}
-                onChange={(e) => set({ vatReconciled: e.target.checked })}
+                onChange={(e) => {
+                  set({ vatReconciled: e.target.checked });
+                  committed("vat_reconciled");
+                }}
                 data-testid="credit-what-if-vat"
               />
             </label>
-            <Slider id="simah" label={m.simah} value={w.simahScore} display={f.number(w.simahScore)} range={LEVER_RANGE.simahScore} onChange={(v) => set({ simahScore: v })} />
-            <Slider id="overdue" label={m.overdue} value={w.overdueShare} display={f.percent(w.overdueShare)} range={LEVER_RANGE.overdueShare} onChange={(v) => set({ overdueShare: v })} />
-            <Slider id="cheques" label={m.cheques} value={w.returnedCheques} display={f.number(w.returnedCheques)} range={LEVER_RANGE.returnedCheques} onChange={(v) => set({ returnedCheques: v })} />
-            <Slider id="years" label={m.years} value={w.yearsTrading} display={f.number(w.yearsTrading)} range={LEVER_RANGE.yearsTrading} onChange={(v) => set({ yearsTrading: v })} />
+            <Slider id="simah" onCommit={() => committed("simah_score")} label={m.simah} value={w.simahScore} display={f.number(w.simahScore)} range={LEVER_RANGE.simahScore} onChange={(v) => set({ simahScore: v })} />
+            <Slider id="overdue" onCommit={() => committed("overdue_share")} label={m.overdue} value={w.overdueShare} display={f.percent(w.overdueShare)} range={LEVER_RANGE.overdueShare} onChange={(v) => set({ overdueShare: v })} />
+            <Slider id="cheques" onCommit={() => committed("returned_cheques")} label={m.cheques} value={w.returnedCheques} display={f.number(w.returnedCheques)} range={LEVER_RANGE.returnedCheques} onChange={(v) => set({ returnedCheques: v })} />
+            <Slider id="years" onCommit={() => committed("years_trading")} label={m.years} value={w.yearsTrading} display={f.number(w.yearsTrading)} range={LEVER_RANGE.yearsTrading} onChange={(v) => set({ yearsTrading: v })} />
           </fieldset>
 
           <table className="w-full table-fixed text-sm" data-testid="credit-what-if-result">
@@ -110,7 +119,7 @@ export function WhatIfPanel({ profile, asOf }: { profile: CreditProfile; asOf: s
   );
 }
 
-function Slider({ id, label, value, display, range, onChange }: { id: string; label: string; value: number; display: string; range: { min: number; max: number; step: number }; onChange: (v: number) => void }) {
+function Slider({ id, label, value, display, range, onChange, onCommit }: { id: string; label: string; value: number; display: string; range: { min: number; max: number; step: number }; onChange: (v: number) => void; onCommit: () => void }) {
   const inputId = `what-if-${id}`;
   return (
     <div className="space-y-1">
@@ -130,6 +139,10 @@ function Slider({ id, label, value, display, range, onChange }: { id: string; la
         step={range.step}
         value={value}
         onChange={(e) => onChange(e.target.valueAsNumber)}
+        onPointerUp={onCommit}
+        onKeyUp={(e) => {
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) onCommit();
+        }}
         className="w-full accent-[var(--color-pine)]"
         data-testid={`credit-what-if-${id}`}
       />

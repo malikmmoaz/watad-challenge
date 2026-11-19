@@ -239,3 +239,24 @@ test("activity feed, tax invoice and printing: one event per action, enums and i
   const text = JSON.stringify(await events(page));
   for (const forbidden of ["Rawasi", "Najd", "Sahra", "SAR", "ر.س", "INV-", "300000"]) expect(text, `no "${forbidden}" in analytics`).not.toContain(forbidden);
 });
+
+test("credit what-if: one event per committed lever change and on reset, never the value", async ({ page }) => {
+  await page.goto("/credit/cases/cc_511");
+  await tid(page, "credit-run-checks").click();
+  await expect(tid(page, "credit-what-if")).toBeVisible();
+
+  // Three key presses on one slider: three commits (keyup), each the lever name only.
+  await tid(page, "credit-what-if-simah").focus();
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowLeft");
+  await tid(page, "credit-what-if-vat").click();
+  const changed = await only(page, "credit_whatif_changed");
+  expect(changed.map((e) => e.properties)).toEqual([
+    { case_id: "cc_511", lever: "simah_score" },
+    { case_id: "cc_511", lever: "simah_score" },
+    { case_id: "cc_511", lever: "simah_score" },
+    { case_id: "cc_511", lever: "vat_reconciled" },
+  ]);
+
+  await tid(page, "credit-what-if-reset").click();
+  expect(await once(page, "credit_whatif_reset", ["case_id"])).toEqual({ case_id: "cc_511" });
+});

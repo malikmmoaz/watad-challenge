@@ -257,7 +257,7 @@ export function CaseFile({ id }: { id: string }) {
             </Panel>
           )}
 
-          {whatIfProfile && <WhatIfPanel key={c.id} profile={whatIfProfile} asOf={checksRanOn} />}
+          {whatIfProfile && <WhatIfPanel key={c.id} caseId={c.id} profile={whatIfProfile} asOf={checksRanOn} />}
 
           {card && (
             <Panel title={m.policyTitle}>
