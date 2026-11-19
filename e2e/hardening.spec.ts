@@ -68,6 +68,8 @@ test("after placing a PO, Back and reload cannot place a second one", async ({ p
   await expect(page).toHaveURL(/\/contractor$/);
   await page.goForward();
   await expect(page).toHaveURL(/\/contractor\/rfq\/rfq_1042$/);
+  // Before the reload too: a page restored from the back/forward cache must not offer Choose again.
+  await expect(tid(page, "offer-choose")).toHaveCount(0);
   await page.reload();
   await expect(page).toHaveURL(/\/contractor\/rfq\/rfq_1042$/);
   // The RFQ is awarded: no Choose buttons, one PO for it.
