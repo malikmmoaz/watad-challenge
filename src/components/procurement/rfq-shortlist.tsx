@@ -312,7 +312,16 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             {m.rfqPage.blind}
           </label>
           </div>
-        ) : null}
+        ) : (
+          // Inside the invited-suppliers panel, not an orphan line after the last panel (Layla, 19 Nov).
+          <p role="status" data-testid="shortlist-sent" className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">
+            {/* "Offers appear here…" only while waiting; once offers are in it would contradict the page. */}
+            {fill(
+              rfq.status === "sent" ? (rfq.blindComparison ? m.rfqPage.sentBlind : m.rfqPage.sent) : rfq.blindComparison ? m.rfqPage.sentBlindDone : m.rfqPage.sentDone,
+              { n: rfq.invitedSupplierIds.length },
+            )}
+          </p>
+        )}
       </Panel>
 
       {isDraft ? (
@@ -324,15 +333,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             {selected.size === 1 ? m.rfqPage.sendOne : fill(m.rfqPage.send, { n: selected.size })}
           </button>
         </div>
-      ) : (
-        <p role="status" data-testid="shortlist-sent" className="rounded-xl bg-paper p-4 text-sm text-ink-muted">
-          {/* "Offers appear here…" only while waiting; once offers are in it would contradict the page. */}
-          {fill(
-            rfq.status === "sent" ? (rfq.blindComparison ? m.rfqPage.sentBlind : m.rfqPage.sent) : rfq.blindComparison ? m.rfqPage.sentBlindDone : m.rfqPage.sentDone,
-            { n: rfq.invitedSupplierIds.length },
-          )}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

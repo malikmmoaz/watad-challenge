@@ -66,7 +66,7 @@ export function SupplierRfq({ rfqId }: { rfqId: string }) {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         <Panel title={s.request.whatIsRequested} className="lg:col-span-2">
           <ul className="divide-y divide-line text-sm">
             {rfq.lines.map((l) => (
