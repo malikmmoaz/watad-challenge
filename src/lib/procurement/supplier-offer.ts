@@ -6,6 +6,7 @@ import type { DemoState } from "@/data";
 import { sar } from "@/domain/money";
 import type { Offer, OfferId, OrgId, PaymentTerms, PoStatus, PurchaseOrder, Rfq, Role, StockStatus } from "@/domain/types";
 import { advancePurchaseOrder } from "./po";
+import { MAX_DELIVERY_FEE_SAR, MAX_UNIT_PRICE_SAR, WHOLE_UNITS } from "./rfq-draft";
 
 export interface OfferLineDraft {
   rfqLineId: string;
@@ -45,16 +46,19 @@ export function validateOfferDraft(rfq: Rfq, draft: OfferDraft): OfferErrors {
     }
     // An empty price (NaN from the number input) means "not quoting this line", as the form says.
     if (l.unitPriceSar < 0 || l.unitPriceSar === Infinity) e[`line:${l.rfqLineId}:price`] = "Enter a price of 0 or more.";
+    else if (l.unitPriceSar > MAX_UNIT_PRICE_SAR) e[`line:${l.rfqLineId}:price`] = "A unit price is at most SAR 1,000,000.";
     if (l.unitPriceSar > 0) {
       if (!ok(l.quantityAvailable) || l.quantityAvailable <= 0) e[`line:${l.rfqLineId}:qty`] = "Enter the quantity you can supply.";
       else if (l.quantityAvailable > line.quantity) e[`line:${l.rfqLineId}:qty`] = `At most the ${line.quantity} requested.`;
+      else if (WHOLE_UNITS.has(line.unit) && !Number.isInteger(l.quantityAvailable)) e[`line:${l.rfqLineId}:qty`] = "Bags, pieces and rolls are supplied in whole numbers.";
       if (l.brand.trim() === "") e[`line:${l.rfqLineId}:brand`] = "Name the brand you will supply.";
       if (l.isAlternative && l.alternativeNote.trim() === "") e[`line:${l.rfqLineId}:alt`] = "Say how the alternative differs from the spec.";
     }
   }
   if (!ok(draft.deliveryFeeSar) || draft.deliveryFeeSar < 0) e.deliveryFee = "Enter a delivery fee of 0 or more.";
+  else if (draft.deliveryFeeSar > MAX_DELIVERY_FEE_SAR) e.deliveryFee = "A delivery fee is at most SAR 1,000,000.";
   if (!ok(draft.leadTimeDays) || !Number.isInteger(draft.leadTimeDays) || draft.leadTimeDays < 1 || draft.leadTimeDays > 120) e.leadTime = "Lead time is 1 to 120 whole days.";
-  if (!ok(draft.validDays) || draft.validDays < 1 || draft.validDays > 60) e.validDays = "Valid for 1 to 60 days.";
+  if (!ok(draft.validDays) || !Number.isInteger(draft.validDays) || draft.validDays < 1 || draft.validDays > 60) e.validDays = "Valid for 1 to 60 days.";
   return e;
 }
 
