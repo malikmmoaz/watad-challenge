@@ -1,3 +1,7 @@
+import type { ReactNode } from "react";
+import { Money, T } from "@/components/i18n/t";
+import { common } from "@/i18n/common";
+import { msg } from "@/i18n/core";
 import { BAND_FLOORS } from "@/domain/credit/scorecard";
 import type { Band as CreditBandName } from "@/domain/credit/types";
 import { cx } from "./cx";
@@ -24,23 +28,39 @@ const BAND_STYLE: Record<CreditBandName, { color: string; meaning: string }> = {
 };
 export const creditBands: Band[] = (Object.keys(BAND_STYLE) as CreditBandName[]).map((name) => ({ name, from: BAND_FLOORS[name], ...BAND_STYLE[name] }));
 
+const BAND_NAMES = new Set(["A", "B", "C", "D"]);
+/** Band meaning in the reader's language for the default A to D bands; custom bands keep their own text. */
+function meaningOf(band: Band): ReactNode {
+  return BAND_NAMES.has(band.name) ? <T m={msg(common, (m) => m.ui.bands[band.name as "A" | "B" | "C" | "D"])} /> : band.meaning;
+}
+
 /**
  * Score gauge: the score on a ruled 0 to 100 scale with its band named in
  * words. A scale shows how close the next band is, which a ring cannot.
  */
-export function ScoreScale({ score, bands = creditBands, label = "Credit score", size = "md" }: { score: number; bands?: Band[]; label?: string; size?: "sm" | "md" }) {
+export function ScoreScale({ score, bands = creditBands, label, size = "md" }: { score: number; bands?: Band[]; label?: string; size?: "sm" | "md" }) {
   const s = Math.min(100, Math.max(0, Math.round(score)));
   const sorted = [...bands].sort((a, b) => a.from - b.from);
   const band = [...sorted].reverse().find((b) => s >= b.from) ?? sorted[0];
   return (
-    <div role="img" aria-label={`${label}: ${s} out of 100, band ${band.name}, ${band.meaning}`}>
-      <div className="flex items-baseline gap-3">
+    <div>
+      <p className="sr-only">
+        <T
+          m={msg(common, (m) => m.ui.scoreSr)}
+          values={{ label: label ?? <T m={msg(common, (m) => m.ui.creditScore)} />, score: s, band: band.name, meaning: meaningOf(band) }}
+        />
+      </p>
+      <div aria-hidden="true" className="flex items-baseline gap-3">
         <span className={cx("font-semibold tabular-nums text-ink", size === "md" ? "text-4xl" : "text-2xl")}>{s}</span>
         <span className="text-sm text-ink-muted">
-          of 100 · <span className="font-semibold text-ink">Band {band.name}</span> · {band.meaning}
+          <T m={msg(common, (m) => m.ui.outOf100)} /> ·{" "}
+          <span className="font-semibold text-ink">
+            <T m={msg(common, (m) => m.ui.band)} values={{ name: band.name }} />
+          </span>{" "}
+          · {meaningOf(band)}
         </span>
       </div>
-      <div className="relative mt-3 pt-2">
+      <div aria-hidden="true" className="relative mt-3 pt-2">
         <span className="absolute top-0 h-0 w-0 -translate-x-1/2 border-x-[5px] rtl:translate-x-1/2 border-t-[7px] border-x-transparent border-t-ink" style={{ insetInlineStart: `${s}%` }} />
         <div className="flex h-2 gap-px overflow-hidden rounded-xs">
           {sorted.map((b, i) => {
@@ -69,21 +89,31 @@ export function ScoreScale({ score, bands = creditBands, label = "Credit score",
  * Amounts are whole SAR numbers already formatted by the caller's `format`.
  */
 /** `barOnly` drops the summary line when the screen already states the figures (keeps the bar and legend). */
-export function CreditCapMeter({ cap, drawn, thisPo = 0, format, barOnly = false }: { cap: number; drawn: number; thisPo?: number; format: (n: number) => string; barOnly?: boolean }) {
+export function CreditCapMeter({ cap, drawn, thisPo = 0, format, barOnly = false }: { cap: number; drawn: number; thisPo?: number; format?: (n: number) => string; barOnly?: boolean }) {
+  // Without `format`, amounts render in the reader's language (<Money>); callers on the server should omit it.
+  const amt = (n: number): ReactNode => (format ? format(n) : <Money h={n} />);
   const after = drawn + thisPo;
   const over = Math.max(0, after - cap);
   const scale = Math.max(cap, after) || 1;
   const w = (n: number) => `${(n / scale) * 100}%`;
-  const summary = over > 0 ? `This PO exceeds the credit cap by ${format(over)}` : `${format(cap - after)} of the credit cap left${thisPo ? " after this PO" : ""}`;
+  const summary =
+    over > 0 ? (
+      <T m={msg(common, (m) => m.ui.capExceeds)} values={{ amount: amt(over) }} />
+    ) : (
+      <T m={thisPo ? msg(common, (m) => m.ui.capLeftAfter) : msg(common, (m) => m.ui.capLeft)} values={{ amount: amt(cap - after) }} />
+    );
   return (
-    <div role="img" aria-label={`Credit cap ${format(cap)}. Drawn ${format(drawn)}.${thisPo ? ` This PO ${format(thisPo)}.` : ""} ${summary}.`}>
+    <div>
+      {barOnly ? <p className="sr-only">{summary}</p> : null}
       {barOnly ? null : (
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <p className={cx("text-sm font-semibold", over > 0 ? "text-negative" : "text-ink")}>{summary}</p>
-          <p className="text-xs text-ink-muted tabular-nums">Credit cap {format(cap)}</p>
+          <p className="text-xs text-ink-muted tabular-nums">
+            <T m={msg(common, (m) => m.ui.capTotal)} values={{ amount: amt(cap) }} />
+          </p>
         </div>
       )}
-      <div className={cx("relative flex h-3 overflow-hidden rounded-xs bg-neutral-soft", barOnly ? "" : "mt-2.5")}>
+      <div aria-hidden="true" className={cx("relative flex h-3 overflow-hidden rounded-xs bg-neutral-soft", barOnly ? "" : "mt-2.5")}>
         <span className="bg-ink-muted" style={{ width: w(drawn) }} />
         {thisPo ? <span className="bg-pine" style={{ width: w(Math.min(thisPo, Math.max(0, cap - drawn))) }} /> : null}
         {over > 0 ? <span className="bg-negative" style={{ width: w(over) }} /> : null}
@@ -92,12 +122,12 @@ export function CreditCapMeter({ cap, drawn, thisPo = 0, format, barOnly = false
       <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-muted">
         <li className="flex items-center gap-1.5">
           <span className="size-2 rounded-xs bg-ink-muted" />
-          Drawn <span className="tabular-nums text-ink">{format(drawn)}</span>
+          <T m={msg(common, (m) => m.ui.drawn)} /> <span className="tabular-nums text-ink">{amt(drawn)}</span>
         </li>
         {thisPo ? (
           <li className="flex items-center gap-1.5">
             <span className={cx("size-2 rounded-xs", over > 0 ? "bg-negative" : "bg-pine")} />
-            This PO <span className="tabular-nums text-ink">{format(thisPo)}</span>
+            <T m={msg(common, (m) => m.ui.thisPo)} /> <span className="tabular-nums text-ink">{amt(thisPo)}</span>
           </li>
         ) : null}
       </ul>
@@ -112,7 +142,7 @@ export function FactorBar({ label, points, weight, note }: { label: string; poin
       <div className="flex items-baseline justify-between gap-3 text-sm">
         <span className="font-medium text-ink">{label}</span>
         <span className="tabular-nums text-ink-muted">
-          <span className="text-ink">{points}</span> of {weight}
+          <T m={msg(common, (m) => m.ui.pointsOf)} values={{ points: <span className="text-ink">{points}</span>, weight }} />
         </span>
       </div>
       <div className="mt-1.5 h-1.5 rounded-full bg-neutral-soft" aria-hidden="true">

@@ -1,3 +1,6 @@
+import { T } from "@/components/i18n/t";
+import { common } from "@/i18n/common";
+import { msg } from "@/i18n/core";
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cx } from "./cx";
 import { Icon } from "./icon";
@@ -25,7 +28,10 @@ function Shell({ id, label, hint, error, optional, children }: FieldShell & { id
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-ink">
         {label}
-        {optional ? <span className="font-normal text-ink-subtle"> (optional)</span> : null}
+        {optional ? <span className="font-normal text-ink-subtle">
+            {" "}
+            <T m={msg(common, (m) => m.ui.optional)} />
+          </span> : null}
       </label>
       {children}
       {error ? (
