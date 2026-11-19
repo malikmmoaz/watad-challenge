@@ -5,6 +5,8 @@
 import type { DemoState } from "@/data";
 import { sar } from "@/domain/money";
 import type { Offer, OfferId, OrgId, PaymentTerms, PoStatus, PurchaseOrder, Rfq, Role, StockStatus } from "@/domain/types";
+import { fill } from "@/i18n/core";
+import { supplier as supplierDict } from "@/i18n/supplier";
 import { advancePurchaseOrder } from "./po";
 import { MAX_DELIVERY_FEE_SAR, MAX_UNIT_PRICE_SAR, WHOLE_UNITS } from "./rfq-draft";
 
@@ -34,39 +36,45 @@ export type OfferErrors = Record<string, string>;
 
 const ok = (n: number) => Number.isFinite(n);
 
+/**
+ * The English messages come from the supplier dictionary, the same strings the form shows: the UI
+ * finds the Arabic by matching this English (useProcurementI18n().logic), so the two cannot drift.
+ */
+const E = supplierDict.en.errors;
+
 export function validateOfferDraft(rfq: Rfq, draft: OfferDraft): OfferErrors {
   const e: OfferErrors = {};
   const quoted = draft.lines.filter((l) => ok(l.unitPriceSar) && l.unitPriceSar > 0);
-  if (quoted.length === 0) e.lines = "Enter a unit price for at least one line.";
+  if (quoted.length === 0) e.lines = E.linesNone;
   for (const l of draft.lines) {
     const line = rfq.lines.find((x) => x.id === l.rfqLineId);
     if (!line) {
-      e[`line:${l.rfqLineId}:price`] = "This line is not in the request.";
+      e[`line:${l.rfqLineId}:price`] = E.notInRequest;
       continue;
     }
     // An empty price (NaN from the number input) means "not quoting this line", as the form says.
-    if (l.unitPriceSar < 0 || l.unitPriceSar === Infinity) e[`line:${l.rfqLineId}:price`] = "Enter a price of 0 or more.";
-    else if (l.unitPriceSar > MAX_UNIT_PRICE_SAR) e[`line:${l.rfqLineId}:price`] = "A unit price is at most SAR 1,000,000.";
+    if (l.unitPriceSar < 0 || l.unitPriceSar === Infinity) e[`line:${l.rfqLineId}:price`] = E.price;
+    else if (l.unitPriceSar > MAX_UNIT_PRICE_SAR) e[`line:${l.rfqLineId}:price`] = E.priceTooHigh;
     if (l.unitPriceSar > 0) {
-      if (!ok(l.quantityAvailable) || l.quantityAvailable <= 0) e[`line:${l.rfqLineId}:qty`] = "Enter the quantity you can supply.";
-      else if (l.quantityAvailable > line.quantity) e[`line:${l.rfqLineId}:qty`] = `At most the ${line.quantity} requested.`;
-      else if (WHOLE_UNITS.has(line.unit) && !Number.isInteger(l.quantityAvailable)) e[`line:${l.rfqLineId}:qty`] = "Bags, pieces and rolls are supplied in whole numbers.";
-      if (l.brand.trim() === "") e[`line:${l.rfqLineId}:brand`] = "Name the brand you will supply.";
-      if (l.isAlternative && l.alternativeNote.trim() === "") e[`line:${l.rfqLineId}:alt`] = "Say how the alternative differs from the spec.";
+      if (!ok(l.quantityAvailable) || l.quantityAvailable <= 0) e[`line:${l.rfqLineId}:qty`] = E.quantity;
+      else if (l.quantityAvailable > line.quantity) e[`line:${l.rfqLineId}:qty`] = fill(E.atMost, { qty: line.quantity });
+      else if (WHOLE_UNITS.has(line.unit) && !Number.isInteger(l.quantityAvailable)) e[`line:${l.rfqLineId}:qty`] = E.qtyWhole;
+      if (l.brand.trim() === "") e[`line:${l.rfqLineId}:brand`] = E.brand;
+      if (l.isAlternative && l.alternativeNote.trim() === "") e[`line:${l.rfqLineId}:alt`] = E.alternative;
     }
   }
-  if (!ok(draft.deliveryFeeSar) || draft.deliveryFeeSar < 0) e.deliveryFee = "Enter a delivery fee of 0 or more.";
-  else if (draft.deliveryFeeSar > MAX_DELIVERY_FEE_SAR) e.deliveryFee = "A delivery fee is at most SAR 1,000,000.";
-  if (!ok(draft.leadTimeDays) || !Number.isInteger(draft.leadTimeDays) || draft.leadTimeDays < 1 || draft.leadTimeDays > 120) e.leadTime = "Lead time is 1 to 120 whole days.";
-  if (!ok(draft.validDays) || !Number.isInteger(draft.validDays) || draft.validDays < 1 || draft.validDays > 60) e.validDays = "Valid for 1 to 60 days.";
+  if (!ok(draft.deliveryFeeSar) || draft.deliveryFeeSar < 0) e.deliveryFee = E.deliveryFee;
+  else if (draft.deliveryFeeSar > MAX_DELIVERY_FEE_SAR) e.deliveryFee = E.feeTooHigh;
+  if (!ok(draft.leadTimeDays) || !Number.isInteger(draft.leadTimeDays) || draft.leadTimeDays < 1 || draft.leadTimeDays > 120) e.leadTime = E.leadTime;
+  if (!ok(draft.validDays) || !Number.isInteger(draft.validDays) || draft.validDays < 1 || draft.validDays > 60) e.validDays = E.validDays;
   return e;
 }
 
 /** Where the request stands for this supplier. */
 export function canOffer(rfq: Rfq, supplierId: OrgId): { ok: true } | { ok: false; reason: string } {
-  if (!rfq.invitedSupplierIds.includes(supplierId)) return { ok: false, reason: "You were not invited to this request." };
-  if (rfq.status === "awarded") return { ok: false, reason: "The contractor has already awarded this request." };
-  if (rfq.status !== "sent" && rfq.status !== "offers_received") return { ok: false, reason: "This request is not open for offers." };
+  if (!rfq.invitedSupplierIds.includes(supplierId)) return { ok: false, reason: E.notInvited };
+  if (rfq.status === "awarded") return { ok: false, reason: E.alreadyAwarded };
+  if (rfq.status !== "sent" && rfq.status !== "offers_received") return { ok: false, reason: E.notOpen };
   return { ok: true };
 }
 
@@ -79,7 +87,7 @@ export type SubmitResult = { ok: true; state: DemoState; offer: Offer } | { ok: 
  */
 export function submitOffer(state: DemoState, rfqId: string, supplierId: OrgId, draft: OfferDraft, now: string): SubmitResult {
   const rfq = state.rfqs.find((r) => r.id === rfqId);
-  if (!rfq) return { ok: false, errors: { form: "Request not found." } };
+  if (!rfq) return { ok: false, errors: { form: E.requestNotFound } };
   const allowed = canOffer(rfq, supplierId);
   if (!allowed.ok) return { ok: false, errors: { form: allowed.reason } };
   const errors = validateOfferDraft(rfq, draft);
