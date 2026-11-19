@@ -22,7 +22,7 @@ export function SiteHeader({ current }: { current?: (typeof LINKS)[number]["href
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5 sm:px-8">
         <Link href="/" className="flex items-center gap-2 rounded-md text-base font-semibold tracking-[-0.01em] text-ink">
           <span aria-hidden="true" className="grid size-7 place-items-center rounded-lg bg-pine-deep text-on-pine shadow-button">
-            <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45" />
+            <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45 rtl:rotate-45" />
           </span>
           {m.product}
         </Link>

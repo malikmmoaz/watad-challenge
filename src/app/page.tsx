@@ -119,7 +119,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
           <Link href="/" className="flex items-center gap-2 text-base font-semibold tracking-[-0.01em] text-ink">
             <span aria-hidden="true" className="grid size-7 place-items-center rounded-lg bg-pine-deep text-on-pine shadow-button">
-              <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45" />
+              <Icon name="arrow-right" size={14} strokeWidth={2} className="-rotate-45 rtl:rotate-45" />
             </span>
             Watad challenge demo
           </Link>

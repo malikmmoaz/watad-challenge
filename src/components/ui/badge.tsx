@@ -1,3 +1,6 @@
+import { T } from "@/components/i18n/t";
+import { common } from "@/i18n/common";
+import { msg } from "@/i18n/core";
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./icon";
@@ -40,8 +43,13 @@ export function Badge({ tone = "neutral", icon, children, className }: { tone?: 
 export function AiLabel({ agent, confidence, className }: { agent?: string; confidence?: number; className?: string }) {
   return (
     <span className={cx("inline-flex min-h-6 max-w-full flex-wrap items-center gap-x-1.5 rounded-sm border border-dashed border-ai-line bg-ai-soft px-2 py-0.5 text-xs font-medium text-ai", className)}>
-      Simulated AI{agent ? ` · ${agent}` : ""}
-      {confidence === undefined ? null : <span className="font-normal">{Math.round(confidence * 100)}% confident</span>}
+      <T m={msg(common, (m) => m.ui.simulatedAi)} />
+      {agent ? ` · ${agent}` : ""}
+      {confidence === undefined ? null : (
+        <span className="font-normal">
+          <T m={msg(common, (m) => m.ui.confident)} values={{ n: Math.round(confidence * 100) }} />
+        </span>
+      )}
     </span>
   );
 }
@@ -50,7 +58,7 @@ export function AiLabel({ agent, confidence, className }: { agent?: string; conf
 export function SampleDataLabel({ className }: { className?: string }) {
   return (
     <span className={cx("inline-flex h-6 items-center whitespace-nowrap rounded-sm border border-dashed border-line-strong px-2 text-xs font-medium text-ink-muted", className)}>
-      Sample data
+      <T m={msg(common, (m) => m.ui.sampleDataShort)} />
     </span>
   );
 }

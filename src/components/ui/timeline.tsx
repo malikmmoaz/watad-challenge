@@ -1,3 +1,6 @@
+import { T } from "@/components/i18n/t";
+import { common } from "@/i18n/common";
+import { msg } from "@/i18n/core";
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon } from "./icon";
@@ -40,7 +43,7 @@ export function StatusTimeline({ steps, label }: { steps: TimelineStep[]; label:
               <p className={cx("text-sm", s.state === "upcoming" || s.state === "skipped" ? "text-ink-subtle" : "font-medium text-ink")}>
                 {s.label}
                 <span className="sr-only">
-                  {s.state === "done" ? " (done)" : s.state === "current" ? " (current)" : s.state === "problem" ? " (problem)" : s.state === "skipped" ? " (not needed)" : " (not yet)"}
+                  <T m={msg(common, (m) => m.ui.step[s.state])} />
                 </span>
               </p>
               {s.at || s.actor ? (
@@ -66,9 +69,9 @@ export function LeadTimeBar({ days, maxDays, requiredInDays }: { days: number; m
     <div className="min-w-28">
       <div className="flex items-baseline justify-between gap-2 text-sm">
         <span className="tabular-nums text-ink">
-          {days} {days === 1 ? "day" : "days"}
+          <T m={days === 1 ? msg(common, (m) => m.ui.dayOne) : days === 2 ? msg(common, (m) => m.ui.dayTwo) : days <= 10 ? msg(common, (m) => m.ui.dayFew) : msg(common, (m) => m.ui.dayMany)} values={{ n: days }} />
         </span>
-        {requiredInDays === undefined ? null : <span className={cx("text-xs", late ? "text-negative" : "text-ink-muted")}>{late ? `${days - requiredInDays} late` : "in time"}</span>}
+        {requiredInDays === undefined ? null : <span className={cx("text-xs", late ? "text-negative" : "text-ink-muted")}>{late ? <T m={msg(common, (m) => m.ui.late)} values={{ n: days - requiredInDays }} /> : <T m={msg(common, (m) => m.ui.inTime)} />}</span>}
       </div>
       <div className="relative mt-1.5 h-1.5 rounded-full bg-neutral-soft" aria-hidden="true">
         <span className={cx("absolute inset-y-0 start-0 rounded-full", late ? "bg-negative" : "bg-ink-muted")} style={{ width: pct(days) }} />
