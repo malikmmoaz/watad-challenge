@@ -14,4 +14,8 @@ describe("Arabic credit messages", () => {
   it("never put a full stop straight after an amount", () => {
     expect(strings(credit.ar).filter(([, s]) => MONEY.test(s)).map(([p]) => p)).toEqual([]);
   });
+
+  it("use the Arabic percent sign", () => {
+    expect(strings(credit.ar).filter(([, s]) => s.includes("%")).map(([p]) => p)).toEqual([]);
+  });
 });

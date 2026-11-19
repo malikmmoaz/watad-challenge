@@ -106,6 +106,7 @@ function ImpactLine({ impact, weight, points }: { impact?: FactorImpact; weight:
 function TopFactors({ factors }: { factors: { id: string; points: number; weight: number }[] }) {
   const all = useMessages(credit);
   const m = all.caseFile;
+  const f = useFormat();
   const ranked = [...factors].filter((x) => x.weight > 0).sort((a, b) => b.points / b.weight - a.points / a.weight);
   const strongest = ranked.slice(0, 3);
   const weakest = ranked.slice(-2).reverse();
@@ -117,9 +118,7 @@ function TopFactors({ factors }: { factors: { id: string; points: number; weight
     <li key={x.id}>
       <a href={`#factor-${x.id}`} onClick={() => open(x.id)} className="flex items-baseline justify-between gap-3 rounded-md px-2 py-1 text-sm hover:bg-paper">
         <span className="text-ink underline decoration-line-strong underline-offset-[3px]">{all.factors[factorKey(x.id)].label}</span>
-        <span className={`shrink-0 tabular-nums ${tone}`}>
-          {Math.round((x.points / x.weight) * 100)}%
-        </span>
+        <span className={`shrink-0 tabular-nums ${tone}`}>{f.percent(x.points / x.weight)}</span>
       </a>
     </li>
   );
@@ -133,6 +132,7 @@ function TopFactors({ factors }: { factors: { id: string; points: number; weight
         <h3 className="px-2 text-xs font-semibold text-ink-muted">{m.weakest}</h3>
         <ul className="mt-1" data-testid="credit-top-weakest">{weakest.map((x) => chip(x, "text-caution"))}</ul>
       </div>
+      <p className="px-2 text-xs text-ink-muted sm:col-span-2">{m.topFactorsNote}</p>
     </section>
   );
 }
@@ -323,7 +323,7 @@ export function CaseFile({ id }: { id: string }) {
                           <span className="min-w-0 flex-1">
                             <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={seedText(fa.rationale, credit.en as never, all)} />
                           </span>
-                          <Icon name="chevron-right" className="mt-0.5 size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" />
+                          <Icon name="chevron-down" className="mt-0.5 size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
                           <span className="sr-only">{m.factorDetail}</span>
                         </summary>
                         <div className="mt-2 space-y-1.5 border-s-2 border-line ps-3">
@@ -353,7 +353,7 @@ export function CaseFile({ id }: { id: string }) {
                   <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm [&::-webkit-details-marker]:hidden">
                     <span className="flex min-w-0 items-center gap-1.5">
-                      <Icon name="chevron-right" className="size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" />
+                      <Icon name="chevron-down" className="size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
                       <span className="font-medium text-ink" dir={d.fileName ? "ltr" : undefined}>{d.fileName || all.documents[d.type].label}</span>
                     </span>
                     <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{all.documentStatus[d.status]}</Badge>
@@ -397,12 +397,12 @@ export function CaseFile({ id }: { id: string }) {
             <Panel title={m.policyTitle}>
               <ul className="space-y-2 text-sm">
                 {card.policyChecks.map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                  <li key={p.id} className="flex items-start justify-between gap-x-3 gap-y-1">
                     <span>
                       <span className="font-medium text-ink">{seedText(p.rule, credit.en as never, all)}</span>
                       <span className="block text-ink-muted">{seedText(p.observed, credit.en as never, all)}</span>
                     </span>
-                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
+                    <Badge tone={POLICY[p.result]} className="shrink-0">{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
                   </li>
                 ))}
               </ul>
