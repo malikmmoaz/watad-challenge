@@ -6,18 +6,11 @@ import { PAGES } from "./pages";
 
 const WIDTHS = [320, 390];
 
-/** Known gaps: remove a line in the PR that fixes it. */
-const KNOWN: Record<string, string> = Object.fromEntries(
-  ["/contractor", "/contractor/rfq/new", "/contractor/rfq/rfq_1042", "/contractor/credit", "/contractor/credit/apply", "/supplier", "/supplier/rfq/rfq_1044", "/credit", "/credit/cases/cc_502"].map(
-    (path) => [path, "#120: role app bar is 20-24 px too wide at 320 px in Arabic"],
-  ),
-);
 
 for (const p of PAGES) {
   test(`rtl: ${p.name} fits ${WIDTHS.join(" and ")} px without sideways scroll`, async ({ page, appLocale }, info) => {
     test.skip(appLocale !== "ar", "Arabic projects only");
     test.skip(info.project.name !== "desktop-ar", "widths are set here; one project is enough");
-    test.fixme(p.path in KNOWN, KNOWN[p.path]);
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto(p.path);

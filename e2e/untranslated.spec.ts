@@ -1,4 +1,5 @@
 import { reference, seedState } from "@/data";
+import { SAMPLE_CASES } from "@/domain/credit/samples";
 import { test, expect, ready } from "./fixtures";
 import { PAGES } from "./pages";
 
@@ -7,18 +8,10 @@ import { PAGES } from "./pages";
 
 /** Pages still being translated: remove a line in the PR that converts that area. */
 const NOT_YET_TRANSLATED: Record<string, string> = {
-  // Checked on main 2a21184 (19 Nov, 01:20 UTC). The reviewer guide panel (src/content/tour.ts,
-  // incl. "Restart tour") is still English on every role page: Layla.
-  "/": "landing (header, hero, roles, bento): Layla",
-  "/contractor": "contractor home KPIs and copy + reviewer guide: Layla",
-  "/contractor/rfq/new": "reviewer guide only: Layla",
-  "/contractor/rfq/rfq_1042": "reviewer guide only: Layla",
-  "/contractor/credit": "credit pages: Hana (#123) + reviewer guide",
-  "/contractor/credit/apply": "credit pages: Hana (#123) + reviewer guide",
-  "/credit": "credit pages: Hana (#123) + reviewer guide",
-  "/credit/cases/cc_502": "credit pages: Hana (#123), seed free text + reviewer guide",
-  "/supplier": "supplier home KPIs and copy + reviewer guide: Layla",
-  "/supplier/rfq/rfq_1044": "reviewer guide only: Layla",
+  // Checked on main 47e12d2 (19 Nov, 01:35 UTC), every page run without skips.
+  "/contractor": "contractor home KPIs and copy: Omar (homes, in progress)",
+  "/supplier": "supplier home KPIs and copy: Omar (homes, in progress)",
+  "/credit/cases/cc_502": "seed free text in the sample case findings: Hana (in progress)",
 };
 
 /** Names from the sample data: companies, brands, projects, sites, specs, files. Allowed as they are. */
@@ -33,6 +26,7 @@ function sampleDataNames(): Set<string> {
   };
   walk(reference);
   walk(seedState);
+  walk(SAMPLE_CASES); // the credit engine's sample applicants
   return words;
 }
 
@@ -51,9 +45,11 @@ const allowed = (token: string, names: Set<string>) =>
   /[\d_]/.test(token) || // ids and figures: rfq_1042, po_3011, INV-mwm..., A615, 12mm
   /^[A-Z]{2,6}s?$/.test(token) || // codes: VAT, ZATCA, SIMAH, GOSI, RFQ, BOQ, APR, SAR, PO, CR
   /\.(pdf|csv|xlsx?|txt)$/i.test(token) ||
+  /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(token) || // hostnames, e.g. the demo's own address
   UNITS.has(token.toLowerCase()) ||
   PROPER.has(token.toLowerCase()) ||
-  names.has(token.toLowerCase());
+  names.has(token.toLowerCase()) ||
+  (token.includes("-") && token.split("-").every((part) => names.has(part.toLowerCase()))); // Al-Hijaz
 
 for (const p of PAGES.concat([{ name: "404", path: "/does-not-exist" }])) {
   test(`untranslated: ${p.name} has no English words in Arabic`, async ({ page, appLocale, errors }) => {
