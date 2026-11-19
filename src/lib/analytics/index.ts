@@ -7,8 +7,8 @@ import type { Role } from "@/domain/types";
 import { reportError } from "@/lib/monitoring";
 import type { AnalyticsEvent, AnalyticsEvents } from "./events";
 
-export type { AnalyticsEvent, AnalyticsEvents, TermsKey } from "./events";
-export { termsKey } from "./events";
+export type { AnalyticsEvent, AnalyticsEvents, TermsKey, UnreadBucket, WhatIfLever } from "./events";
+export { termsKey, unreadBucket } from "./events";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";

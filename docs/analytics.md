@@ -28,6 +28,9 @@ Events and their properties are typed in `src/lib/analytics/events.ts`. Add a ne
 | Credit review depth | `credit_memo_viewed` and `credit_evidence_opened` per `credit_case_opened`; `credit_decision_made` split by `overrode_ai` |
 | Credit at PO | `po_placed` split by `payment_method` and `within_credit_cap` → `draw_repaid` split by `repaid_before_due` |
 | Reviewer journey | `role_selected` by `role` and `source` |
+| Cross-role story | `role_selected` (`source` = `switcher`) → `activity_feed_opened` by `role` and `unread` → `activity_item_opened` by `kind` |
+| Saudi paperwork | `po_status_changed` (`status` = `invoiced`) → `invoice_viewed` by `viewer` and `locale` → `po_printed` by `document` and `locale` |
+| Credit what-if | `credit_case_opened` → `credit_whatif_changed` by `lever` → `credit_decision_made` (does exploring change the outcome or `overrode_ai`?) |
 
 ## Status
 
@@ -47,6 +50,19 @@ Credit events (wired in #14 follow-up): when each fires, once per action.
 | `draw_repaid` | the contractor repays a credit draw | `po_id`, `repaid_before_due`, `tenor_days` |
 
 No amounts, names or free text: `e2e/analytics.spec.ts` asserts each event fires once with exactly these keys, and that none carries a company name, "SAR" or the manager's notes.
+
+Activity feed, invoice and printing (19 Nov): when each fires.
+
+| Event | Fires when | Properties |
+|---|---|---|
+| `activity_feed_opened` | the bell's panel opens (not on close) | `role`, `unread` (bucket `0` / `1` / `2-5` / `6+`, never the exact count) |
+| `activity_item_opened` | an item in the panel is followed | `role`, `kind` (ActivityKind, e.g. `offerReceived`), `was_unread` |
+| `invoice_viewed` | a tax invoice is on screen, once per invoice per visit (switching language is not a second view) | `po_id`, `viewer`, `locale` |
+| `po_printed` | Print / Save as PDF is pressed on a PO or a tax invoice | `po_id`, `document` (`po` / `invoice`), `locale` |
+| `credit_whatif_changed` | the credit manager commits a change to a what-if lever (on release, not per slider step) | `case_id`, `lever` (`vat_reconciled` / `simah_score` / `overdue_share` / `returned_cheques` / `years_trading`); never the value |
+| `credit_whatif_reset` | the what-if levers are reset to the file's values | `case_id` |
+
+The what-if events are in the catalog; Hana's what-if panel (`feat/credit-what-if`) captures them. `e2e/analytics.spec.ts` asserts the feed, invoice and print events fire once per action with exactly these keys, and that none carries a company name, "SAR", "ر.س", an invoice number or a VAT number.
 
 Wired so far: `role_selected` (landing cards and header switcher) and `demo_reset`. The other events are captured by the feature PRs that own those screens.
 

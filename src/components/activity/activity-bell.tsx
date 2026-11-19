@@ -14,6 +14,7 @@ import type { IsoDate, Role } from "@/domain/types";
 import { activity } from "@/i18n/activity";
 import { useMessages } from "@/i18n/locale";
 import { activityFor, defaultSeenAt, unreadCount, type ActivityItem } from "@/lib/activity/feed";
+import { track, unreadBucket } from "@/lib/analytics";
 import { useProcurementI18n } from "@/components/procurement/use-procurement-i18n";
 import { useDemo } from "@/store";
 import { Icon } from "../ui";
@@ -131,7 +132,10 @@ export function ActivityBell({ role }: { role: Role }) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={unread ? i.fill(a.bellUnread, { n: unread }) : a.bell}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (!open) track("activity_feed_opened", { role, unread: unreadBucket(unread) });
+          setOpen(!open);
+        }}
         className="relative grid size-8 place-items-center rounded-full border border-line-control bg-surface text-ink shadow-card transition-colors duration-150 hover:bg-paper"
       >
         <Icon name="bell" />
@@ -184,7 +188,10 @@ export function ActivityBell({ role }: { role: Role }) {
                       href={item.href}
                       data-testid="activity-item"
                       data-unread={isNew ? "true" : undefined}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        track("activity_item_opened", { role, kind: item.kind, was_unread: isNew });
+                        setOpen(false);
+                      }}
                       className="flex gap-3 px-4 py-2.5 text-sm leading-5 transition-colors duration-150 hover:bg-paper focus-visible:bg-paper"
                     >
                       <span aria-hidden="true" className={`mt-1.5 size-2 shrink-0 rounded-full ${isNew ? "bg-stamp" : "bg-transparent"}`} />

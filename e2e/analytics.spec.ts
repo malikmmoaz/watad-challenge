@@ -200,3 +200,42 @@ test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> a
   const text = JSON.stringify((await events(page)).filter((e) => e.event.startsWith("credit_") || e.event === "draw_repaid"));
   for (const forbidden of ["Najd", "Narjis", "SAR", "second account", "Reem"]) expect(text, `no "${forbidden}" in credit analytics`).not.toContain(forbidden);
 });
+
+test("activity feed, tax invoice and printing: one event per action, enums and ids only", async ({ page }) => {
+  // window.print() opens a dialog; the test only needs to know it was asked for.
+  await page.addInitScript(() => {
+    window.print = () => sessionStorage.setItem("__printed", String(Number(sessionStorage.getItem("__printed") ?? "0") + 1));
+  });
+  await enterAs(page, "contractor");
+
+  await tid(page, "activity-bell").click();
+  const opened = await once(page, "activity_feed_opened", ["role", "unread"]);
+  expect(opened.role).toBe("contractor");
+  expect(["0", "1", "2-5", "6+"]).toContain(opened.unread);
+  await tid(page, "activity-item").first().click();
+  const item = await once(page, "activity_item_opened", ["role", "kind", "was_unread"]);
+  expect(item.role).toBe("contractor");
+  expect(typeof item.kind).toBe("string");
+  expect(typeof item.was_unread).toBe("boolean");
+
+  await page.goto("/contractor/po/po_3007");
+  await tid(page, "po-print").click();
+  expect(await once(page, "po_printed", ["po_id", "document", "locale"])).toEqual({ po_id: "po_3007", document: "po", locale: "en" });
+
+  await tid(page, "po-invoice-link").click();
+  await expect(tid(page, "invoice-qr")).toBeVisible();
+  expect(await once(page, "invoice_viewed", ["po_id", "viewer", "locale"])).toEqual({ po_id: "po_3007", viewer: "contractor", locale: "en" });
+  // Switching language is not a second view; printing in Arabic carries the reader's locale.
+  await tid(page, "locale-toggle").click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await tid(page, "invoice-print").click();
+  expect(await only(page, "invoice_viewed")).toHaveLength(1);
+  expect((await only(page, "po_printed")).map((e) => e.properties)).toEqual([
+    { po_id: "po_3007", document: "po", locale: "en" },
+    { po_id: "po_3007", document: "invoice", locale: "ar" },
+  ]);
+  expect(await page.evaluate(() => sessionStorage.getItem("__printed"))).toBe("2");
+
+  const text = JSON.stringify(await events(page));
+  for (const forbidden of ["Rawasi", "Najd", "Sahra", "SAR", "ر.س", "INV-", "300000"]) expect(text, `no "${forbidden}" in analytics`).not.toContain(forbidden);
+});

@@ -15,6 +15,8 @@ import type {
   PoStatus,
   Role,
 } from "@/domain/types";
+import type { Locale } from "@/i18n/core";
+import type { ActivityKind } from "@/lib/activity/feed";
 
 /** Payment terms as one flat value for breakdowns, e.g. "platform_credit_60" or "on_delivery". */
 export type TermsKey = PaymentTerms extends infer T
@@ -24,6 +26,13 @@ export type TermsKey = PaymentTerms extends infer T
       ? K
       : never
   : never;
+
+/** Unread count as a coarse bucket, so the feed's state is visible without exact counts. */
+export type UnreadBucket = "0" | "1" | "2-5" | "6+";
+export const unreadBucket = (n: number): UnreadBucket => (n <= 0 ? "0" : n === 1 ? "1" : n <= 5 ? "2-5" : "6+");
+
+/** The credit manager's what-if levers (src/domain/credit/what-if.ts), by name only: never the value. */
+export type WhatIfLever = "vat_reconciled" | "simah_score" | "overdue_share" | "returned_cheques" | "years_trading";
 
 /** Build a `TermsKey` from domain payment terms. */
 export const termsKey = (t: PaymentTerms): TermsKey => ("days" in t ? `${t.kind}_${t.days}` : t.kind) as TermsKey;
@@ -62,6 +71,18 @@ export interface AnalyticsEvents {
 
   // Explainer pages
   about_viewed: { page: string };
+
+  // Activity feed (bell in the app bar): opened, and which kind of update was followed.
+  activity_feed_opened: { role: Role; unread: UnreadBucket };
+  activity_item_opened: { role: Role; kind: ActivityKind; was_unread: boolean };
+
+  // Printable PO and the sample tax invoice (ZATCA Phase 1 QR). Locale = the reader's language.
+  invoice_viewed: { po_id: string; viewer: "contractor" | "supplier"; locale: Locale };
+  po_printed: { po_id: string; document: "po" | "invoice"; locale: Locale };
+
+  // Credit what-if on the scorecard: which lever moved, never to what (fire on commit, not per pixel).
+  credit_whatif_changed: { case_id: string; lever: WhatIfLever };
+  credit_whatif_reset: { case_id: string };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

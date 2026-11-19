@@ -149,7 +149,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
               {inv.viewInvoice}
             </Link>
           ) : null}
-          <PrintButton testId="po-print" />
+          <PrintButton poId={po.id} document="po" testId="po-print" />
           </span>
         }
       />

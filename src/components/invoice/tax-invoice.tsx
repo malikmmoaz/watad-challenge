@@ -5,10 +5,12 @@
  * reader's language and ready to print on A4. A sample: fictional VAT numbers, never sent to ZATCA.
  */
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { reference } from "@/data";
 import type { Halalas } from "@/domain/types";
 import { invoice } from "@/i18n/invoice";
-import { useMessages } from "@/i18n/locale";
+import { useLocale, useMessages } from "@/i18n/locale";
+import { track } from "@/lib/analytics";
 import { zatcaQrPayload } from "@/lib/invoice/zatca-qr";
 import { useDemo } from "@/store";
 import { useProcurementI18n } from "../procurement/use-procurement-i18n";
@@ -23,6 +25,15 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
   const po = pos.find((p) => p.id === poId);
+  const locale = useLocale();
+  const issuedAt = po?.timeline.find((e) => e.status === "invoiced")?.at;
+  // Once per invoice per visit (switching language does not count as a second view).
+  const viewed = useRef<string | null>(null);
+  useEffect(() => {
+    if (!issuedAt || viewed.current === poId) return;
+    viewed.current = poId;
+    track("invoice_viewed", { po_id: poId, viewer, locale });
+  }, [issuedAt, poId, viewer, locale]);
   const eyebrow = viewer === "supplier" ? m.eyebrowSupplier : m.eyebrowContractor;
   const back = (
     <Link href={`/${viewer}/po/${poId}`} data-testid="invoice-back" className={buttonClass("quiet", "sm", "print:hidden")}>
@@ -109,7 +120,7 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
         actions={
           <span className="flex flex-wrap items-center gap-2">
             {back}
-            <PrintButton testId="invoice-print" />
+            <PrintButton poId={po.id} document="invoice" testId="invoice-print" />
           </span>
         }
       />

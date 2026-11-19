@@ -22,3 +22,10 @@ describe("termsKey", () => {
     expect(termsKey({ kind: "on_delivery" })).toBe("on_delivery");
   });
 });
+
+describe("unreadBucket", () => {
+  it("buckets the unread count instead of sending it exactly", async () => {
+    const { unreadBucket } = await import("./events");
+    expect([0, 1, 2, 5, 6, 40].map(unreadBucket)).toEqual(["0", "1", "2-5", "2-5", "6+", "6+"]);
+  });
+});
