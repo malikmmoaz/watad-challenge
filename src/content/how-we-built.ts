@@ -81,6 +81,7 @@ export const howWeBuilt: DocPage = {
             { label: "Incidents", href: `${REPO}/blob/main/docs/incidents.md`, note: "What broke while building, how we handled it, and what changed after." },
             { label: "Changelog", href: `${REPO}/blob/main/CHANGELOG.md`, note: "What changed, in order." },
             { label: "Live status", href: "https://watad-challenge-demo.betteruptime.com", note: "Uptime of this demo, checked every 3 minutes by Better Stack." },
+            { label: "Live analytics", href: "https://eu.posthog.com/shared/_TVLZSISE6RiSWDUmfTJWdm8ST-Fjw", note: "Public PostHog dashboard: procurement and credit funnels, roles explored." },
           ],
         },
       ],

@@ -81,6 +81,7 @@ export const howWeBuiltAr: DocPage = {
             { label: "الحوادث", href: `${REPO}/blob/main/docs/incidents.md`, note: "ما الذي تعطّل أثناء البناء، وكيف عالجناه، وما الذي تغيّر بعده." },
             { label: "سجل التغييرات", href: `${REPO}/blob/main/CHANGELOG.md`, note: "ما الذي تغيّر، بالترتيب." },
             { label: "الحالة المباشرة", href: "https://watad-challenge-demo.betteruptime.com", note: "توفّر هذا العرض، يُفحص كل 3 دقائق عبر Better Stack." },
+            { label: "التحليلات المباشرة", href: "https://eu.posthog.com/shared/_TVLZSISE6RiSWDUmfTJWdm8ST-Fjw", note: "لوحة PostHog العامة: مسارات المشتريات والائتمان، والأدوار التي جرى استكشافها." },
           ],
         },
       ],
