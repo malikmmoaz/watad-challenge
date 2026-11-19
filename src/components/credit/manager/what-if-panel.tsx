@@ -187,7 +187,7 @@ function Slider({ id, label, value, display, range, format, onChange, onCommit }
         max={range.max}
         step={range.step}
         value={value}
-        onChange={(e) => onChange(e.target.valueAsNumber)}
+        onChange={(e) => onChange(Number(e.target.value))}
         onPointerDown={begin}
         onKeyDown={(e) => !e.repeat && begin()}
         onPointerUp={commit}
