@@ -10,6 +10,7 @@ import { canOffer, submitOffer, withdrawOffer, type OfferDraft, type OfferErrors
 import { termsKey, track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 import { useProcurementI18n } from "./use-procurement-i18n";
+import { numberFromInput } from "@/lib/number-input";
 
 const STOCK: StockStatus[] = ["in_stock", "partial", "made_to_order"];
 
@@ -295,7 +296,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
                     data-testid="offer-line-price"
                     placeholder={m ? (m.benchmarkUnitPrice / 100).toFixed(2) : undefined}
                     value={Number.isNaN(l.unitPriceSar) ? "" : l.unitPriceSar}
-                    onChange={(e) => setLine(i, { unitPriceSar: e.target.valueAsNumber })}
+                    onChange={(e) => setLine(i, { unitPriceSar: numberFromInput(e.target.value) })}
                     {...err(key("price"))}
                   />
                   <Input
@@ -304,7 +305,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
                     min={0}
                     step="any"
                     value={Number.isNaN(l.quantityAvailable) ? "" : l.quantityAvailable}
-                    onChange={(e) => setLine(i, { quantityAvailable: e.target.valueAsNumber })}
+                    onChange={(e) => setLine(i, { quantityAvailable: numberFromInput(e.target.value) })}
                     {...err(key("qty"))}
                   />
                   <Select label={s.form.availability} value={l.stock} onChange={(e) => setLine(i, { stock: e.target.value as StockStatus })}>
@@ -330,14 +331,14 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
         </ul>
 
         <div className="grid gap-3 sm:grid-cols-4">
-          <Input label={s.form.deliveryFee} type="number" min={0} step="0.01" data-testid="offer-delivery" value={Number.isNaN(draft.deliveryFeeSar) ? "" : draft.deliveryFeeSar} onChange={(e) => setDraft((d) => ({ ...d, deliveryFeeSar: e.target.valueAsNumber }))} {...err(errors.deliveryFee)} />
-          <Input label={s.form.leadTime} type="number" min={1} step={1} data-testid="offer-lead-time" value={Number.isNaN(draft.leadTimeDays) ? "" : draft.leadTimeDays} onChange={(e) => setDraft((d) => ({ ...d, leadTimeDays: e.target.valueAsNumber }))} {...err(errors.leadTime)} />
+          <Input label={s.form.deliveryFee} type="number" min={0} step="0.01" data-testid="offer-delivery" value={Number.isNaN(draft.deliveryFeeSar) ? "" : draft.deliveryFeeSar} onChange={(e) => setDraft((d) => ({ ...d, deliveryFeeSar: numberFromInput(e.target.value) }))} {...err(errors.deliveryFee)} />
+          <Input label={s.form.leadTime} type="number" min={1} step={1} data-testid="offer-lead-time" value={Number.isNaN(draft.leadTimeDays) ? "" : draft.leadTimeDays} onChange={(e) => setDraft((d) => ({ ...d, leadTimeDays: numberFromInput(e.target.value) }))} {...err(errors.leadTime)} />
           <Select label={s.form.paymentTerms} data-testid="offer-terms" value={termsKey(draft.paymentTerms)} onChange={(e) => setDraft((d) => ({ ...d, paymentTerms: terms.find((t) => termsKey(t) === e.target.value) ?? d.paymentTerms }))}>
             {terms.map((t) => (
               <option key={termsKey(t)} value={termsKey(t)}>{termsLabel(t)}</option>
             ))}
           </Select>
-          <Input label={s.form.validDays} type="number" min={1} max={60} value={Number.isNaN(draft.validDays) ? "" : draft.validDays} onChange={(e) => setDraft((d) => ({ ...d, validDays: e.target.valueAsNumber }))} {...err(errors.validDays)} />
+          <Input label={s.form.validDays} type="number" min={1} max={60} value={Number.isNaN(draft.validDays) ? "" : draft.validDays} onChange={(e) => setDraft((d) => ({ ...d, validDays: numberFromInput(e.target.value) }))} {...err(errors.validDays)} />
         </div>
         <Checkbox label={s.form.madeInSaudi} hint={s.form.madeInSaudiHint} checked={draft.localContent} onChange={(e) => setDraft((d) => ({ ...d, localContent: e.target.checked }))} />
         <Textarea label={s.form.notes} optional value={draft.notes} onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))} rows={2} />
