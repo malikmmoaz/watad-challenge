@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { test, expect, tid, enterAs } from "./fixtures";
+import { test, expect, tid, enterAs, typeNumber } from "./fixtures";
 
 // Proves the PostHog funnels (#5): every catalogued procurement event fires exactly once per
 // user action, with the typed properties in src/lib/analytics/events.ts, and carries only ids,
@@ -61,7 +61,7 @@ test("procurement funnel: RFQ -> shortlist -> sent", async ({ page }) => {
 test("procurement funnel: offer -> compared -> awarded -> PO with credit -> every status", async ({ page }) => {
   await enterAs(page, "supplier");
   await page.goto("/supplier/rfq/rfq_1044");
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await typeNumber(tid(page, "offer-line-price").nth(0), "3380");
   await tid(page, "offer-line-price").nth(1).fill("15.4");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toBeVisible();
@@ -125,7 +125,7 @@ test("over the credit cap: po_placed says it did not fit", async ({ page }) => {
 test("analytics carry ids, counts and enums only (no names or free text)", async ({ page }) => {
   await enterAs(page, "supplier");
   await page.goto("/supplier/rfq/rfq_1044");
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await typeNumber(tid(page, "offer-line-price").nth(0), "3380");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toBeVisible();
   await page.goto("/contractor/rfq/rfq_1044");

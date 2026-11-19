@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type Locator, type Page } from "@playwright/test";
 
 export type Role = "contractor" | "supplier" | "credit";
 /** App language (ADR 0005). The Arabic projects in playwright.config.ts set "ar". */
@@ -96,6 +96,17 @@ export async function expectNoHorizontalScroll(page: Page) {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow, "page should not scroll horizontally").toBeLessThanOrEqual(1);
+}
+
+/**
+ * Type a number into a field with real keystrokes, as a user does. Playwright's fill() sets the
+ * value programmatically, which desktop WebKit does not always surface to React for number inputs.
+ */
+export async function typeNumber(field: Locator, text: string) {
+  await field.click();
+  await field.press("ControlOrMeta+a");
+  await field.press("Backspace");
+  await field.pressSequentially(text);
 }
 
 export { expect };

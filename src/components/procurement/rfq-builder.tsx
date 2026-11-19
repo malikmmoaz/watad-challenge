@@ -11,6 +11,7 @@ import { estimateRfqValue } from "@/lib/procurement/shortlist";
 import { AiLabel, Badge, Facts, PageHeader, Panel, buttonClass } from "@/components/ui";
 import { update } from "@/store";
 import { useProcurementI18n } from "./use-procurement-i18n";
+import { numberFromInput } from "@/lib/number-input";
 import { MAX_LINE_QUANTITY, WHOLE_UNITS, quantityProblem, rfqDraftProblems } from "@/lib/procurement/rfq-draft";
 
 const TERMS: { key: string; terms: PaymentTerms }[] = [
@@ -304,7 +305,7 @@ export function RfqBuilder() {
                           aria-label={fill(b.quantityFor, { item: l.description })}
                           className={`${input} w-28 tabular-nums`}
                           value={Number.isNaN(l.quantity) ? "" : l.quantity}
-                          onChange={(e) => patch(l.id, { quantity: e.target.valueAsNumber })}
+                          onChange={(e) => patch(l.id, { quantity: numberFromInput(e.target.value) })}
                         />
                         {unit(l.unit, l.quantity)}
                       </span>
