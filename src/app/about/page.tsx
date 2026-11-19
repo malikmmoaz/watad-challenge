@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { DocPage } from "@/components/docs/doc-page";
+import { LocalizedDocPage } from "@/components/docs/localized-doc-page";
 import { SiteHeader } from "@/components/site-header";
 import { about } from "@/content/about";
+import { aboutAr } from "@/content/about.ar";
 
 export const metadata: Metadata = { title: "About" };
 
@@ -9,7 +10,7 @@ export default function Page() {
   return (
     <>
       <SiteHeader current="/about" />
-      <DocPage page={about} />
+      <LocalizedDocPage en={about} ar={aboutAr} />
     </>
   );
 }

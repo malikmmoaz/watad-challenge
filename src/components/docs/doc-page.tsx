@@ -15,7 +15,7 @@ function Block({ block }: { block: DocBlock }) {
       return (
         <dl className="grid border-t border-line sm:grid-cols-2">
           {block.items.map((f, i) => (
-            <div key={`${f.label}-${i}`} className="border-b border-line py-3 sm:odd:pr-8 sm:even:pl-8 sm:even:border-l">
+            <div key={`${f.label}-${i}`} className="border-b border-line py-3 sm:odd:pe-8 sm:even:ps-8 sm:even:border-s">
               <dt className="text-xs text-ink-muted">{f.label}</dt>
               <dd className="mt-0.5 text-sm font-medium text-ink">{f.value}</dd>
               {f.note ? <dd className="mt-1 text-sm text-ink-muted">{f.note}</dd> : null}
@@ -104,7 +104,15 @@ function Block({ block }: { block: DocBlock }) {
  * numbered sections: a one-sentence lead that stands on its own, and one or
  * two blocks. Sections are short on purpose: each should read in under a minute.
  */
-export function DocPage({ page }: { page: DocPageContent }) {
+/** Fixed labels around the content, in the reader's language. */
+export interface DocPageLabels {
+  onThisPage: string;
+  draft: string;
+}
+
+const EN_LABELS: DocPageLabels = { onThisPage: "On this page", draft: "Draft copy" };
+
+export function DocPage({ page, labels = EN_LABELS }: { page: DocPageContent; labels?: DocPageLabels }) {
   return (
     <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-8">
       <PageHeader
@@ -113,17 +121,17 @@ export function DocPage({ page }: { page: DocPageContent }) {
         status={
           page.draft ? (
             <span data-testid="doc-draft" className="inline-flex h-6 items-center whitespace-nowrap rounded-sm border border-dashed border-caution px-2 text-xs font-medium text-caution">
-              Draft copy
+              {labels.draft}
             </span>
           ) : null
         }
       />
       <div className="mt-8 grid gap-x-12 gap-y-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <nav aria-label="On this page" className="lg:sticky lg:top-6 lg:self-start">
-          <ol className="flex flex-wrap gap-x-5 gap-y-1 text-sm lg:flex-col lg:gap-y-0 lg:border-l lg:border-line">
+        <nav aria-label={labels.onThisPage} className="lg:sticky lg:top-6 lg:self-start">
+          <ol className="flex flex-wrap gap-x-5 gap-y-1 text-sm lg:flex-col lg:gap-y-0 lg:border-s lg:border-line">
             {page.sections.map((s, i) => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="flex items-baseline gap-2 py-1 text-ink-muted transition-colors duration-150 hover:text-ink lg:-ml-px lg:border-l lg:border-transparent lg:py-1.5 lg:pl-4 lg:hover:border-ink">
+                <a href={`#${s.id}`} className="flex items-baseline gap-2 py-1 text-ink-muted transition-colors duration-150 hover:text-ink lg:-ms-px lg:border-s lg:border-transparent lg:py-1.5 lg:ps-4 lg:hover:border-ink">
                   <span className="font-mono text-xs">{String(i + 1).padStart(2, "0")}</span>
                   {s.title}
                 </a>

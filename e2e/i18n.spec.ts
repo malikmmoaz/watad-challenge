@@ -48,3 +48,18 @@ plain("Arabic pages have no serious or critical accessibility issues", async ({ 
     expect(blocking, `serious/critical a11y issues on ${path} (ar)`).toEqual([]);
   }
 });
+
+test("About and How we built it read in Arabic with the same sections", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("watad-locale", "ar"));
+  for (const path of ["/about", "/how-we-built"]) {
+    await page.goto(path);
+    await expect(page.locator("html")).not.toHaveClass(/i18n-pending/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/[؀-ۿ]/);
+    expect(await page.getByTestId("doc-section").count()).toBeGreaterThanOrEqual(5);
+    await expect(page.getByRole("navigation", { name: "في هذه الصفحة" })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+  }
+  // Anchors are shared across languages.
+  await page.goto("/about#business-model");
+  await expect(page.locator("#business-model")).toBeVisible();
+});
