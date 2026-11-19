@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { LEVER_RANGE, leversOf, simulate, type WhatIfLevers, type WhatIfOutcome } from "@/domain/credit/what-if";
 import type { CreditProfile } from "@/domain/credit/types";
 import { sar } from "@/domain/money";
@@ -162,6 +162,14 @@ export function WhatIfPanel({ caseId, profile, asOf }: { caseId: string; profile
 
 function Slider({ id, label, value, display, range, format, onChange, onCommit }: { id: string; label: string; value: number; display: string; range: { min: number; max: number; step: number }; format: (v: number) => string; onChange: (v: number) => void; onCommit: () => void }) {
   const inputId = `what-if-${id}`;
+  // Report a commit only when the gesture changed the value (a click without a drag, or an arrow key at the end, is not a change).
+  const start = useRef(value);
+  const begin = () => {
+    start.current = value;
+  };
+  const commit = () => {
+    if (value !== start.current) onCommit();
+  };
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -180,9 +188,11 @@ function Slider({ id, label, value, display, range, format, onChange, onCommit }
         step={range.step}
         value={value}
         onChange={(e) => onChange(e.target.valueAsNumber)}
-        onPointerUp={onCommit}
+        onPointerDown={begin}
+        onKeyDown={(e) => !e.repeat && begin()}
+        onPointerUp={commit}
         onKeyUp={(e) => {
-          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) onCommit();
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) commit();
         }}
         className="w-full accent-action"
         data-testid={`credit-what-if-${id}`}

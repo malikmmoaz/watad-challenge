@@ -260,3 +260,13 @@ test("credit what-if: one event per committed lever change and on reset, never t
   await tid(page, "credit-what-if-reset").click();
   expect(await once(page, "credit_whatif_reset", ["case_id"])).toEqual({ case_id: "cc_511" });
 });
+
+test("credit what-if: no event when a lever does not actually move", async ({ page }) => {
+  await page.goto("/credit/cases/cc_511");
+  await tid(page, "credit-run-checks").click();
+  await tid(page, "credit-what-if-years").focus();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Home"); // already at the start: no change, no event
+  await page.keyboard.press("ArrowLeft");
+  expect((await only(page, "credit_whatif_changed")).map((e) => e.properties)).toEqual([{ case_id: "cc_511", lever: "years_trading" }]);
+});
