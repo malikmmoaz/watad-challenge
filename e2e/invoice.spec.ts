@@ -106,3 +106,21 @@ test("PO and tax invoice have no serious or critical accessibility issues, Engli
     }
   }
 });
+
+test("tax invoice at 390 px: lines as cards, nothing scrolls sideways, English and Arabic", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await enterAs(page, "contractor");
+  for (const locale of ["en", "ar"]) {
+    if (locale === "ar") {
+      await tid(page, "locale-toggle").click();
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    }
+    await page.goto("/contractor/po/po_3007/invoice");
+    await expect(tid(page, "invoice-line").first()).toBeVisible();
+    await expect(page.getByRole("region", { name: /INV-2026-0412/ })).toBeHidden(); // the scrolling table
+    // Any visible box that scrolls sideways (1 px screen-reader-only text is clipped by design, not scrolled).
+    const sideways = await page.evaluate(() => [...document.querySelectorAll("main *")].filter((el) => el.clientWidth > 1 && el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== "visible").length);
+    expect(sideways, locale).toBe(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), locale).toBeLessThanOrEqual(0);
+  }
+});

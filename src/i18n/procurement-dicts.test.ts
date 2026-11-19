@@ -36,6 +36,8 @@ describe.each([
   it("call credit a Murabaha profit rate, never interest, and use Watad's credit-cap term", () => {
     const arText = [...ar.values()].join(" ");
     expect(arText).not.toMatch(/فائدة|فوائد|السقف الائتماني/);
+    // A figure is not followed by a Latin abbreviation in Arabic (Layla: «18.3٪ APR»); "(APR)" as a gloss is fine.
+    expect(arText).not.toMatch(/\}\s*APR/);
     expect([...en.values()].join(" ")).not.toMatch(/\binterest\b/i);
   });
 });
