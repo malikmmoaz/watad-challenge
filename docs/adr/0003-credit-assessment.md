@@ -1,6 +1,6 @@
 # ADR 0003: Credit assessment, pricing and draws
 
-Status: accepted · 2026-11-18 · Owner: Hana · Issues #12, #13, #14
+Status: accepted · 2026-11-18, updated 2026-11-19 · Owner: Hana · Issues #12, #13, #14
 
 ## Context
 
@@ -39,10 +39,22 @@ Contractors buy materials on credit; an independent credit manager decides who g
 
 **Simulated-AI boundary** ([`to-case.ts`](../../src/domain/credit/to-case.ts), [`workflow.ts`](../../src/domain/credit/workflow.ts)): "Run checks" plays the AI preparing the file: extracted fields with confidence, gates, scorecard, consistency, tamper flags and a drafted memo, all marked `simulated: true` and labelled in the UI. Only `decide()` sets approved, declined or more information requested. Every outcome needs a reason the contractor reads; departing from the AI proposal needs a written override reason, stored with `overrodeAi`.
 
+**A higher cap never lowers the cap** ([`workflow.ts`](../../src/domain/credit/workflow.ts), #163). An approval replaces the contractor's facility, so an approval *below* the current cap used to cut it silently: Najd Horizon's SAR 1.5M cap fell to SAR 750k and its next purchase order no longer fitted. Now `decide()` keeps the higher of the current and the approved cap and applies the new assessment's band, Murabaha rate and conditions; draws carry over. The decision log records "Credit cap raised from X to Y SAR" or "kept at X", and `capChange()` reads it back for the contractor. The apply form starts at the current cap and only accepts more; the decision panel shows "current cap → approving" and a caution when below it. When a purchase order does not fit what is left, the PO draft says why in numbers and waits for an explicit choice (Omar, #164): credit is never dropped silently. Lowering a cap is a separate credit action, not a side effect of an approval; it is not built.
+
+**What-if reuses the engine** ([`what-if.ts`](../../src/domain/credit/what-if.ts), #144). Five levers (VAT/bank/financials reconciled, SIMAH score, overdue receivables, returned cheques, years trading) are applied to a *copy* of the profile and `assessCase()` runs again on the same `asOf` the checks used: same rules, same bands, same limit and pricing, no second model. The panel is labelled "Simulation, not saved", never touches the case or the decision, and only appears when re-running the engine reproduces the stored score (±1), so a hand-written seed scorecard is never contradicted. Analytics record which lever moved, never its value.
+
+**Cash flow and its annotations** ([`cashflow.ts`](../../src/domain/credit/cashflow.ts), #147). Twelve months are derived from the extracted bank figures (annual inflows, average balance, volatility, returned cheques, overdrawn days), seeded by the case id: inflows sum to the annual total and the mean closing balance is the average balance, exactly. The "simulated AI" notes are plain, tested rules over those months (a one-off inflow at least 1.5× the median month, a seasonal dip at most 0.8×, months with returned cheques, the lowest balance when overdrawn more than 15 days), each linking to the bank-statement field it rests on. They describe; they do not score: the scorecard never reads them. The time axis runs left to right with Latin digits in Arabic too (DESIGN.md).
+
+**What the contractor sees** ([`application-tracker.tsx`](../../src/components/credit/application-tracker.tsx), #171). An approval explains itself: cap, band and Murabaha markup with APR, each with what it was (`outcomeTerms()`: the latest earlier approval for the cap and terms before, this case for after), and from when it applies. The structured reason codes are shown in plain words, split into what counted for the contractor and what held it back, above the credit manager's own note, labelled as theirs: the agents' reasons and the human's words stay distinct. While waiting, the tracker says what happens next.
+
+**Arabic** (ADR 0005, #123, #135, #154). The engine writes its findings through a `CreditLang` (English by default, byte-identical), so the Arabic screens re-render the stored assessment rather than translating text. Latin digits and the Gregorian calendar; «٪» and «ر.س.»; never «فائدة». Dictionary tests keep Arabic credit strings free of «%» and of a full stop after an amount.
+
 ## Consequences
 
 - Every number on screen comes from tested pure functions and traces back to a document field.
 - Thresholds, weights, multipliers and rates are our assumptions for the demo, not a validated credit model; they are named constants so a risk team can change them in one place.
+- An approval cannot reduce a cap; a real reduction would need its own reviewed action and notice to the contractor.
+- The what-if, the cash-flow months and the "what this means for you" terms are all recomputed from the same engine and the stored profile, so they cannot drift from the scorecard; the cost is that they only exist for sample contractors with an engine profile.
 - Engine profiles for the sample contractors live in [`src/data/credit-profiles.ts`](../../src/data/credit-profiles.ts); a new application from another contractor has no profile and cannot be scored.
 
 ## What a real Abwab-style integration would change
