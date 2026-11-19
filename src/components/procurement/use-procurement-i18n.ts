@@ -5,6 +5,7 @@
  * both message sets, locale-aware formatters (ADR 0005), and the small conversions those
  * screens repeat (payment terms, quantities with units, cities, categories, names).
  */
+import { common } from "@/i18n/common";
 import { fill } from "@/i18n/core";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { procurement } from "@/i18n/procurement";
@@ -35,6 +36,7 @@ export function useProcurementI18n() {
   const locale = useLocale();
   const m = useMessages(procurement);
   const s = useMessages(supplier);
+  const status = useMessages(common).status;
   const f = useFormat();
   const ar = locale === "ar";
 
@@ -52,6 +54,8 @@ export function useProcurementI18n() {
     ar,
     m,
     s,
+    /** RFQ and PO status labels, shared with the credit screens and the contractor home. */
+    status,
     f,
     fill,
     terms,

@@ -134,7 +134,7 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
 }
 
 export function RfqShortlist({ rfqId }: { rfqId: string }) {
-  const { m, f, fill, terms, qty, name, city } = useProcurementI18n();
+  const { m, status, f, fill, terms, qty, name, city } = useProcurementI18n();
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
   const facilities = useDemo((s) => s.creditFacilities);
@@ -205,7 +205,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           status={
             <Badge tone={RFQ_STATUS[rfq.status].tone}>
               <span data-testid="rfq-status" data-status={rfq.status}>
-                {m.rfqStatus[rfq.status]}
+                {status.rfq[rfq.status]}
               </span>
             </Badge>
           }

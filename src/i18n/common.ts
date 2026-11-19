@@ -25,6 +25,25 @@ export const common = defineMessages(
       supplier: "Supplier",
       credit: "Credit manager",
     },
+    status: {
+      rfq: {
+        draft: "Draft",
+        sent: "Waiting for offers",
+        offers_received: "Offers received",
+        awarded: "PO placed",
+        cancelled: "Cancelled",
+        expired: "Closed, no offer chosen",
+      },
+      po: {
+        placed: "PO placed",
+        confirmed: "Confirmed by supplier",
+        dispatched: "Out for delivery",
+        delivered: "Delivered",
+        invoiced: "Invoiced",
+        paid: "Paid",
+        cancelled: "Cancelled",
+      },
+    },
     personas: {
       contractor: "Najd Horizon Contracting Co.",
       supplier: "Rawasi Building Materials Trading",
@@ -104,6 +123,25 @@ export const common = defineMessages(
       contractor: "المقاول",
       supplier: "المورّد",
       credit: "مدير الائتمان",
+    },
+    status: {
+      rfq: {
+        draft: "مسودة",
+        sent: "بانتظار العروض",
+        offers_received: "وصلت العروض",
+        awarded: "صدر أمر الشراء",
+        cancelled: "ملغى",
+        expired: "أُغلق دون اختيار عرض",
+      },
+      po: {
+        placed: "صدر أمر الشراء",
+        confirmed: "أكّده المورّد",
+        dispatched: "قيد التوصيل",
+        delivered: "تم التسليم",
+        invoiced: "صدرت الفاتورة",
+        paid: "مدفوع",
+        cancelled: "ملغى",
+      },
     },
     personas: {
       contractor: "شركة أفق نجد للمقاولات",

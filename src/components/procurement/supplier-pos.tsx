@@ -23,7 +23,7 @@ export function SupplierPurchaseOrders({ supplierId }: { supplierId: OrgId }) {
     [pos, supplierId],
   );
   const toDo = mine.filter((x) => x.step.yours).length;
-  const { m, s, f, fill, name } = useProcurementI18n();
+  const { m, s, status: st, f, fill, name } = useProcurementI18n();
   // The step follows from the status; show it in the reader's locale.
   const stepText = (po: PurchaseOrder, yours: boolean): string => {
     if (yours) return po.status === "placed" ? m.poActions.accept : po.status === "confirmed" ? m.poActions.dispatch : m.poActions.invoice;
@@ -72,7 +72,7 @@ export function SupplierPurchaseOrders({ supplierId }: { supplierId: OrgId }) {
                     </CellNote>
                   </Td>
                   <Td>
-                    <Badge tone={status.tone}>{m.poStatus[po.status]}</Badge>
+                    <Badge tone={status.tone}>{st.po[po.status]}</Badge>
                     <CellNote>{fill(s.pos.placed, { when: f.date(po.placedAt) })}</CellNote>
                   </Td>
                   <Td>

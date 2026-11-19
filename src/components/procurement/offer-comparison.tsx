@@ -306,7 +306,7 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
       {pos.map((po) => {
         const supplier = supplierOf(po.supplierId);
         return (
-          <Panel key={po.id} title={i.name(supplier, po.supplierId)} aside={<Badge tone={PO_STATUS[po.status].tone}>{i.m.poStatus[po.status]}</Badge>}>
+          <Panel key={po.id} title={i.name(supplier, po.supplierId)} aside={<Badge tone={PO_STATUS[po.status].tone}>{i.status.po[po.status]}</Badge>}>
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-4 lg:col-span-2">
                 <div>
@@ -376,7 +376,7 @@ function PoList({ pos }: { pos: PurchaseOrder[] }) {
                 <CellNote>{i.name(supplierOf(po.supplierId))}</CellNote>
               </Td>
               <Td>
-                <Badge tone={PO_STATUS[po.status].tone}>{i.m.poStatus[po.status]}</Badge>
+                <Badge tone={PO_STATUS[po.status].tone}>{i.status.po[po.status]}</Badge>
               </Td>
               <Td align="end">
                 <span className="tabular-nums text-ink">{i.f.money(po.totalInclVat)}</span>
