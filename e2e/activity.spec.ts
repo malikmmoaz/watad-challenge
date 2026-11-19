@@ -47,7 +47,7 @@ test("cross-role: a supplier's offer shows up unread in the contractor's bell", 
   // The supplier sends an offer on rfq_1044.
   await switchTo(page, "supplier");
   await tid(page, "inbox-open").filter({ hasText: "Villas 13 to 24" }).click();
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await tid(page, "offer-line-price").nth(0).fill("2925");
   await tid(page, "offer-lead-time").fill("3");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toHaveAttribute("data-status", "submitted");

@@ -61,9 +61,9 @@ const typeScale: [cls: string, use: string][] = [
 ];
 
 const offers = [
-  { supplier: "Rawasi Building Materials Trading", city: "Riyadh", unit: 2485, total: 298200, days: 4, terms: "Net 30", state: "recommended" as const, reason: "Lowest landed cost, delivers 3 days before the required date" },
-  { supplier: "Al Sarh Steel & Cement Supply", city: "Dammam", unit: 2440, total: 292800, days: 9, terms: "Cash on delivery", state: "default" as const, reason: "Lowest unit price, arrives 2 days late" },
-  { supplier: "Dar Al Bina Distribution", city: "Jeddah", unit: 2560, total: 307200, days: 6, terms: "Net 60", state: "default" as const, reason: "Longest payment terms" },
+  { supplier: "Rawasi Building Materials Trading", city: "Riyadh", unit: 2925, total: 351000, days: 4, terms: "Net 30", state: "recommended" as const, reason: "Lowest landed cost, delivers 3 days before the required date" },
+  { supplier: "Al Sarh Steel & Cement Supply", city: "Dammam", unit: 2880, total: 345600, days: 9, terms: "Cash on delivery", state: "default" as const, reason: "Lowest unit price, arrives 2 days late" },
+  { supplier: "Dar Al Bina Distribution", city: "Jeddah", unit: 2990, total: 358800, days: 6, terms: "Net 60", state: "default" as const, reason: "Longest payment terms" },
 ];
 
 function Section({ id, title, lead, children }: { id: string; title: string; lead: string; children: ReactNode }) {
