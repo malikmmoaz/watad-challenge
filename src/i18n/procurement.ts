@@ -435,6 +435,23 @@ export const procurement = defineMessages(
   },
   "home": {
     "title": "Contractor workspace"
+  },
+  "rfqStatus": {
+    "draft": "Draft",
+    "sent": "Waiting for offers",
+    "offers_received": "Offers received",
+    "awarded": "PO placed",
+    "cancelled": "Cancelled",
+    "expired": "Closed, no offer chosen"
+  },
+  "poStatus": {
+    "placed": "PO placed",
+    "confirmed": "Confirmed by supplier",
+    "dispatched": "Out for delivery",
+    "delivered": "Delivered",
+    "invoiced": "Invoiced",
+    "paid": "Paid",
+    "cancelled": "Cancelled"
   }
 },
   {
@@ -865,6 +882,23 @@ export const procurement = defineMessages(
   },
   "home": {
     "title": "مساحة عمل المقاول"
+  },
+  "rfqStatus": {
+    "draft": "مسودة",
+    "sent": "بانتظار العروض",
+    "offers_received": "وصلت العروض",
+    "awarded": "صدر أمر الشراء",
+    "cancelled": "ملغى",
+    "expired": "أُغلق دون اختيار عرض"
+  },
+  "poStatus": {
+    "placed": "صدر أمر الشراء",
+    "confirmed": "أكّده المورّد",
+    "dispatched": "قيد التوصيل",
+    "delivered": "تم التسليم",
+    "invoiced": "صدرت الفاتورة",
+    "paid": "مدفوع",
+    "cancelled": "ملغى"
   }
 },
 );
