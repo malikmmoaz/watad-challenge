@@ -114,7 +114,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             value={Number.isNaN(d.requestedCapSar) ? "" : d.requestedCapSar}
             onChange={(e) => {
               setCapTouched(true);
-              set({ requestedCapSar: e.target.valueAsNumber });
+              set({ requestedCapSar: e.target.value === "" ? Number.NaN : Number(e.target.value) });
             }}
             data-testid="credit-apply-cap"
             hint={currentCap !== undefined ? fill(m.capHintCurrent, { cap: f.money(currentCap) }) : fill(m.capHint, { min: f.money(CAP_LIMITS.min), max: f.money(CAP_LIMITS.max) })}

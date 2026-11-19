@@ -126,7 +126,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
               suffix={all.apply.capSuffix}
               type="number"
               value={Number.isNaN(cap) ? "" : cap}
-              onChange={(e) => setCap(e.target.valueAsNumber)}
+              onChange={(e) => setCap(e.target.value === "" ? Number.NaN : Number(e.target.value))}
               hint={proposedCap ? fill(m.capHintProposed, { cap: f.money(proposedCap), requested: f.money(c.requestedCap) }) : fill(m.capHintNone, { requested: f.money(c.requestedCap) })}
               data-testid="credit-decision-cap"
             />
