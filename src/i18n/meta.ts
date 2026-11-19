@@ -14,11 +14,13 @@ export type PageKey =
   | "rfqNew"
   | "rfq"
   | "contractorPo"
+  | "contractorInvoice"
   | "contractorCredit"
   | "creditApply"
   | "supplier"
   | "supplierRfq"
   | "supplierPo"
+  | "supplierInvoice"
   | "credit"
   | "creditCase"
   | "about"
@@ -29,11 +31,13 @@ export type PageKey =
 export const PAGE_ROUTES: [pattern: RegExp, key: PageKey][] = [
   [/^\/contractor\/rfq\/new\/?$/, "rfqNew"],
   [/^\/contractor\/rfq\/[^/]+\/?$/, "rfq"],
+  [/^\/contractor\/po\/[^/]+\/invoice\/?$/, "contractorInvoice"],
   [/^\/contractor\/po\/[^/]+\/?$/, "contractorPo"],
   [/^\/contractor\/credit\/apply\/?$/, "creditApply"],
   [/^\/contractor\/credit\/?$/, "contractorCredit"],
   [/^\/contractor\/?$/, "contractor"],
   [/^\/supplier\/rfq\/[^/]+\/?$/, "supplierRfq"],
+  [/^\/supplier\/po\/[^/]+\/invoice\/?$/, "supplierInvoice"],
   [/^\/supplier\/po\/[^/]+\/?$/, "supplierPo"],
   [/^\/supplier\/?$/, "supplier"],
   [/^\/credit\/cases\/[^/]+\/?$/, "creditCase"],
@@ -56,11 +60,13 @@ export const meta = defineMessages(
     contractor: { title: "Contractor workspace", description: "Open RFQs, offers to compare, purchase orders on the way and the credit cap, for a sample Riyadh contractor." },
     rfqNew: { title: "New RFQ", description: "Upload a BOQ or pick from the catalog; simulated AI reads the file and you confirm every line." },
     rfq: { title: "RFQ", description: "Shortlisted suppliers with match reasons, and offers compared on landed cost, lead time, terms and reliability." },
+    contractorInvoice: { title: "Tax invoice", description: "Simplified tax invoice with the ZATCA Phase 1 QR code. Sample: not submitted to ZATCA." },
     contractorPo: { title: "Purchase order", description: "Purchase order status from issue to payment, with the credit draw and Murabaha markup shown with its APR." },
     contractorCredit: { title: "Credit · Contractor", description: "The credit cap, draws per PO and the status of credit applications." },
     creditApply: { title: "Apply for credit · Contractor", description: "Apply for a credit cap with Saudi documents: CR, ZATCA VAT returns, Zakat, bank statements, GOSI and more." },
     supplier: { title: "Supplier portal", description: "Requests matched to a sample supplier, why each one matched, and purchase orders to fulfil." },
     supplierRfq: { title: "Request for quotation", description: "One request, the same for every invited supplier: lines, delivery, preferred terms, and the offer form." },
+    supplierInvoice: { title: "Tax invoice · Supplier", description: "Your simplified tax invoice with the ZATCA Phase 1 QR code. Sample: not submitted to ZATCA." },
     supplierPo: { title: "Purchase order · Supplier", description: "Accept, dispatch and invoice a purchase order; paid directly from the contractor's credit cap." },
     credit: { title: "Credit manager workspace", description: "The independent credit manager's queue of applications, with gated checks, scores and decisions." },
     creditCase: { title: "Credit case · Credit manager", description: "Gated checks, evidence-linked scorecard, AI-drafted memo and a decision a named person signs." },
@@ -77,11 +83,13 @@ export const meta = defineMessages(
     contractor: { title: "مساحة عمل المقاول", description: "الطلبات المفتوحة والعروض للمقارنة وأوامر الشراء قيد التنفيذ والحد الائتماني لمقاول تجريبي في الرياض." },
     rfqNew: { title: "طلب عروض أسعار جديد", description: "ارفع جدول الكميات أو اختر من الكتالوج؛ يقرأ الذكاء الاصطناعي المحاكى الملف وتؤكّد أنت كل بند." },
     rfq: { title: "طلب عروض أسعار", description: "الموردون المرشحون مع أسباب الترشيح، والعروض مقارنة بالتكلفة الواصلة ومدة التوريد والشروط والموثوقية." },
+    contractorInvoice: { title: "فاتورة ضريبية", description: "فاتورة ضريبية مبسطة مع رمز QR للمرحلة الأولى من الفوترة الإلكترونية. نموذج: لم تُرسل إلى الهيئة." },
     contractorPo: { title: "أمر الشراء", description: "حالة أمر الشراء من الإصدار حتى الدفع، مع السحب من الائتمان وربح المرابحة ونسبته السنوية." },
     contractorCredit: { title: "الائتمان · المقاول", description: "الحد الائتماني والسحب لكل أمر شراء وحالة طلبات الائتمان." },
     creditApply: { title: "طلب ائتمان · المقاول", description: "قدّم طلب حد ائتماني بالمستندات السعودية: السجل التجاري وإقرارات زاتكا والزكاة وكشوف الحساب والتأمينات الاجتماعية وغيرها." },
     supplier: { title: "بوابة المورّد", description: "الطلبات المطابقة لمورّد تجريبي وسبب ترشيحه لكل منها، وأوامر الشراء المطلوب تنفيذها." },
     supplierRfq: { title: "طلب عروض أسعار", description: "طلب واحد يراه كل مورّد مدعو بالصيغة نفسها: البنود والتسليم وشروط الدفع المفضلة ونموذج العرض." },
+    supplierInvoice: { title: "فاتورة ضريبية · المورّد", description: "فاتورتك الضريبية المبسطة مع رمز QR للمرحلة الأولى من الفوترة الإلكترونية. نموذج: لم تُرسل إلى الهيئة." },
     supplierPo: { title: "أمر الشراء · المورّد", description: "اقبل أمر الشراء واشحنه وأصدر فاتورته؛ يُدفع لك مباشرةً من الحد الائتماني للمقاول." },
     credit: { title: "مساحة عمل مدير الائتمان", description: "قائمة طلبات الائتمان لدى مدير الائتمان المستقل، مع الفحوص المتدرجة والدرجات والقرارات." },
     creditCase: { title: "ملف ائتماني · مدير الائتمان", description: "فحوص متدرجة وبطاقة تقييم مرتبطة بالمستندات ومذكرة يصوغها الذكاء الاصطناعي وقرار يوقّعه شخص مسمّى." },

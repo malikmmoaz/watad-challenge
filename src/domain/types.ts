@@ -54,6 +54,8 @@ export interface Contractor {
   name: string;
   nameAr?: string;
   city: City;
+  /** Fictional 15-digit VAT registration number (starts and ends with 3), for the sample tax invoice. */
+  vatNumber: string;
   crNumber: string;
   /** Saudi contractor classification grade, 1 (largest) to 5. */
   classificationGrade: 1 | 2 | 3 | 4 | 5;
@@ -97,6 +99,8 @@ export interface Supplier {
   name: string;
   nameAr?: string;
   city: City;
+  /** Fictional 15-digit VAT registration number (starts and ends with 3), for the sample tax invoice. */
+  vatNumber: string;
   categories: MaterialCategory[];
   /** Real manufacturer brands this fictional distributor stocks. */
   brandsStocked: string[];

@@ -7,6 +7,7 @@ All notable changes, grouped by release. Issue and PR numbers refer to github.co
 _Changes merged after this section was written are listed here and folded into 1.0.0 when it is tagged at the 12:20 UTC freeze._
 
 - Link previews and icons: a 1200×630 share card (headline, the Arabic line, the three roles) on every page, a title and description per page in English and Arabic (the browser tab follows the language toggle), a favicon, an Apple touch icon and an install manifest in the pine and paper of the design language (#138).
+- Printable PO and a simplified tax invoice: "Print / Save as PDF" on A4 with the VAT breakdown, both parties' VAT numbers and the payment method (incl. paid from the credit cap); the tax invoice carries the ZATCA Phase 1 QR (seller, VAT number, time, total and VAT as TLV, generated in the browser) and is clearly labelled "Sample: not submitted to ZATCA" with fictional VAT numbers; English and Arabic (#146).
 
 ## 1.0.0 · 2026-11-19
 

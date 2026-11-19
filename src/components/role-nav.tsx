@@ -21,7 +21,7 @@ import { RoleLink } from "./role-link";
 export function RoleNav({ current }: { current: Role }) {
   const m = useMessages(common);
   return (
-    <header className="relative z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
+    <header className="relative z-20 border-b print:hidden border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-30 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         {m.skipToContent}
       </a>

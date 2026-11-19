@@ -10,7 +10,7 @@ import { fill } from "@/i18n/core";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { procurement } from "@/i18n/procurement";
 import { supplier } from "@/i18n/supplier";
-import { offers as seedOffers, purchaseOrders as seedPurchaseOrders, reference, rfqs as seedRfqs } from "@/data";
+import { offers as seedOffers, purchaseOrders as seedPurchaseOrders, reference, rfqs as seedRfqs, seedBrandAr } from "@/data";
 import type { City, MaterialCategory, PaymentTerms, Rfq, RfqLine, Unit } from "@/domain/types";
 
 type Named = { name: string; nameAr?: string | undefined };
@@ -30,6 +30,7 @@ for (const r of seedRfqs) {
   addSeed(r.notes, r.notesAr);
 }
 for (const o of seedOffers) addSeed(o.notes, o.notesAr);
+for (const [en, ar] of Object.entries(seedBrandAr)) addSeed(en, ar);
 for (const po of seedPurchaseOrders) for (const e of po.timeline) addSeed(e.note, e.noteAr);
 
 /** Find which English message `text` is, so logic-produced text can be shown in the reader's locale. */

@@ -1,2 +1,28 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+
+/*
+ * Print / Save as PDF (printable PO and tax invoice): A4 pages with only the document. The app
+ * bar, the reviewer guide and the controls carry `print:hidden` themselves.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  main#main {
+    max-width: none;
+    padding: 0;
+  }
+  [data-testid="tax-invoice"] section,
+  [data-testid="tax-invoice"] table,
+  [data-testid="invoice-totals"] {
+    break-inside: avoid;
+  }
+}

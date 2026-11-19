@@ -18,6 +18,8 @@ export const contractors: Contractor[] = [
   {
     id: org("con_najd"),
     kind: "contractor",
+
+    vatNumber: "300000000791903",
     name: "Najd Horizon Contracting Co.",
     nameAr: "شركة أفق نجد للمقاولات",
     city: "Riyadh",
@@ -46,6 +48,8 @@ export const contractors: Contractor[] = [
   {
     id: org("con_hijaz"),
     kind: "contractor",
+
+    vatNumber: "300000001583803",
     name: "Hijaz Peaks Building Est.",
     nameAr: "مؤسسة قمم الحجاز للبناء",
     city: "Jeddah",
@@ -66,6 +70,8 @@ export const contractors: Contractor[] = [
   {
     id: org("con_sharq"),
     kind: "contractor",
+
+    vatNumber: "300000002375703",
     name: "Sharq Gulf Industrial Contracting",
     nameAr: "شرق الخليج للمقاولات الصناعية",
     city: "Dammam",
@@ -89,6 +95,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_rawasi"),
     kind: "supplier",
+
+    vatNumber: "300000003167603",
     name: "Rawasi Building Materials Trading",
     nameAr: "رواسي لتجارة مواد البناء",
     city: "Riyadh",
@@ -104,6 +112,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_sawari"),
     kind: "supplier",
+
+    vatNumber: "300000003959503",
     name: "Sawari Steel & Cement Distribution",
     nameAr: "صواري لتوزيع الحديد والأسمنت",
     city: "Riyadh",
@@ -119,6 +129,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_bahr"),
     kind: "supplier",
+
+    vatNumber: "300000004751403",
     name: "Bahr Al Ahmar Supplies Co.",
     nameAr: "شركة البحر الأحمر للتوريدات",
     city: "Jeddah",
@@ -134,6 +146,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_tayf"),
     kind: "supplier",
+
+    vatNumber: "300000005543303",
     name: "Tayf Electrical & Cables Trading",
     nameAr: "طيف لتجارة الكهرباء والكابلات",
     city: "Riyadh",
@@ -149,6 +163,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_khaleej"),
     kind: "supplier",
+
+    vatNumber: "300000006335203",
     name: "Khaleej Import Building Supplies",
     nameAr: "الخليج لاستيراد مواد البناء",
     city: "Dammam",
@@ -164,6 +180,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_dana"),
     kind: "supplier",
+
+    vatNumber: "300000007127103",
     name: "Dana Finishes & Sanitary Ware",
     nameAr: "دانة للتشطيبات والأدوات الصحية",
     city: "Jeddah",
@@ -179,6 +197,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_sahra"),
     kind: "supplier",
+
+    vatNumber: "300000007919003",
     name: "Sahra Ready-Mix & Aggregates",
     nameAr: "صحراء للخرسانة الجاهزة والركام",
     city: "Riyadh",
@@ -195,6 +215,8 @@ export const suppliers: Supplier[] = [
     // Vetted but new to the platform: fills the shortlist's reserved newcomer slot in the demo.
     id: org("sup_nakheel"),
     kind: "supplier",
+
+    vatNumber: "300000008710903",
     name: "Nakheel Modern Building Supplies",
     nameAr: "النخيل الحديثة لمواد البناء",
     city: "Riyadh",
@@ -210,6 +232,8 @@ export const suppliers: Supplier[] = [
   {
     id: org("sup_shamal"),
     kind: "supplier",
+
+    vatNumber: "300000009502803",
     name: "Shamal Pipes & Infrastructure Supply",
     nameAr: "الشمال لتوريد الأنابيب والبنية التحتية",
     city: "Tabuk",

@@ -3,6 +3,7 @@ import type { Messages } from "./core";
 import { procurement } from "./procurement";
 import { supplier } from "./supplier";
 import { activity } from "./activity";
+import { invoice } from "./invoice";
 import { offers, purchaseOrders, rfqs } from "@/data";
 
 const leaves = (o: Messages | string, path = ""): [string, string][] =>
@@ -16,6 +17,7 @@ describe.each([
   ["procurement", procurement],
   ["supplier", supplier],
   ["activity", activity],
+  ["invoice", invoice],
 ])("%s messages", (_name, dict) => {
   const en = new Map(leaves(dict.en as Messages));
   const ar = new Map(leaves(dict.ar as Messages));
