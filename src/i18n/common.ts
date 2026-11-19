@@ -50,6 +50,7 @@ export const common = defineMessages(
       resetAndTryAgain: "Reset demo data and try again",
     },
     ui: {
+      optional: "optional",
       noEvidence: "No document on file",
       creditScore: "Credit score",
       outOf100: "of 100",
@@ -111,6 +112,7 @@ export const common = defineMessages(
       resetAndTryAgain: "إعادة ضبط بيانات العرض والمحاولة مرة أخرى",
     },
     ui: {
+      optional: "اختياري",
       noEvidence: "لا يوجد مستند في الملف",
       creditScore: "التقييم الائتماني",
       outOf100: "من 100",
