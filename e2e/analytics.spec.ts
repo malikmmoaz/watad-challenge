@@ -142,7 +142,7 @@ test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> a
   await page.goto("/contractor/credit/apply");
   await expect(tid(page, "credit-apply-form")).toBeVisible();
   expect(await once(page, "credit_application_started", [])).toEqual({});
-  await tid(page, "credit-apply-cap").fill("500000");
+  await tid(page, "credit-apply-cap").fill("2000000");
   await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-sample-docs").click(); // attaching the same files again adds nothing

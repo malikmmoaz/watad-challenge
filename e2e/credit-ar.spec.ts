@@ -37,7 +37,7 @@ test("apply, request more information, answer it and approve, all in Arabic", as
   await expect(tid(page, "credit-doc-gosi_certificate")).toContainText("التأمينات الاجتماعية");
   await tid(page, "credit-apply-submit").click();
   await expect(tid(page, "credit-apply-form")).toContainText("الموافقة على تقرير سمة مطلوبة");
-  await tid(page, "credit-apply-cap").fill("750000");
+  await tid(page, "credit-apply-cap").fill("2000000");
   await tid(page, "credit-apply-purpose").fill("حديد تسليح وخرسانة جاهزة لمجمّع مدارس النرجس");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-simah-consent").check();
