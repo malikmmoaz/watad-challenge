@@ -19,7 +19,7 @@ for v in e2e/.demo-results/*/video.webm; do
   [ -n "$name" ] || name=$(basename "$(dirname "$v")")
   "$FFMPEG" -loglevel error -y -i "$v" -vf "fps=24,scale=1280:-2" -c:v libx264 -preset slow -crf 30 \
     -pix_fmt yuv420p -movflags +faststart -an "docs/demo/$name.mp4"
-  "$FFMPEG" -loglevel error -y -i "$v" -vf "fps=8,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
+  "$FFMPEG" -loglevel error -y -i "$v" -vf "fps=5,scale=560:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
     "docs/demo/$name.gif"
   echo "docs/demo/$name.mp4 $(du -h "docs/demo/$name.mp4" | cut -f1) · docs/demo/$name.gif $(du -h "docs/demo/$name.gif" | cut -f1)"
 done
