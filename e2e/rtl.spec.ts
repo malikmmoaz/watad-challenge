@@ -15,6 +15,13 @@ for (const p of PAGES) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto(p.path);
       await ready(page);
+      // Measure the settled layout: wait for web fonts (the first frame uses a wider fallback
+      // face and can stick out by a few px until Noto Sans Arabic arrives) and for animations.
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      });
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
       const result = await page.evaluate(() => {
         const vw = document.documentElement.clientWidth;
         const out: string[] = [];
