@@ -9,8 +9,18 @@ test.skip(({ isMobile }) => isMobile, "keyboard-only journeys are a desktop conc
 async function tabTo(page: Page, target: Locator, label: string, { checkFocusRing = true, max = 150 } = {}) {
   // Safari's Tab moves between form fields and links only; Option+Tab reaches every control.
   const key = page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab";
+  // Where focus went on each press, for the failure message (WebKit cannot be run locally).
+  const trail: string[] = [];
   for (let i = 0; i < max; i++) {
     await page.keyboard.press(key);
+    trail.push(
+      await page.evaluate(() => {
+        const el = document.activeElement;
+        if (!el || el === document.body) return "body";
+        const id = el.getAttribute("data-testid") ?? el.getAttribute("aria-label") ?? (el.textContent ?? "").trim().slice(0, 24);
+        return `${el.tagName.toLowerCase()}[${id}]`;
+      }),
+    );
     if (await target.evaluate((el) => el === document.activeElement).catch(() => false)) {
       if (checkFocusRing) {
         const visible = await page.evaluate(() => {
@@ -27,7 +37,7 @@ async function tabTo(page: Page, target: Locator, label: string, { checkFocusRin
       return;
     }
   }
-  throw new Error(`Could not reach "${label}" with Tab`);
+  throw new Error(`Could not reach "${label}" with ${key}. Focus went: ${[...new Set(trail)].slice(0, 40).join(" → ")}`);
 }
 
 test("keyboard only: create an RFQ from the catalog", async ({ page }) => {
