@@ -111,6 +111,14 @@ export function OfferComparisonTable({ rows, nameOf, requiredInDays, rfqLabel, c
                 </Cell>
                 <Cell end label={c.landedCost}>
                   <span className="whitespace-nowrap font-medium text-ink">{f.money(r.landedCostInclVat)}</span>
+                  {/* A partial offer's total is not comparable to a full one: say what it covers. */}
+                  {r.linesCovered < r.linesRequested ? (
+                    <CellNote>
+                      <span data-testid="offer-partial-cost" className="text-caution">
+                        {fill(c.forLines, { covered: r.linesCovered, requested: r.linesRequested })}
+                      </span>
+                    </CellNote>
+                  ) : null}
                   <CellNote>{fill(c.inclDelivery, { fee: f.money(r.deliveryFee) })}</CellNote>
                   {(() => {
                     const fit = creditFit?.(r);

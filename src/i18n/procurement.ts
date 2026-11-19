@@ -186,14 +186,17 @@ export const procurement = defineMessages(
     "noCredit": "No platform credit",
     "why": "Why:",
     "whyNot": "Why not:",
-    "showAll": "Show all {n} reasons",
     "showLess": "Show less",
+    "showMore": "Show {n} more reasons",
+    "showMoreOne": "Show 1 more reason",
     "matchOf100": "match of 100",
     "selectedCount": "{selected} of {total} shortlisted suppliers selected",
     "selectedCountBlind": "{selected} of {total} shortlisted suppliers selected · blind comparison on",
     "sendOne": "Send RFQ to 1 supplier",
     "sent": "Sent to {n} suppliers. Offers appear here as suppliers respond.",
-    "sentBlind": "Sent to {n} suppliers, blind comparison on. Offers appear here as suppliers respond."
+    "sentBlind": "Sent to {n} suppliers, blind comparison on. Offers appear here as suppliers respond.",
+    "sentDone": "Sent to {n} suppliers.",
+    "sentBlindDone": "Sent to {n} suppliers, blind comparison on."
   },
   "reasons": {
     "stocksAll": "Stocks everything requested ({categories})",
@@ -241,6 +244,7 @@ export const procurement = defineMessages(
     "chosen": "Chosen",
     "inclDelivery": "incl. delivery {fee}",
     "linesInFull": "{covered} of {requested} lines in full",
+    "forLines": "for {covered} of {requested} lines",
     "ofRequestedValue": "{pct}% of requested value",
     "days": "{n} days",
     "inTime": "in time",
@@ -254,7 +258,7 @@ export const procurement = defineMessages(
     "breakdownSum": "Goods {goods} + delivery {delivery} + 15% VAT {vat} = {total}",
     "badges": {
       "best": "Best overall score",
-      "lowest_landed_cost": "Lowest landed cost",
+      "lowest_landed_cost": "Lowest cost for the whole order",
       "fastest": "Fastest delivery",
       "best_terms": "Best payment terms",
       "most_reliable": "Most reliable"
@@ -655,14 +659,17 @@ export const procurement = defineMessages(
     "noCredit": "لا يقبل ائتمان المنصة",
     "why": "لماذا:",
     "whyNot": "لماذا لا:",
-    "showAll": "عرض كل الأسباب ({n})",
     "showLess": "عرض أقل",
+    "showMore": "عرض أسباب أخرى ({n})",
+    "showMoreOne": "عرض سبب آخر",
     "matchOf100": "تطابق من 100",
     "selectedCount": "تم اختيار {selected} من {total} موردين في القائمة المختصرة",
     "selectedCountBlind": "تم اختيار {selected} من {total} موردين في القائمة المختصرة · المقارنة دون أسماء مفعّلة",
     "sendOne": "إرسال الطلب إلى مورّد واحد",
     "sent": "أُرسل إلى الموردين ({n}). ستظهر العروض هنا عند ردّ الموردين.",
-    "sentBlind": "أُرسل إلى الموردين ({n})، والمقارنة دون أسماء مفعّلة. ستظهر العروض هنا عند ردّ الموردين."
+    "sentBlind": "أُرسل إلى الموردين ({n})، والمقارنة دون أسماء مفعّلة. ستظهر العروض هنا عند ردّ الموردين.",
+    "sentDone": "أُرسل إلى الموردين ({n}).",
+    "sentBlindDone": "أُرسل إلى الموردين ({n})، والمقارنة دون أسماء مفعّلة."
   },
   "reasons": {
     "stocksAll": "يوفّر كل المطلوب ({categories})",
@@ -710,6 +717,7 @@ export const procurement = defineMessages(
     "chosen": "مُختار",
     "inclDelivery": "شامل التوصيل {fee}",
     "linesInFull": "{covered} من {requested} بنود كاملة",
+    "forLines": "تغطي {covered} من {requested} بنود",
     "ofRequestedValue": "{pct}٪ من القيمة المطلوبة",
     "days": "{n} يوم",
     "inTime": "في الموعد",
@@ -723,7 +731,7 @@ export const procurement = defineMessages(
     "breakdownSum": "المواد {goods} + التوصيل {delivery} + الضريبة 15٪ {vat} = {total}",
     "badges": {
       "best": "أعلى درجة إجمالية",
-      "lowest_landed_cost": "أقل تكلفة حتى الموقع",
+      "lowest_landed_cost": "أقل تكلفة للطلب كاملًا",
       "fastest": "أسرع توريد",
       "best_terms": "أفضل شروط دفع",
       "most_reliable": "الأكثر موثوقية"
