@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Role } from "@/domain/types";
 import { common } from "@/i18n/common";
 import { useMessages } from "@/i18n/locale";
+import { ActivityBell } from "./activity/activity-bell";
 import { LocaleToggle } from "./i18n/locale-toggle";
 import { ROLES } from "./roles";
 import { Icon } from "./ui";
@@ -20,7 +21,7 @@ import { RoleLink } from "./role-link";
 export function RoleNav({ current }: { current: Role }) {
   const m = useMessages(common);
   return (
-    <header className="z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
+    <header className="relative z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-30 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         {m.skipToContent}
       </a>
@@ -61,6 +62,7 @@ export function RoleNav({ current }: { current: Role }) {
             {m.appBar.howWeBuilt}
           </Link>
           <span className="whitespace-nowrap rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs text-ink-muted">{m.sampleData}</span>
+          <ActivityBell role={current} />
           <LocaleToggle />
           <ResetDemoButton />
         </div>
