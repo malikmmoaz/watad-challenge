@@ -32,6 +32,7 @@ import {
   THead,
   Tr,
 } from "@/components/ui";
+import { T } from "@/components/i18n/t";
 import { formatSar, sar } from "@/domain/money";
 import { OfferComparisonDemo } from "./offer-comparison-demo";
 import { RtlSpecimen } from "./rtl-specimen";
@@ -95,7 +96,16 @@ const sections = [
 
 export default function DesignSystemPage() {
   return (
-    <main id="main" className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-8">
+    <main id="main" lang="en" dir="ltr" className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-8">
+      {/* A reference for engineers: code names stay English and left to right in both locales.
+          Arabic readers get a pointer to the right-to-left specimen below. */}
+      <p lang="ar" dir="rtl" className="hidden rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink [html[dir=rtl]_&]:block">
+        <T m={{ en: "", ar: "هذه الصفحة مرجع للمهندسين، لذا تبقى بالإنجليزية ومن اليسار إلى اليمين. لرؤية المكونات نفسها بالعربية ومن اليمين إلى اليسار، انتقل إلى قسم " }} />
+        <a href="#rtl" className="font-medium text-stamp underline decoration-stamp/35 hover:decoration-stamp">
+          <T m={{ en: "", ar: "«العربية، من اليمين إلى اليسار»" }} />
+        </a>
+        .
+      </p>
       <PageHeader
         title="Design system"
         serial="src/components/ui"
