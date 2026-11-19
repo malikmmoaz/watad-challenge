@@ -41,7 +41,7 @@ export function ScoreScale({ score, bands = creditBands, label = "Credit score",
         </span>
       </div>
       <div className="relative mt-3 pt-2">
-        <span className="absolute top-0 h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[7px] border-x-transparent border-t-ink" style={{ left: `${s}%` }} />
+        <span className="absolute top-0 h-0 w-0 -translate-x-1/2 border-x-[5px] rtl:translate-x-1/2 border-t-[7px] border-x-transparent border-t-ink" style={{ insetInlineStart: `${s}%` }} />
         <div className="flex h-2 gap-px overflow-hidden rounded-xs">
           {sorted.map((b, i) => {
             const to = sorted[i + 1]?.from ?? 100;
@@ -87,7 +87,7 @@ export function CreditCapMeter({ cap, drawn, thisPo = 0, format, barOnly = false
         <span className="bg-ink-muted" style={{ width: w(drawn) }} />
         {thisPo ? <span className="bg-pine" style={{ width: w(Math.min(thisPo, Math.max(0, cap - drawn))) }} /> : null}
         {over > 0 ? <span className="bg-negative" style={{ width: w(over) }} /> : null}
-        {over > 0 ? <span className="absolute inset-y-0 w-0.5 bg-ink" style={{ left: w(cap) }} /> : null}
+        {over > 0 ? <span className="absolute inset-y-0 w-0.5 bg-ink" style={{ insetInlineStart: w(cap) }} /> : null}
       </div>
       <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-muted">
         <li className="flex items-center gap-1.5">

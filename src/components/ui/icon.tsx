@@ -20,8 +20,11 @@ const paths = {
 
 export type IconName = keyof typeof paths;
 
+/** Glyphs that point along the reading direction; they mirror in right-to-left text. */
+const DIRECTIONAL: ReadonlySet<IconName> = new Set<IconName>(["arrow-right", "chevron-right", "external"]);
+
 /** 16px, 1.5 stroke, one weight everywhere. Decorative unless `label` is set. */
-export function Icon({ name, label, size = 16, ...rest }: { name: IconName; label?: string; size?: number } & Omit<SVGProps<SVGSVGElement>, "name">) {
+export function Icon({ name, label, size = 16, className, ...rest }: { name: IconName; label?: string; size?: number } & Omit<SVGProps<SVGSVGElement>, "name">) {
   return (
     <svg
       width={size}
@@ -35,6 +38,7 @@ export function Icon({ name, label, size = 16, ...rest }: { name: IconName; labe
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
+      className={DIRECTIONAL.has(name) ? `rtl:-scale-x-100 ${className ?? ""}`.trim() : className}
       {...rest}
     >
       <path d={paths[name]} />

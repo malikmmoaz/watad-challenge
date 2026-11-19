@@ -319,6 +319,18 @@ All exported from `@/components/ui`.
 - **Don't** stamp or seal anything a simulated AI produced.
 - **Don't** add a dark theme or a second typeface.
 
+## Arabic and right to left
+
+The whole product runs in Arabic, right to left, with the same design language. Live specimen: the "Arabic, right to left" section of `/design-system`.
+
+- **Direction:** layout uses logical properties only (`ms-`/`me-`, `ps-`/`pe-`, `start-`/`end-`, `text-start`/`text-end`, `insetInlineStart` in inline styles). Never `ml-`, `pr-`, `left-`, `text-right` and the like in new code.
+- **Icons:** `arrow-right`, `chevron-right` and `external` mirror automatically under `dir="rtl"` (`Icon` adds `rtl:-scale-x-100`). Hover nudges along the reading direction need an `rtl:` counterpart (`group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5`).
+- **Bars and meters** fill from the reading start: score bands, the credit cap meter, factor bars and lead-time bars flip with the direction; the band marker and cap edge are placed with `insetInlineStart`.
+- **Numbers:** Western digits and `SAR`/`ر.س` amounts stay left to right inside Arabic text; money and counts still align to the column end (`text-end`).
+- **Type:** Arabic sets in Noto Sans Arabic (400 / 600 / 700) with Public Sans as the fallback for Latin names, codes and digits. The scale steps up about 7% with looser leading (display 1.2, body 1.75rem). Arabic is **never letter-spaced**: tracking breaks the joins, so all tracking is zeroed under `lang="ar"`.
+- **Display accent:** the phrase set in Instrument Serif italic in English is set in **Noto Naskh Arabic 700** in Arabic: Arabic has no italic, and the classical Naskh against the sans gives the same contrast. Write it as `font-serif`; the swap is automatic.
+- **Copy** is written in Arabic in Watad's terms (عروض، حد ائتماني، أمر شراء، ربح المرابحة مع معدل النسبة السنوي), never translated word for word.
+
 ## Inspiration
 
 Five reference sites, re-studied on 18 Nov 2026 from 1440-wide renders (phonic.ai from its first three screens). We take patterns, never their copy, logos, illustrations or exact layouts. Where a reference conflicts with a rule in this file, the rule wins.

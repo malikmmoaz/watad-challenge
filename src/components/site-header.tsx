@@ -10,7 +10,7 @@ const LINKS = [
 export function SiteHeader({ current }: { current?: (typeof LINKS)[number]["href"] }) {
   return (
     <header className="sticky top-0 z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-10 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-10 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         Skip to content
       </a>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5 sm:px-8">

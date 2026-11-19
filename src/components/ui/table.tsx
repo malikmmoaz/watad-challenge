@@ -9,7 +9,7 @@ import { cx } from "./cx";
 export function Table({ caption, children, className, minWidth = 640 }: { caption: string; children: ReactNode; className?: string; minWidth?: number }) {
   return (
     <div className={cx("relative overflow-x-auto rounded-xl border border-line bg-surface shadow-card", className)} tabIndex={0} role="region" aria-label={caption}>
-      <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
+      <table className="w-full border-collapse text-start text-sm" style={{ minWidth }}>
         <caption className="sr-only">{caption}</caption>
         {children}
       </table>
@@ -22,7 +22,7 @@ export function THead({ children }: { children: ReactNode }) {
 }
 
 type Align = "start" | "end";
-const alignClass: Record<Align, string> = { start: "text-left", end: "text-right" };
+const alignClass: Record<Align, string> = { start: "text-start", end: "text-end" };
 
 /** Numbers and money align to the end so digits line up. */
 export function Th({ align = "start", className, children, ...rest }: { align?: Align } & Omit<ThHTMLAttributes<HTMLTableCellElement>, "align">) {

@@ -51,8 +51,8 @@ export function Input({ label, hint, error, suffix, optional, className, id: giv
   return (
     <Shell id={id} {...shell}>
       <div className="relative">
-        <input id={id} className={cx(control, "h-10", suffix && "pr-16", className)} aria-invalid={error ? true : undefined} aria-describedby={describe(id, shell)} required={!optional && rest.required} {...rest} />
-        {suffix ? <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">{suffix}</span> : null}
+        <input id={id} className={cx(control, "h-10", suffix && "pe-16", className)} aria-invalid={error ? true : undefined} aria-describedby={describe(id, shell)} required={!optional && rest.required} {...rest} />
+        {suffix ? <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-ink-muted">{suffix}</span> : null}
       </div>
     </Shell>
   );
@@ -76,10 +76,10 @@ export function Select({ label, hint, error, optional, className, id: given, chi
   return (
     <Shell id={id} {...shell}>
       <div className="relative">
-        <select id={id} className={cx(control, "h-10 appearance-none pr-9", className)} aria-invalid={error ? true : undefined} aria-describedby={describe(id, shell)} {...rest}>
+        <select id={id} className={cx(control, "h-10 appearance-none pe-9", className)} aria-invalid={error ? true : undefined} aria-describedby={describe(id, shell)} {...rest}>
           {children}
         </select>
-        <Icon name="chevron-down" className="pointer-events-none absolute right-3 top-3 text-ink-muted" />
+        <Icon name="chevron-down" className="pointer-events-none absolute end-3 top-3 text-ink-muted" />
       </div>
     </Shell>
   );

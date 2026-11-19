@@ -16,7 +16,7 @@ export interface NavItem {
 export function AppShell({ role, org, nav, current, footer, children }: { role: string; org: string; nav: NavItem[]; current: string; footer?: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-10 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-10 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         Skip to content
       </a>
       <aside className="flex shrink-0 flex-col bg-pine text-on-pine lg:sticky lg:top-0 lg:h-dvh lg:w-60">
