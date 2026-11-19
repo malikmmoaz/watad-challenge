@@ -13,6 +13,7 @@ _Changes merged after this section was written are listed here and folded into 1
 - Credit, contractor side: an approval now says what it means for you (credit cap, band and Murabaha markup with APR, before and after, and from when it applies), the reasons in plain words (what counted for you, what held it back) above the credit manager's note, and while waiting, what happens next. On phones, credit draws read as cards instead of a sideways-scrolling table.
 - Credit: applying for a higher cap can no longer lower it. The form starts at the current cap and asks for more; the credit manager sees "current cap → approving"; approving less than the current cap keeps the cap and applies the new terms; the contractor sees "Credit cap raised from X to Y", so the next purchase order is paid on credit as expected.
 - Credit in Arabic: the four sample applicants (Rawasi Najd, Durrat Al-Qassim, Sahel Al-Sharq, Bunyan Al-Hijaz) appear under their Arabic names in the queue, the case file and the memo; any Latin name left in Arabic text keeps its punctuation in place.
+- Credit case file, compact: a Top factors strip (three strongest, two weakest) beside the score; one row per factor with why it matters, its effect and the evidence one click away; policy rules and the what-if beside the decision; each document's extracted fields behind its header (evidence links open it); the memo leads with its recommendation. About 40% shorter at 1440 with nothing removed.
 
 ## 1.0.0 · 2026-11-19
 

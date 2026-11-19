@@ -57,20 +57,30 @@ function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[];
 
 /** Renders the simulated memo's small markdown subset: bold, bullets, paragraphs. */
 function Memo({ text }: { text: string }) {
+  const m = useMessages(credit).caseFile;
+  const line = (raw: string, i: number) => {
+    const html = raw.replace(/^- /, "").split(/\*\*(.+?)\*\*|_(.+?)_/g);
+    const parts = html.map((p, j) => (p === undefined ? null : j % 3 === 1 ? <strong key={j}>{p}</strong> : j % 3 === 2 ? <em key={j}>{p}</em> : p));
+    return raw.startsWith("- ") ? (
+      <p key={i} className="ps-4 before:-ms-3 before:me-1.5 before:content-['•']">
+        {parts}
+      </p>
+    ) : (
+      <p key={i}>{parts}</p>
+    );
+  };
+  const lines = text.split("\n").filter((x) => x.trim());
+  // The recommendation leads; the full memo opens on demand.
+  const [head, ...rest] = lines;
   return (
     <div className="space-y-1.5 text-sm text-ink">
-      {text.split("\n").map((line, i) => {
-        if (!line.trim()) return null;
-        const html = line.replace(/^- /, "").split(/\*\*(.+?)\*\*|_(.+?)_/g);
-        const parts = html.map((p, j) => (p === undefined ? null : j % 3 === 1 ? <strong key={j}>{p}</strong> : j % 3 === 2 ? <em key={j}>{p}</em> : p));
-        return line.startsWith("- ") ? (
-          <p key={i} className="ps-4 before:-ms-3 before:me-1.5 before:content-['•']">
-            {parts}
-          </p>
-        ) : (
-          <p key={i}>{parts}</p>
-        );
-      })}
+      {head && line(head, 0)}
+      {rest.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer list-none text-sm font-medium text-stamp underline underline-offset-[3px] [&::-webkit-details-marker]:hidden">{m.readMemo}</summary>
+          <div className="mt-1.5 space-y-1.5">{rest.map((x, i) => line(x, i + 1))}</div>
+        </details>
+      )}
     </div>
   );
 }
@@ -89,6 +99,41 @@ function ImpactLine({ impact, weight, points }: { impact?: FactorImpact; weight:
       {fill(m.without, { outcome: outcomeText(impact.atZero) })}
       {same(impact.atZero, impact.current) ? `${m.unchanged}.` : "."}
     </p>
+  );
+}
+
+/** The three strongest and two weakest factors, by share of their weight earned; each opens its row. */
+function TopFactors({ factors }: { factors: { id: string; points: number; weight: number }[] }) {
+  const all = useMessages(credit);
+  const m = all.caseFile;
+  const ranked = [...factors].filter((x) => x.weight > 0).sort((a, b) => b.points / b.weight - a.points / a.weight);
+  const strongest = ranked.slice(0, 3);
+  const weakest = ranked.slice(-2).reverse();
+  const open = (id: string) => {
+    const el = document.getElementById(`factor-${id}`)?.querySelector("details");
+    if (el) el.open = true;
+  };
+  const chip = (x: (typeof factors)[number], tone: string) => (
+    <li key={x.id}>
+      <a href={`#factor-${x.id}`} onClick={() => open(x.id)} className="flex items-baseline justify-between gap-3 rounded-md px-2 py-1 text-sm hover:bg-paper">
+        <span className="text-ink underline decoration-line-strong underline-offset-[3px]">{all.factors[factorKey(x.id)].label}</span>
+        <span className={`shrink-0 tabular-nums ${tone}`}>
+          {Math.round((x.points / x.weight) * 100)}%
+        </span>
+      </a>
+    </li>
+  );
+  return (
+    <section aria-label={m.topFactors} className="grid gap-3 rounded-xl bg-paper p-3 sm:grid-cols-2" data-testid="credit-top-factors">
+      <div>
+        <h3 className="px-2 text-xs font-semibold text-ink-muted">{m.strongest}</h3>
+        <ul className="mt-1" data-testid="credit-top-strongest">{strongest.map((x) => chip(x, "text-positive"))}</ul>
+      </div>
+      <div>
+        <h3 className="px-2 text-xs font-semibold text-ink-muted">{m.weakest}</h3>
+        <ul className="mt-1" data-testid="credit-top-weakest">{weakest.map((x) => chip(x, "text-caution"))}</ul>
+      </div>
+    </section>
   );
 }
 
@@ -121,6 +166,32 @@ function Preparing({ step }: { step: number }) {
 const FACTOR_KEY = { bank_cashflow: "bank_behaviour", compliance: "compliance_disputes" } as const;
 const factorKey = (id: string) => (FACTOR_KEY[id as keyof typeof FACTOR_KEY] ?? id) as keyof typeof credit.en.factors;
 
+/**
+ * Evidence links point at fields inside collapsed rows (documents, factors). Open the row
+ * that holds the target before the browser scrolls to it, on click and on a hash in the URL.
+ */
+function useOpenTargets() {
+  useEffect(() => {
+    const reveal = (hash: string) => {
+      const el = hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+      const box = el?.closest("details");
+      if (box && !box.open) box.open = true;
+    };
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="#"]');
+      if (a) reveal(a.getAttribute("href")!);
+    };
+    const onHash = () => reveal(window.location.hash);
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("hashchange", onHash);
+    onHash();
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, []);
+}
+
 export function CaseFile({ id }: { id: string }) {
   const all = useMessages(credit);
   const m = all.caseFile;
@@ -128,6 +199,7 @@ export function CaseFile({ id }: { id: string }) {
   const locale = useLocale();
   const c = useDemo((s) => s.creditCases.find((x) => x.id === id));
   const hydrated = useHydrated();
+  useOpenTargets();
   const reduced = useReducedMotion();
   const [step, setStep] = useState<number | null>(null);
   const caseId = c?.id;
@@ -241,15 +313,27 @@ export function CaseFile({ id }: { id: string }) {
             <Panel title={m.scorecard} aside={<span className="text-sm text-ink-muted">{m.scorecardAside}</span>}>
               <div className="space-y-6">
                 <ScoreReveal score={card.total} animate={justScored.has(c.id)} />
-                <ul className="space-y-5" data-testid="credit-factors">
+                <TopFactors factors={card.factors} />
+                {/* One compact row per factor; why it matters, its effect on the outcome and the evidence open on demand. */}
+                <ul className="divide-y divide-line" data-testid="credit-factors">
                   {card.factors.map((fa) => (
-                    <li key={fa.id} className="space-y-1.5">
-                      <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={seedText(fa.rationale, credit.en as never, all)} />
-                      <p className="text-xs text-ink-muted">
-                        <span className="font-medium text-ink">{m.whyLabel}</span> {all.factors[factorKey(fa.id)].why}
-                      </p>
-                      <ImpactLine impact={impacts.find((i) => i.factorId === fa.id)} weight={fa.weight} points={fa.points} />
-                      <Evidence caseId={c.id} refs={fa.evidence} docs={c.documents} />
+                    <li key={fa.id} id={`factor-${fa.id}`} className="scroll-mt-24 py-2.5 first:pt-0 last:pb-0">
+                      <details className="group">
+                        <summary className="flex cursor-pointer list-none items-start gap-2 [&::-webkit-details-marker]:hidden">
+                          <span className="min-w-0 flex-1">
+                            <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={seedText(fa.rationale, credit.en as never, all)} />
+                          </span>
+                          <Icon name="chevron-right" className="mt-0.5 size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" />
+                          <span className="sr-only">{m.factorDetail}</span>
+                        </summary>
+                        <div className="mt-2 space-y-1.5 border-s-2 border-line ps-3">
+                          <p className="text-xs text-ink-muted">
+                            <span className="font-medium text-ink">{m.whyLabel}</span> {all.factors[factorKey(fa.id)].why}
+                          </p>
+                          <ImpactLine impact={impacts.find((i) => i.factorId === fa.id)} weight={fa.weight} points={fa.points} />
+                          <Evidence caseId={c.id} refs={fa.evidence} docs={c.documents} />
+                        </div>
+                      </details>
                     </li>
                   ))}
                 </ul>
@@ -257,23 +341,6 @@ export function CaseFile({ id }: { id: string }) {
             </Panel>
           )}
 
-          {whatIfProfile && <WhatIfPanel key={c.id} caseId={c.id} profile={whatIfProfile} asOf={checksRanOn} />}
-
-          {card && (
-            <Panel title={m.policyTitle}>
-              <ul className="space-y-2 text-sm">
-                {card.policyChecks.map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                    <span>
-                      <span className="font-medium text-ink">{seedText(p.rule, credit.en as never, all)}</span>
-                      <span className="block text-ink-muted">{seedText(p.observed, credit.en as never, all)}</span>
-                    </span>
-                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          )}
 
           {card && profile?.bank && (
             <CashflowChart profile={profile} asOf={([...c.log].reverse().find((l) => l.action === "Gated checks run (simulated)")?.at ?? c.updatedAt).slice(0, 10)} seed={c.id} documents={c.documents} />
@@ -283,12 +350,16 @@ export function CaseFile({ id }: { id: string }) {
             <ul className="divide-y divide-line">
               {c.documents.map((d) => (
                 <li key={d.id} className="space-y-2 py-3 first:pt-0">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-ink" dir={d.fileName ? "ltr" : undefined}>{d.fileName || all.documents[d.type].label}</span>
+                  <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm [&::-webkit-details-marker]:hidden">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <Icon name="chevron-right" className="size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" />
+                      <span className="font-medium text-ink" dir={d.fileName ? "ltr" : undefined}>{d.fileName || all.documents[d.type].label}</span>
+                    </span>
                     <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{all.documentStatus[d.status]}</Badge>
-                  </div>
+                  </summary>
                   {d.extracted.length > 0 && (
-                    <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
+                    <dl className="mt-2 grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
                       {d.extracted.map((x) => (
                         <div key={x.key} id={`${d.id}-${x.key}`} className="flex justify-between gap-2 scroll-mt-24 target:bg-stamp-soft">
                           <dt className="text-ink-muted">{fieldLabel(x, all, locale === "ar")}</dt>
@@ -299,6 +370,7 @@ export function CaseFile({ id }: { id: string }) {
                       ))}
                     </dl>
                   )}
+                  </details>
                   {d.findings.map((x, i) => (
                     <p key={i} className={`text-xs ${x.severity === "critical" ? "text-negative" : x.severity === "warning" ? "text-caution" : "text-ink-muted"}`}>
                       {x.kind === "tamper_signal" ? `${m.tamperSignal} ` : ""}
@@ -319,6 +391,21 @@ export function CaseFile({ id }: { id: string }) {
                 <p className="text-sm font-medium text-ink">{fill(m.proposedCap, { cap: f.money(card.proposedCap) })}</p>
                 <p className="text-xs text-ink-muted">{fill(m.neverAbove, { cap: f.money(c.requestedCap) })}</p>
               </div>
+            </Panel>
+          )}
+          {card && (
+            <Panel title={m.policyTitle}>
+              <ul className="space-y-2 text-sm">
+                {card.policyChecks.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                    <span>
+                      <span className="font-medium text-ink">{seedText(p.rule, credit.en as never, all)}</span>
+                      <span className="block text-ink-muted">{seedText(p.observed, credit.en as never, all)}</span>
+                    </span>
+                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
+                  </li>
+                ))}
+              </ul>
             </Panel>
           )}
 
@@ -356,6 +443,7 @@ export function CaseFile({ id }: { id: string }) {
 
           {/* Remount when checks finish so the form starts from the fresh AI proposal. */}
           <DecisionPanel key={`${c.status}-${c.aiProposal ? "ai" : "none"}`} c={c} />
+          {whatIfProfile && <WhatIfPanel key={c.id} caseId={c.id} profile={whatIfProfile} asOf={checksRanOn} />}
 
           {c.status === "approved" && <UtilisationPanel caseId={c.id} />}
 
