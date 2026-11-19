@@ -124,7 +124,7 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
           )}
           {why.length > 2 && (
             <button type="button" className="mt-1.5 text-sm text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp" onClick={() => setOpen((o) => !o)}>
-              {open ? p.showLess : fill(p.showAll, { n: why.length })}
+              {open ? p.showLess : why.length - 2 === 1 ? p.showMoreOne : fill(p.showMore, { n: why.length - 2 })}
             </button>
           )}
         </div>
@@ -306,7 +306,11 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
         </div>
       ) : (
         <p role="status" data-testid="shortlist-sent" className="rounded-xl bg-paper p-4 text-sm text-ink-muted">
-          {fill(rfq.blindComparison ? m.rfqPage.sentBlind : m.rfqPage.sent, { n: rfq.invitedSupplierIds.length })}
+          {/* "Offers appear here…" only while waiting; once offers are in it would contradict the page. */}
+          {fill(
+            rfq.status === "sent" ? (rfq.blindComparison ? m.rfqPage.sentBlind : m.rfqPage.sent) : rfq.blindComparison ? m.rfqPage.sentBlindDone : m.rfqPage.sentDone,
+            { n: rfq.invitedSupplierIds.length },
+          )}
         </p>
       )}
     </div>

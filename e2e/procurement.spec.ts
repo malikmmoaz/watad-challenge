@@ -133,3 +133,17 @@ test("RFQ builder tabs work by keyboard alone (WAI-ARIA tabs, #81)", async ({ pa
   await page.keyboard.press("Tab");
   await expect(page.getByRole("tabpanel", { name: "Upload RFQ / BOQ" })).toBeFocused();
 });
+
+test("comparison reads consistently: whole-order badge, partial offers say what they cover, no stale waiting line", async ({ page }) => {
+  await enterAs(page, "contractor");
+  await page.goto("/contractor/rfq/rfq_1042");
+  // Sawari covers 2 of 3 lines: its cheaper total says so, and the cost badge is about the whole order.
+  await expect(tid(page, "offer-partial-cost")).toHaveText("for 2 of 3 lines");
+  await expect(page.getByText("Lowest cost for the whole order")).toBeVisible();
+  await expect(page.getByText("Lowest landed cost")).toHaveCount(0);
+  // Offers are in: the footer no longer says they will appear.
+  await expect(tid(page, "shortlist-sent")).toHaveText("Sent to 3 suppliers.");
+  // The reasons toggle counts what it will reveal.
+  await expect(page.getByRole("button", { name: /^Show all \d+ reasons$/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Show (\d+ more reasons|1 more reason)$/ }).first()).toBeVisible();
+});
