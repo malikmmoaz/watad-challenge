@@ -566,6 +566,30 @@ export const credit = defineMessages(
       footnote: "The score, limit and profit rate come from the same rules as the real assessment. The profit rate is the flat Murabaha markup for the requested term.",
     },
 
+    cashflow: {
+      title: "Cash flow, last 12 months",
+      simulated: "Simulated from the bank statements",
+      chartLabel: "Monthly inflows and outflows with the closing balance, {from} to {to}. {notes}",
+      inflow: "Inflows",
+      outflow: "Outflows",
+      closing: "Closing balance",
+      unit: "SAR millions",
+      notesTitle: "What the simulated AI noticed",
+      noNotes: "Nothing unusual: steady inflows, no returned cheques, never overdrawn.",
+      note: {
+        one_off_inflow: "One-off inflow in {month}: {times}x a typical month. Check it is trading income, not a loan or asset sale.",
+        seasonal_dip: "Seasonal dip in {month}: inflows at {times}x a typical month, in line with the summer slowdown.",
+        returned_cheque: "A returned cheque in {month}, when the balance was tight.",
+        returned_cheques: "{n} returned cheques in {month}, when the balance was tight.",
+        overdrawn: "Overdrawn in {month}: the balance closed {amount} below zero.",
+      },
+      evidence: "Bank statements",
+      showData: "Show the data",
+      tableCaption: "Monthly cash flow (simulated from the bank statements)",
+      colMonth: "Month",
+      footnote: "Months are simulated from the totals the document reader extracted (annual inflows, average balance, returned cheques); the annual figures match the statements exactly.",
+    },
+
     memo: {
       recommendation: "Recommendation: {decision}, {days} days, band {band} (score {score}{provisional}).",
       recommendationCap: "Recommendation: {decision}, credit cap {cap}, {days} days, band {band} (score {score}{provisional}).",
@@ -1136,6 +1160,30 @@ export const credit = defineMessages(
       outcome: { approve: "موافقة", approve_with_conditions: "موافقة بشروط", refer: "طلب معلومات إضافية", decline: "رفض" },
       noFacility: "لا يوجد تسهيل",
       footnote: "يأتي التقييم والحد ونسبة الربح من القواعد نفسها المستخدمة في التقييم الفعلي. ونسبة الربح هي هامش ربح مرابحة ثابت للمدة المطلوبة.",
+    },
+
+    cashflow: {
+      title: "التدفقات النقدية، آخر 12 شهرًا",
+      simulated: "محاكاة من كشوف الحساب البنكية",
+      chartLabel: "التدفقات الواردة والصادرة شهريًا مع الرصيد الختامي، من {from} إلى {to}. {notes}",
+      inflow: "التدفقات الواردة",
+      outflow: "التدفقات الصادرة",
+      closing: "الرصيد الختامي",
+      unit: "ملايين الريالات",
+      notesTitle: "ما لاحظه الذكاء الاصطناعي (محاكاة)",
+      noNotes: "لا شيء غير معتاد: تدفقات منتظمة، دون شيكات مرتجعة، ودون رصيد مكشوف.",
+      note: {
+        one_off_inflow: "تدفق استثنائي في {month}: {times} ضعف الشهر المعتاد. تحقق من أنه دخل تشغيلي وليس قرضًا أو بيع أصل.",
+        seasonal_dip: "انخفاض موسمي في {month}: التدفقات {times} من الشهر المعتاد، بما يتوافق مع تباطؤ الصيف.",
+        returned_cheque: "شيك مرتجع في {month}، حين كان الرصيد ضيقًا.",
+        returned_cheques: "شيكات مرتجعة في {month}: {n}، حين كان الرصيد ضيقًا.",
+        overdrawn: "رصيد مكشوف في {month}: أُقفل الرصيد دون الصفر بمبلغ {amount}.",
+      },
+      evidence: "كشوف الحساب البنكية",
+      showData: "عرض البيانات",
+      tableCaption: "التدفقات النقدية الشهرية (محاكاة من كشوف الحساب البنكية)",
+      colMonth: "الشهر",
+      footnote: "الأشهر محاكاة من الإجماليات التي استخرجها قارئ المستندات (التدفقات السنوية، متوسط الرصيد، الشيكات المرتجعة)؛ والأرقام السنوية مطابقة للكشوف تمامًا.",
     },
 
     memo: {

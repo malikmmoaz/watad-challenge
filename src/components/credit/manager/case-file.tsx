@@ -21,6 +21,7 @@ import { DecisionPanel } from "./decision-panel";
 import { UtilisationPanel } from "./utilisation-panel";
 import { WhatIfPanel } from "./what-if-panel";
 import { outcomeOf } from "@/domain/credit/what-if";
+import { CashflowChart } from "./cashflow-chart";
 import { GATE_RESULT } from "@/lib/status";
 import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
@@ -273,6 +274,10 @@ export function CaseFile({ id }: { id: string }) {
                 ))}
               </ul>
             </Panel>
+          )}
+
+          {card && profile?.bank && (
+            <CashflowChart profile={profile} asOf={([...c.log].reverse().find((l) => l.action === "Gated checks run (simulated)")?.at ?? c.updatedAt).slice(0, 10)} seed={c.id} documents={c.documents} />
           )}
 
           <Panel title={m.documentsTitle} aside={<AiLabel agent={m.documentReader} />}>
