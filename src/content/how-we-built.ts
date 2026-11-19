@@ -60,7 +60,7 @@ export const howWeBuilt: DocPage = {
           items: [
             { when: "Hours 0 to 2", title: "Plan, scaffold and frozen types; design system; first deploy; all core logic unit-tested." },
             { when: "Hours 2 to 10", title: "The three roles built in parallel: RFQ to purchase order, supplier portal, credit application and credit manager." },
-            { when: "Hours 10 to 17", title: "Credit joined to procurement; end-to-end journeys across roles; analytics and monitoring." },
+            { when: "Hours 10 to 17", title: "Credit joined to procurement; end-to-end journeys across roles; analytics and monitoring; the Arabic version." },
             { when: "Hours 17 to 22", title: "Polish, a full pass against the brief, these pages, then code freeze." },
           ],
         },
@@ -78,6 +78,7 @@ export const howWeBuilt: DocPage = {
             { label: "Pull requests and reviews", href: `${REPO}/pulls?q=is%3Apr`, note: "Each change, who wrote it, and who reviewed it." },
             { label: "CI runs", href: `${REPO}/actions`, note: "Lint, typecheck, unit and end-to-end tests on every change." },
             { label: "Decision records", href: `${REPO}/tree/main/docs/adr`, note: "Why the main technical choices were made." },
+            { label: "Incidents", href: `${REPO}/blob/main/docs/incidents.md`, note: "What broke while building, how we handled it, and what changed after." },
             { label: "Changelog", href: `${REPO}/blob/main/CHANGELOG.md`, note: "What changed, in order." },
             { label: "Live status", href: "https://watad-challenge-demo.betteruptime.com", note: "Uptime of this demo, checked every 3 minutes by Better Stack." },
           ],
@@ -103,6 +104,10 @@ export const howWeBuilt: DocPage = {
             {
               title: "Merge smaller and sooner",
               text: "Pull requests opened in parallel against a moving main often needed rebasing. A fixed merge order, set early, helped.",
+            },
+            {
+              title: "No automated tests against production",
+              text: "Our test traffic tripped Vercel's bot protection for eight minutes. Tests now run on local builds only, and the config refuses the production URL.",
             },
           ],
         },
