@@ -30,3 +30,4 @@
 - Docs: `docs/incidents.md`, blameless notes on build incidents (stacked PRs closed by a branch deletion, a mid-animation accessibility false failure, stale available credit) and what we changed.
 - Monitoring: Better Stack uptime monitor on the live link with a public status page (linked from How we built it and the README), and browser errors reported to Better Stack error tracking when its DSN is set.
 - Arabic and right-to-left foundation: EN / ع toggle in the app bars, remembered in the browser; app bars, status pages and decision stamps in Arabic; money and dates with Latin digits (ADR 0005).
+- Landing page in Arabic, right to left, with the EN / ع toggle in its nav; the shared components speak Arabic (#7).
