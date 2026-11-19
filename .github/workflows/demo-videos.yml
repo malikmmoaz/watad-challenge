@@ -1,0 +1,36 @@
+name: Demo videos
+
+# Records the README demo clips against a production build served inside the job
+# (never the live site) and uploads docs/demo/*.mp4 and *.gif as an artifact.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --user 1001
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: ffmpeg (static build, no apt)
+        run: npm i --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/ff" ffmpeg-static@5
+      - name: Record and convert
+        env:
+          FFMPEG: ${{ runner.temp }}/ff/node_modules/ffmpeg-static/ffmpeg
+        run: pnpm demo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-videos
+          path: docs/demo
+          retention-days: 7
