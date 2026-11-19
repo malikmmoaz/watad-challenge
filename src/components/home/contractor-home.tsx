@@ -101,7 +101,7 @@ export function ContractorHome() {
         <RfqList />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <Panel title={h.creditCap} aside={facility ? <Badge tone="positive">{fill(h.approvedBand, { band: facility.band })}</Badge> : <Badge>{h.notApplied}</Badge>}>
           {facility ? (
             <div className="flex flex-col gap-5">
