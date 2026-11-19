@@ -4,20 +4,19 @@ import Link from "next/link";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { track } from "@/lib/analytics";
 import { demoPersona, reference } from "@/data";
-import { formatSar } from "@/domain/money";
 import type { City, MaterialCategory, OrgId, PaymentTerms, Rfq, RfqId, RfqLine } from "@/domain/types";
 import { SAMPLE_BOQ_FILE, lineIdFor, simulateBoqExtraction, type BoqExtraction } from "@/lib/procurement/boq";
-import { CATEGORY_LABELS, CITIES, UNIT_SINGULAR, unitLabel } from "@/lib/procurement/labels";
+import { CITIES } from "@/lib/procurement/labels";
 import { estimateRfqValue } from "@/lib/procurement/shortlist";
 import { AiLabel, Badge, Facts, PageHeader, Panel, buttonClass } from "@/components/ui";
-import { formatDate } from "@/lib/format";
 import { update } from "@/store";
+import { useProcurementI18n } from "./use-procurement-i18n";
 
-const TERMS: { key: string; label: string; terms: PaymentTerms }[] = [
-  { key: "net30", label: "Net 30 days", terms: { kind: "net", days: 30 } },
-  { key: "net60", label: "Net 60 days", terms: { kind: "net", days: 60 } },
-  { key: "on_delivery", label: "Payment on delivery", terms: { kind: "on_delivery" } },
-  { key: "advance", label: "Payment in advance", terms: { kind: "advance" } },
+const TERMS: { key: string; terms: PaymentTerms }[] = [
+  { key: "net30", terms: { kind: "net", days: 30 } },
+  { key: "net60", terms: { kind: "net", days: 60 } },
+  { key: "on_delivery", terms: { kind: "on_delivery" } },
+  { key: "advance", terms: { kind: "advance" } },
 ];
 const CREDIT_TERMS: PaymentTerms = { kind: "platform_credit", days: 60 };
 const DAY_MS = 86_400_000;
@@ -44,6 +43,12 @@ export function RfqBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Rfq | null>(null);
 
+  const { m, f, fill, terms: termsLabel, unit, city: cityName, category: categoryName, name } = useProcurementI18n();
+  const b = m.rfqBuilder;
+  const lineName = (l: RfqLine) => {
+    const mat = reference.materials.find((x) => x.id === l.materialId);
+    return mat && l.description === mat.name ? name(mat) : l.description;
+  };
   const started = useRef(false);
   const idBase = useId();
   const tabRefs = useRef<Partial<Record<"upload" | "catalog", HTMLButtonElement | null>>>({});
@@ -75,16 +80,16 @@ export function RfqBuilder() {
 
   const estimate = estimateRfqValue({ lines } as Rfq, reference.materials);
   const problems = [
-    lines.length === 0 ? "Add at least one line item" : null,
-    lines.some((l) => !(l.quantity > 0)) ? "Every line needs a quantity above zero" : null,
-    site.trim() === "" ? "Enter the delivery site" : null,
-    requiredBy === "" ? "Choose the required-by date" : null,
+    lines.length === 0 ? b.needLine : null,
+    lines.some((l) => !(l.quantity > 0)) ? b.needQuantity : null,
+    site.trim() === "" ? b.needSite : null,
+    requiredBy === "" ? b.needDate : null,
   ].filter((p): p is string => p !== null);
 
   const confirm = () => {
     const now = Date.now();
     if (Date.parse(`${requiredBy}T00:00:00Z`) <= now) {
-      setError("The required-by date must be in the future.");
+      setError(b.dateInPast);
       return;
     }
     const fromUpload = lines.some((l) => l.parsedBy);
@@ -93,7 +98,7 @@ export function RfqBuilder() {
       id: `rfq_${now.toString(36)}` as RfqId,
       contractorId: contractor.id as OrgId,
       projectId: project.id,
-      title: `${project.name}: ${lines.length} ${lines.length === 1 ? "material" : "materials"}`,
+      title: fill(b.rfqTitle, { project: name(project), n: lines.length }),
       source: fromUpload ? "upload" : "catalog",
       ...(fromUpload && extraction ? { sourceFileName: extraction.fileName } : {}),
       status: "draft",
@@ -118,9 +123,9 @@ export function RfqBuilder() {
     return (
       <div className="space-y-6" data-testid="rfq-confirmed">
         <PageHeader
-          eyebrow="Contractor"
-          title="RFQ confirmed"
-          status={<Badge tone="neutral">Draft</Badge>}
+          eyebrow={b.eyebrow}
+          title={b.confirmedTitle}
+          status={<Badge tone="neutral">{b.draft}</Badge>}
           meta={
             <span data-testid="rfq-id" className="font-mono text-xs text-ink">
               {created.id}
@@ -131,22 +136,22 @@ export function RfqBuilder() {
           <Facts
             columns={3}
             items={[
-              { label: "Scope", value: `${created.lines.length} line ${created.lines.length === 1 ? "item" : "items"}` },
-              { label: "Deliver to", value: created.deliverySite.includes(created.deliveryCity) ? created.deliverySite : `${created.deliverySite}, ${created.deliveryCity}` },
-              { label: "Required on site by", value: formatDate(created.requiredBy) },
-              { label: "Estimate incl. 15% VAT", value: <span className="tabular-nums">{formatSar(estimateRfqValue(created, reference.materials))}</span> },
-              { label: "Payment", value: created.wantsCredit ? "From your credit cap" : "Supplier terms" },
-              { label: "Source", value: created.source === "upload" ? "Uploaded BOQ (simulated reader)" : "Catalog" },
+              { label: b.scope, value: created.lines.length === 1 ? b.lineCountOne : fill(b.lineCount, { n: created.lines.length }) },
+              { label: m.common.deliverTo, value: created.deliverySite.includes(created.deliveryCity) ? created.deliverySite : `${created.deliverySite}, ${cityName(created.deliveryCity)}` },
+              { label: m.common.requiredOnSiteBy, value: f.date(created.requiredBy) },
+              { label: b.estimateLabel, value: <span className="tabular-nums">{f.money(estimateRfqValue(created, reference.materials))}</span> },
+              { label: m.common.payment, value: created.wantsCredit ? b.fromCreditCap : b.supplierTerms },
+              { label: b.source, value: created.source === "upload" ? b.sourceUpload : b.sourceCatalog },
             ]}
           />
-          <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">Saved as a draft. Next: choose which suppliers receive it from the explainable shortlist.</p>
+          <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">{b.savedAsDraft}</p>
         </Panel>
         <div className="flex flex-wrap gap-3">
           <Link href={`/contractor/rfq/${created.id}`} data-testid="rfq-choose-suppliers" className={buttonClass("primary")}>
-            Choose suppliers
+            {b.chooseSuppliers}
           </Link>
           <Link href="/contractor" className={buttonClass("secondary")}>
-            Back to my RFQs
+            {m.common.backToMyRfqs}
           </Link>
         </div>
       </div>
@@ -189,35 +194,33 @@ export function RfqBuilder() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Contractor" title="New request for quotation" meta="Upload a bill of quantities or pick materials from the catalog, then confirm quantities, specs and delivery." />
+      <PageHeader eyebrow={b.eyebrow} title={b.title} meta={b.intro} />
 
-      <Panel title="Add line items">
-        <div role="tablist" aria-label="How to add line items" className="mb-4 inline-flex gap-0.5 rounded-md border border-line-control bg-panel p-0.5">
-          {tab("upload", "Upload RFQ / BOQ")}
-          {tab("catalog", "Pick from catalog")}
+      <Panel title={b.addLineItems}>
+        <div role="tablist" aria-label={b.tabsLabel} className="mb-4 inline-flex gap-0.5 rounded-md border border-line-control bg-panel p-0.5">
+          {tab("upload", b.tabUpload)}
+          {tab("catalog", b.tabCatalog)}
         </div>
 
         {mode === "upload" ? (
           <div role="tabpanel" id={panelId("upload")} aria-labelledby={tabId("upload")} tabIndex={0} className="space-y-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink">
             <p className="text-sm text-ink-muted">
-              <AiLabel agent="BOQ reader" className="mr-1 align-middle" /> The BOQ reader is simulated: CSV and TXT files (<code>description; quantity; unit</code>) are read and matched to the catalog by keyword; any other
-              file returns a fixed sample extraction. Always review the lines before confirming.
+              <AiLabel agent={b.boqReader} className="me-1 align-middle" /> {b.boqExplainer}
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <input type="file" data-testid="rfq-upload" aria-label="RFQ or BOQ file" accept=".csv,.txt,.tsv,.pdf,.xlsx,.xls" className="max-w-full text-sm text-ink-muted file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-control file:bg-surface file:px-3 file:text-sm file:font-medium file:text-ink hover:file:bg-paper" onChange={(e) => void onFile(e.target.files?.[0])} />
+              <input type="file" data-testid="rfq-upload" aria-label={b.fileLabel} accept=".csv,.txt,.tsv,.pdf,.xlsx,.xls" className="max-w-full text-sm text-ink-muted file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-line-control file:bg-surface file:px-3 file:text-sm file:font-medium file:text-ink hover:file:bg-paper" onChange={(e) => void onFile(e.target.files?.[0])} />
               <button type="button" data-testid="rfq-upload-sample" className={buttonClass("secondary", "sm")} onClick={() => applyExtraction(simulateBoqExtraction(SAMPLE_BOQ_FILE, null, reference.materials))}>
-                Try the sample BOQ
+                {b.trySample}
               </button>
             </div>
             {extraction && (
               <div data-testid="rfq-extraction" className="rounded-md border border-dashed border-ai-line bg-ai-soft p-3 text-sm text-ink">
                 <p>
-                  <strong>{extraction.fileName}</strong>: {extraction.lines.length} line items extracted
-                  {extraction.mode === "sample" ? " (sample extraction, not read from your file)" : " from the file"}. Simulated AI, check each line below.
+                  {fill(extraction.mode === "sample" ? b.extractedSample : b.extractedFromFile, { file: extraction.fileName, n: extraction.lines.length })}
                 </p>
                 {extraction.unmatched.length > 0 && (
                   <p className="mt-1">
-                    Not matched to the catalog, add by hand if needed: {extraction.unmatched.join("; ")}
+                    {fill(b.unmatched, { rows: extraction.unmatched.map((u) => (u.startsWith("Waterproofing membrane") ? m.boq.unmatchedSample : u)).join("; ") })}
                   </p>
                 )}
               </div>
@@ -228,9 +231,9 @@ export function RfqBuilder() {
             <label className="flex items-center gap-2 text-sm">
               Category
               <select className={input} value={category} onChange={(e) => setCategory(e.target.value as MaterialCategory | "all")}>
-                <option value="all">All categories</option>
+                <option value="all">{b.allCategories}</option>
                 {categories.map((c) => (
-                  <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                  <option key={c} value={c}>{categoryName(c)}</option>
                 ))}
               </select>
             </label>
@@ -240,9 +243,9 @@ export function RfqBuilder() {
                 return (
                   <li key={m.id} className="flex items-start justify-between gap-3 border-t border-line py-3">
                     <div className="text-sm">
-                      <p className="font-medium text-ink">{m.name}</p>
+                      <p className="font-medium text-ink">{name(m)}</p>
                       <p className="text-ink-muted">{m.spec}</p>
-                      <p className="text-ink-muted">Benchmark {formatSar(m.benchmarkUnitPrice)} per {UNIT_SINGULAR[m.unit]} excl. VAT (sample data)</p>
+                      <p className="text-ink-muted">{fill(b.benchmarkPer, { price: f.money(m.benchmarkUnitPrice), unit: unit(m.unit, 1) })}</p>
                     </div>
                     <button
                       type="button"
@@ -252,7 +255,7 @@ export function RfqBuilder() {
                       className={buttonClass("secondary", "sm", "shrink-0")}
                       onClick={() => { start("catalog"); setLines((prev) => [...prev, { id: lineIdFor(m.id), materialId: m.id, description: m.name, spec: m.spec, quantity: 1, unit: m.unit }]); }}
                     >
-                      {added ? "Added" : "Add"}
+                      {added ? b.added : b.add}
                     </button>
                   </li>
                 );
@@ -262,37 +265,37 @@ export function RfqBuilder() {
         )}
       </Panel>
 
-      <Panel title={`Line items (${lines.length})`}>
+      <Panel title={fill(b.lineItems, { n: lines.length })}>
         {lines.length === 0 ? (
-          <p className="text-sm text-ink-muted">No line items yet.</p>
+          <p className="text-sm text-ink-muted">{b.noLines}</p>
         ) : (
           <div>
             {/* A grid, not a table: one row per line from sm up, a stacked card on phones (#29). */}
             <div aria-hidden="true" className="hidden gap-3 border-b border-line-strong pb-1.5 text-xs font-medium text-ink-muted sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem]">
-              <span>Material</span>
-              <span>Spec</span>
-              <span>Quantity</span>
+              <span>{b.material}</span>
+              <span>{b.spec}</span>
+              <span>{b.quantity}</span>
               <span />
             </div>
             <ul className="divide-y divide-line text-sm">
               {lines.map((l) => (
                 <li key={l.id} data-testid="rfq-line" className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_13rem_3.5rem] sm:items-start sm:gap-3">
                   <div className="min-w-0">
-                    <span className="font-medium text-ink sm:font-normal">{l.description}</span>
+                    <span className="font-medium text-ink sm:font-normal">{lineName(l)}</span>
                     {l.parsedBy && (
                       <div className="mt-1">
                         <AiLabel confidence={l.parsedBy.confidence} />
-                        {l.parsedBy.confidence < 0.8 ? <span className="ml-2 text-xs font-medium text-caution">Please check this match</span> : null}
+                        {l.parsedBy.confidence < 0.8 ? <span className="ms-2 text-xs font-medium text-caution">{b.checkMatch}</span> : null}
                       </div>
                     )}
                   </div>
                   <label className="flex min-w-0 flex-col gap-1">
-                    <span className="text-ink-muted sm:sr-only">Spec</span>
-                    <input aria-label={`Spec for ${l.description}`} className={`${input} w-full min-w-0`} value={l.spec} onChange={(e) => patch(l.id, { spec: e.target.value })} />
+                    <span className="text-ink-muted sm:sr-only">{b.spec}</span>
+                    <input aria-label={fill(b.specFor, { item: l.description })} className={`${input} w-full min-w-0`} value={l.spec} onChange={(e) => patch(l.id, { spec: e.target.value })} />
                   </label>
                   <div className="flex items-end justify-between gap-3 sm:contents">
                     <label className="flex flex-col gap-1">
-                      <span className="text-ink-muted sm:sr-only">Quantity</span>
+                      <span className="text-ink-muted sm:sr-only">{b.quantity}</span>
                       <span className="flex items-center gap-2 whitespace-nowrap">
                         <input
                           type="number"
@@ -300,75 +303,77 @@ export function RfqBuilder() {
                           step="any"
                           inputMode="decimal"
                           data-testid="rfq-line-qty"
-                          aria-label={`Quantity for ${l.description}`}
+                          aria-label={fill(b.quantityFor, { item: l.description })}
                           className={`${input} w-28 tabular-nums`}
                           value={Number.isNaN(l.quantity) ? "" : l.quantity}
                           onChange={(e) => patch(l.id, { quantity: e.target.valueAsNumber })}
                         />
-                        {unitLabel(l.unit, l.quantity)}
+                        {unit(l.unit, l.quantity)}
                       </span>
                     </label>
-                    <button type="button" className="py-1.5 text-left text-ink-muted underline decoration-line-strong underline-offset-[3px] hover:text-negative hover:decoration-negative" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
-                      Remove
+                    <button type="button" className="py-1.5 text-start text-ink-muted underline decoration-line-strong underline-offset-[3px] hover:text-negative hover:decoration-negative" onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}>
+                      {m.common.remove}
                     </button>
                   </div>
                 </li>
               ))}
             </ul>
             <p className="mt-3 text-sm text-ink-muted">
-              Estimated value: <strong data-testid="rfq-estimate">{formatSar(estimate)}</strong> incl. 15% VAT, at 90-day benchmark prices (sample data). Offers will set the real price.
+              {b.estimate.split("{total}")[0]}
+              <strong data-testid="rfq-estimate">{f.money(estimate)}</strong>
+              {b.estimate.split("{total}")[1]}
             </p>
           </div>
         )}
       </Panel>
 
-      <Panel title="Delivery and terms">
+      <Panel title={b.deliveryAndTerms}>
         <div className="grid gap-4 text-sm sm:grid-cols-2">
           <label className="flex flex-col gap-1">
-            Project
+            {b.project}
             <select className={input} value={projectId} onChange={(e) => pickProject(e.target.value)}>
               {contractor.activeProjects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{name(p)}</option>
               ))}
             </select>
           </label>
           <label className="flex flex-col gap-1">
-            Delivery city
+            {b.deliveryCity}
             <select data-testid="rfq-city" className={input} value={city} onChange={(e) => setCity(e.target.value as City)}>
               {CITIES.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>{cityName(c)}</option>
               ))}
             </select>
           </label>
           <label className="flex flex-col gap-1">
-            Delivery site
+            {b.deliverySite}
             <input data-testid="rfq-site" className={input} value={site} onChange={(e) => setSite(e.target.value)} />
           </label>
           <div className="flex flex-col gap-1">
-            <label htmlFor="rfq-required-by">Required on site by</label>
+            <label htmlFor="rfq-required-by">{m.common.requiredOnSiteBy}</label>
             <div className="flex flex-wrap items-center gap-2">
               <input id="rfq-required-by" type="date" data-testid="rfq-required-by" className={input} value={requiredBy} onChange={(e) => setRequiredBy(e.target.value)} />
               {[7, 14, 30].map((d) => (
                 <button key={d} type="button" data-testid={`rfq-required-in-${d}`} className={buttonClass("secondary", "sm")} onClick={() => setRequiredBy(new Date(Date.now() + d * DAY_MS).toISOString().slice(0, 10))}>
-                  in {d} days
+                  {fill(b.inDays, { d })}
                 </button>
               ))}
             </div>
           </div>
           <label className="flex flex-col gap-1">
-            Preferred payment terms
+            {b.preferredTerms}
             <select className={input} disabled={wantsCredit} value={termsKey} onChange={(e) => setTermsKey(e.target.value)}>
               {TERMS.map((t) => (
-                <option key={t.key} value={t.key}>{t.label}</option>
+                <option key={t.key} value={t.key}>{termsLabel(t.terms)}</option>
               ))}
             </select>
           </label>
           <label className="flex items-start gap-2 self-end">
             <input type="checkbox" data-testid="rfq-wants-credit" className="mt-1" checked={wantsCredit} onChange={(e) => setWantsCredit(e.target.checked)} />
-            <span>I intend to pay from my credit cap (60 days; the supplier is paid directly). The shortlist will show which suppliers accept it.</span>
+            <span>{b.wantsCredit}</span>
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
-            Notes for suppliers (optional)
+            {b.notes}
             <textarea className={input} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
         </div>
@@ -376,9 +381,9 @@ export function RfqBuilder() {
 
       <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface/95 p-4 shadow-float backdrop-blur">
         <button type="button" data-testid="rfq-confirm" disabled={problems.length > 0} onClick={confirm} className={buttonClass("primary")}>
-          Confirm RFQ
+          {b.confirm}
         </button>
-        <p role="status" className={`text-sm ${error ? "text-negative" : "text-ink-muted"}`}>{error ?? problems[0] ?? "Ready to confirm."}</p>
+        <p role="status" className={`text-sm ${error ? "text-negative" : "text-ink-muted"}`}>{error ?? problems[0] ?? b.ready}</p>
       </div>
     </div>
   );
