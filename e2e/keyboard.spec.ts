@@ -12,6 +12,19 @@ async function tabTo(page: Page, target: Locator, label: string, { checkFocusRin
   const trail: string[] = [];
   for (let i = 0; i < max; i++) {
     await page.keyboard.press(key);
+    // Headless WebKit, after a client-side navigation, can leave keyboard focus outside the
+    // page: every press keeps document.activeElement on <body> (run 44470755923). Give the
+    // window focus back and start sequential navigation from the top of the document.
+    if (i === 1 && (await page.evaluate(() => document.activeElement === document.body))) {
+      await page.bringToFront();
+      await page.evaluate(() => {
+        window.focus();
+        const b = document.body;
+        b.setAttribute("tabindex", "-1");
+        b.focus({ preventScroll: true });
+        b.removeAttribute("tabindex");
+      });
+    }
     // Where focus went, for the error message if the target is never reached.
     trail.push(
       await page.evaluate(() => {

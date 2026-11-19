@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { test, expect, tid, expectNoHorizontalScroll } from "./fixtures";
+import { test, expect, tid, expectNoHorizontalScroll, settled } from "./fixtures";
 
 // The credit journey in Arabic, right to left (ADR 0005): application, manager review and
 // decision, and the contractor's answer. Same test ids as English; Sharia-compliant wording.
@@ -105,8 +105,20 @@ for (const path of ["/contractor/credit", "/contractor/credit/apply", "/credit",
     await page.goto(path);
     await ready(page);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
-    const blocking = violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`);
+    // axe runs over several ticks: start it only once nothing is still being revealed (WebKit).
+    await settled(page);
+    const scan = async () => {
+      const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
+      return violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`);
+    };
+    // A real issue shows on every scan. WebKit can re-render the case file while axe is
+    // mid-run, and axe then reports the replaced node (a labelled textarea): confirm once.
+    let blocking = await scan();
+    if (blocking.length > 0) {
+      await settled(page);
+      const again = await scan();
+      blocking = blocking.filter((b) => again.includes(b));
+    }
     expect(blocking, `serious/critical a11y issues on ${path} (ar)`).toEqual([]);
   });
 }

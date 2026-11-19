@@ -40,7 +40,15 @@ export function ReviewerGuide({ role }: { role: Role }) {
           <HideGuideButton />
         </div>
 
-        <ol className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
+        {/* On phones the steps scroll sideways: the scroller is a focusable, labelled region so
+            keyboard users can scroll it too (axe scrollable-region-focusable), as in ui/table.tsx. */}
+        <div
+          role="region"
+          aria-labelledby="reviewer-guide-h"
+          tabIndex={0}
+          className="-mx-4 mt-4 snap-x snap-mandatory overflow-x-auto rounded-sm px-4 pb-1 [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-glow md:mx-0 md:overflow-visible md:px-0 md:pb-0"
+        >
+        <ol className="flex gap-3 md:grid md:grid-cols-3">
           {panel.steps.map((step, i) => (
             <li key={step.title} className="flex w-[82%] shrink-0 snap-start flex-col gap-2 rounded-xl border border-on-pine/10 bg-pine/60 p-4 md:w-auto">
               <p className="flex items-center gap-2.5 text-sm font-semibold text-on-pine">
@@ -61,6 +69,7 @@ export function ReviewerGuide({ role }: { role: Role }) {
             </li>
           ))}
         </ol>
+        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs text-on-pine-muted">
           <p className="hidden max-w-3xl md:block">

@@ -71,6 +71,45 @@ export async function ready(page: Page) {
   }
 }
 
+/**
+ * Wait until the page has stopped moving: web fonts loaded (WebKit fetches a font file only
+ * when a glyph first needs it, and the swap can re-wrap a line), no streamed boundary still
+ * hidden for the Arabic switch (`data-i18n-hydrated="false"`), and the DOM quiet for 500 ms
+ * (a late re-render mid-axe makes axe judge a node that was just replaced).
+ * With `target`, also wait until its position in the document holds still (whole pixels).
+ * Use before axe (it runs over several ticks) and before any "nothing moved" measurement.
+ */
+export async function settled(page: Page, target?: Locator) {
+  await page.waitForFunction(
+    () => document.fonts.status === "loaded" && document.querySelectorAll('[data-i18n-hydrated="false"]').length === 0,
+  );
+  // Quiet DOM: best effort, so a page with a live clock still gets checked after 5 s.
+  await page.evaluate(() => {
+    const w = window as unknown as { __lastMutation?: number; __quietObserver?: MutationObserver };
+    w.__lastMutation = performance.now();
+    w.__quietObserver?.disconnect();
+    w.__quietObserver = new MutationObserver(() => (w.__lastMutation = performance.now()));
+    w.__quietObserver.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+  });
+  await page
+    .waitForFunction(() => performance.now() - ((window as unknown as { __lastMutation: number }).__lastMutation ?? 0) > 500, undefined, { timeout: 5000, polling: 100 })
+    .catch(() => {});
+  // Detach before axe or the next step runs: nothing should be watching the page meanwhile.
+  await page.evaluate(() => (window as unknown as { __quietObserver?: MutationObserver }).__quietObserver?.disconnect());
+  if (target) {
+    // Same whole-pixel position 300 ms apart (up to ~6 s): late layout has finished.
+    const top = () => target.evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY));
+    let last = await top();
+    for (let i = 0; i < 20; i++) {
+      await page.waitForTimeout(300);
+      const now = await top();
+      if (now === last) return;
+      last = now;
+    }
+    throw new Error(`settled(): ${target} kept moving`);
+  }
+}
+
 /** Pick the expected text for the current locale. */
 export const inLocale = <T>(locale: AppLocale, text: { en: T; ar: T }): T => text[locale];
 

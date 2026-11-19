@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { test, expect, tid } from "./fixtures";
+import { test, expect, tid, settled } from "./fixtures";
 
 // Twelve-month cash flow in the case file: built from the bank statements, simulated-AI
 // notes pinned to months that link to the evidence, a data-table fallback, the time axis
@@ -47,7 +47,8 @@ for (const locale of ["en", "ar"] as const) {
     await expect(chart).not.toContainText("(s)");
 
     // The data table fallback, twelve rows; opening it moves nothing above it.
-    const box = () => plot.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top + window.scrollY, height: r.height }; });
+    const box = () => plot.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: Math.round(r.top + window.scrollY), height: Math.round(r.height) }; });
+    await settled(page, plot);
     const before = await box();
     await chart.locator("summary").click();
     await expect(tid(page, "credit-cashflow-table").locator("tbody tr")).toHaveCount(12);

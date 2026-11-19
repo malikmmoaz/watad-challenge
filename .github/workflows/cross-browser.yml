@@ -22,7 +22,9 @@ jobs:
     # @playwright/test version); installing WebKit's ~200 apt packages on a runner can take 20+ min.
     container:
       image: mcr.microsoft.com/playwright:v1.65.1-noble
-      options: --user 1001
+      # --ipc=host: Docker's default 64 MB /dev/shm is too small for a browser; Firefox's content
+      # process crashed scanning the full credit case file with axe (Playwright's Docker guide).
+      options: --user 1001 --ipc=host
     timeout-minutes: 15
     strategy:
       fail-fast: false
