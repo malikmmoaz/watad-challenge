@@ -11,7 +11,7 @@ import { useDemo } from "@/store";
 export function RfqList() {
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
-  const { m, f, fill, city } = useProcurementI18n();
+  const { m, status: st, f, fill, city } = useProcurementI18n();
   const l = m.rfqList;
   const mine = rfqs.filter((r) => r.contractorId === demoPersona.contractor).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -48,7 +48,7 @@ export function RfqList() {
                 </CellNote>
               </Td>
               <Td>
-                <Badge tone={status.tone}>{m.rfqStatus[r.status]}</Badge>
+                <Badge tone={status.tone}>{st.rfq[r.status]}</Badge>
               </Td>
               <Td align="end">
                 {received}

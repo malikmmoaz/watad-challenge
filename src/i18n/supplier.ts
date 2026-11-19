@@ -238,7 +238,7 @@ export const supplier = defineMessages(
     "nextStep": "خطوتك التالية",
     "total": "الإجمالي شامل الضريبة",
     "placed": "صدر في {when}",
-    "payCredit": "الدفع بالائتمان",
+    "payCredit": "الدفع من الحد الائتماني",
     "payBank": "تحويل بنكي",
     "waitDelivery": "بانتظار تأكيد المقاول للاستلام",
     "waitTransfer": "بانتظار التحويل البنكي من المقاول",

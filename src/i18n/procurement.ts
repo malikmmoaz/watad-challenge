@@ -438,24 +438,39 @@ export const procurement = defineMessages(
     "unmatchedSample": "Waterproofing membrane, 4 mm torch-applied (not in the catalog yet)"
   },
   "home": {
-    "title": "Contractor workspace"
-  },
-  "rfqStatus": {
-    "draft": "Draft",
-    "sent": "Waiting for offers",
-    "offers_received": "Offers received",
-    "awarded": "PO placed",
-    "cancelled": "Cancelled",
-    "expired": "Closed, no offer chosen"
-  },
-  "poStatus": {
-    "placed": "PO placed",
-    "confirmed": "Confirmed by supplier",
-    "dispatched": "Out for delivery",
-    "delivered": "Delivered",
-    "invoiced": "Invoiced",
-    "paid": "Paid",
-    "cancelled": "Cancelled"
+    "title": "Contractor workspace",
+    "cr": "CR",
+    "newRfq": "New RFQ",
+    "creditLink": "Credit cap, applications and progress",
+    "openRfqs": "Open RFQs",
+    "openRfqsNote": "drafts, sent and with offers",
+    "toCompare": "Offers to compare",
+    "posOnWay": "POs on the way",
+    "posOnWayNote": "placed, confirmed or out for delivery",
+    "capLeft": "Credit cap left",
+    "notApplied": "Not applied",
+    "capOf": "of {cap}",
+    "creditCap": "Credit cap",
+    "approvedBand": "Approved · Band {band}",
+    "profitRate": "Profit rate",
+    "profitRateValue": "{rate} for {days} days",
+    "apr": "Equivalent APR",
+    "nextReview": "Next review",
+    "creditBody": "Credit is drawn per PO. The supplier is paid directly; you repay the cost plus the Murabaha markup on the due date. Decided by an independent credit manager on {date}.",
+    "applyBody": "Apply for a credit cap to pay suppliers from credit, one PO at a time. An independent credit manager reviews the application.",
+    "latestPo": "Latest PO",
+    "poNumber": "PO number",
+    "fromCap": "From credit cap, due {date}",
+    "markup": "Murabaha markup {markup} ({rate} profit rate, {apr} APR)",
+    "timelineLabel": "Status of {id}",
+    "empty": "Your first PO appears here once you choose an offer.",
+    "paidFromYourCap": "Supplier paid directly from your credit cap",
+    "actors": {
+      "contractor": "Contractor",
+      "supplier": "Supplier",
+      "credit": "Credit manager",
+      "platform": "Platform"
+    }
   }
 },
   {
@@ -520,7 +535,7 @@ export const procurement = defineMessages(
     "simulatedAi": "ذكاء اصطناعي محاكى",
     "madeInSaudi": "صنع في السعودية",
     "bankTransfer": "تحويل بنكي",
-    "payWithCredit": "الدفع بالائتمان",
+    "payWithCredit": "الدفع من الحد الائتماني",
     "notInBrowser": "ربما أُنشئ في متصفح آخر، أو أُعيد ضبط بيانات العرض التجريبي."
   },
   "rfqBuilder": {
@@ -731,7 +746,7 @@ export const procurement = defineMessages(
     "split": {
       "save": "قسّم الطلب على الموردين ({n}) لتوفير {saving}",
       "noSingle": "لا يغطي عرض واحد كل البنود: قسّم الطلب على الموردين ({n})",
-      "use": "استخدام هذا التقسيم",
+      "use": "اعتماد هذا التقسيم",
       "allocation": "{supplier}: {lines} · {total} شامل التوصيل والضريبة",
       "total": "الإجمالي {total}. لكل مورّد رسوم توصيل خاصة به، وهي مُضمَّنة.",
       "totalVsSingle": "الإجمالي {total} مقابل {single} لأفضل عرض منفرد. لكل مورّد رسوم توصيل خاصة به، وهي مُضمَّنة."
@@ -747,9 +762,9 @@ export const procurement = defineMessages(
     "breakdown": "{goods} + توصيل {delivery} + ضريبة {vat}",
     "total": "الإجمالي {total} شامل ضريبة القيمة المضافة 15%",
     "payment": "الدفع",
-    "payCredit": "الدفع بالائتمان: يُسحب من حدك الائتماني، ويُدفع للمورّد مباشرة",
+    "payCredit": "الدفع من الحد الائتماني: يُدفع للمورّد مباشرة",
     "payBank": "تحويل بنكي للمورّد وفق شروطه المتفق عليها",
-    "blockedTitle": "الدفع بالائتمان غير متاح لهذا الطلب",
+    "blockedTitle": "الدفع من الحد الائتماني غير متاح لهذا الطلب",
     "youCan": "يمكنك:",
     "altBank": "الدفع للمورّد وفق شروطه بالتحويل البنكي (محدد أدناه)؛",
     "altSplit": "تقسيم السلة على عدة موردين",
@@ -774,7 +789,7 @@ export const procurement = defineMessages(
     "one": "تم إصدار أمر الشراء",
     "many": "تم إصدار أوامر الشراء ({n})",
     "announce": "{title}: {ids}، والإجمالي {total} شامل الضريبة.",
-    "methodCredit": "الدفع بالائتمان (يُدفع للمورّد مباشرة من حدك الائتماني)",
+    "methodCredit": "الدفع من الحد الائتماني (يُدفع للمورّد مباشرة)",
     "methodBank": "تحويل بنكي",
     "total": "الإجمالي {total} شامل ضريبة القيمة المضافة 15%",
     "poNumber": "رقم أمر الشراء",
@@ -815,7 +830,7 @@ export const procurement = defineMessages(
     "goods": "المواد",
     "delivery": "التوصيل",
     "vat": "ضريبة القيمة المضافة 15%",
-    "paymentCredit": "الدفع بالائتمان، ويُدفع للمورّد مباشرة",
+    "paymentCredit": "الدفع من الحد الائتماني، ويُدفع للمورّد مباشرة",
     "creditDrawTitle": "السحب الائتماني (مرابحة)",
     "drawn": "المسحوب من الحد الائتماني",
     "markup": "هامش الربح",
@@ -889,24 +904,39 @@ export const procurement = defineMessages(
     "unmatchedSample": "غشاء عزل مائي 4 مم يُركَّب باللهب (غير موجود في الكتالوج بعد)"
   },
   "home": {
-    "title": "مساحة عمل المقاول"
-  },
-  "rfqStatus": {
-    "draft": "مسودة",
-    "sent": "بانتظار العروض",
-    "offers_received": "وصلت العروض",
-    "awarded": "صدر أمر الشراء",
-    "cancelled": "ملغى",
-    "expired": "أُغلق دون اختيار عرض"
-  },
-  "poStatus": {
-    "placed": "صدر أمر الشراء",
-    "confirmed": "أكّده المورّد",
-    "dispatched": "قيد التوصيل",
-    "delivered": "تم التسليم",
-    "invoiced": "صدرت الفاتورة",
-    "paid": "مدفوع",
-    "cancelled": "ملغى"
+    "title": "مساحة عمل المقاول",
+    "cr": "السجل التجاري",
+    "newRfq": "طلب جديد",
+    "creditLink": "الحد الائتماني والطلبات ومتابعتها",
+    "openRfqs": "طلبات عروض الأسعار المفتوحة",
+    "openRfqsNote": "المسودات والمرسلة وما وصلته عروض",
+    "toCompare": "عروض بانتظار المقارنة",
+    "posOnWay": "أوامر شراء قيد التنفيذ",
+    "posOnWayNote": "صادرة أو مؤكدة أو قيد التوصيل",
+    "capLeft": "المتبقي من الحد الائتماني",
+    "notApplied": "لم يُقدَّم طلب",
+    "capOf": "من {cap}",
+    "creditCap": "الحد الائتماني",
+    "approvedBand": "معتمد · الفئة {band}",
+    "profitRate": "معدل الربح",
+    "profitRateValue": "{rate} لمدة {days} يوم",
+    "apr": "معدل النسبة السنوي المكافئ (APR)",
+    "nextReview": "المراجعة القادمة",
+    "creditBody": "يُسحب الائتمان لكل أمر شراء على حدة. يُدفع للمورّد مباشرة، وتسدّد التكلفة مع هامش ربح المرابحة في تاريخ الاستحقاق. صدر القرار من مدير ائتمان مستقل في {date}.",
+    "applyBody": "تقدّم بطلب حد ائتماني لتدفع للموردين من الائتمان، أمر شراء تلو الآخر. يراجع الطلب مدير ائتمان مستقل.",
+    "latestPo": "أحدث أمر شراء",
+    "poNumber": "رقم أمر الشراء",
+    "fromCap": "من الحد الائتماني، يستحق في {date}",
+    "markup": "هامش ربح المرابحة {markup} (معدل ربح {rate}، ومعدل سنوي {apr} APR)",
+    "timelineLabel": "حالة {id}",
+    "empty": "يظهر هنا أول أمر شراء لك بعد اختيار عرض.",
+    "paidFromYourCap": "دُفع للمورّد مباشرة من حدك الائتماني",
+    "actors": {
+      "contractor": "المقاول",
+      "supplier": "المورّد",
+      "credit": "مدير الائتمان",
+      "platform": "المنصة"
+    }
   }
 },
 );

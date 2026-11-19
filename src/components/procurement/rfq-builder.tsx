@@ -43,12 +43,8 @@ export function RfqBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Rfq | null>(null);
 
-  const { m, f, fill, terms: termsLabel, unit, city: cityName, category: categoryName, name } = useProcurementI18n();
+  const { m, f, fill, terms: termsLabel, unit, city: cityName, category: categoryName, name, lineName } = useProcurementI18n();
   const b = m.rfqBuilder;
-  const lineName = (l: RfqLine) => {
-    const mat = reference.materials.find((x) => x.id === l.materialId);
-    return mat && l.description === mat.name ? name(mat) : l.description;
-  };
   const started = useRef(false);
   const idBase = useId();
   const tabRefs = useRef<Partial<Record<"upload" | "catalog", HTMLButtonElement | null>>>({});

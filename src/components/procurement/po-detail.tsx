@@ -7,12 +7,15 @@ import { PO_STATUS } from "@/lib/status";
 import { reference } from "@/data";
 import type { PurchaseOrder } from "@/domain/types";
 import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
+import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
+import { track } from "@/lib/analytics";
+import { getState, update, useDemo } from "@/store";
 import { useProcurementI18n } from "./use-procurement-i18n";
 
 type I18n = ReturnType<typeof useProcurementI18n>;
 
 /** A timeline note in the reader's locale: the ones procurement logic writes are recognised; seed notes are data. */
-const noteText = (i: I18n, note: string): string => {
+export const poNoteText = (i: I18n, note: string): string => {
   if (!i.ar) return note;
   const split = note.match(/^Part (\d+) of (\d+) of a split order$/);
   if (split) return i.fill(i.m.poNotes.splitPart, { i: split[1]!, n: split[2]! });
@@ -25,10 +28,6 @@ const noteText = (i: I18n, note: string): string => {
 /** The action label for the party whose step it is, by PO status. */
 const actionLabel = (i: I18n, status: string): string =>
   status === "placed" ? i.m.poActions.accept : status === "confirmed" ? i.m.poActions.dispatch : status === "dispatched" ? i.m.poActions.confirmDelivery : status === "delivered" ? i.m.poActions.invoice : i.m.poActions.markPaid;
-import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
-import { track } from "@/lib/analytics";
-import { getState, update, useDemo } from "@/store";
-
 
 export function timelineSteps(po: PurchaseOrder, i: I18n): TimelineStep[] {
   const at = stepIndex(po.status);
@@ -38,7 +37,7 @@ export function timelineSteps(po: PurchaseOrder, i: I18n): TimelineStep[] {
       label: i.m.poSteps[step.status as keyof I18n["m"]["poSteps"]].label,
       state: po.status === "cancelled" ? "problem" : idx <= at ? "done" : idx === at + 1 ? "current" : "upcoming",
       ...(event ? { at: i.f.dateTime(event.at), actor: (i.m.poPage.actors as Record<string, string>)[event.actor] ?? event.actor } : {}),
-      ...(event?.note ? { note: noteText(i, event.note) } : idx === at + 1 && PO_STEPS[at] ? { note: i.m.poSteps[PO_STEPS[at]!.status as keyof I18n["m"]["poSteps"]].next } : {}),
+      ...(event?.note ? { note: poNoteText(i, event.note) } : idx === at + 1 && PO_STEPS[at] ? { note: i.m.poSteps[PO_STEPS[at]!.status as keyof I18n["m"]["poSteps"]].next } : {}),
     };
   });
 }
@@ -79,7 +78,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
     const after = getState().purchaseOrders.find((p) => p.id === po.id);
     if (after && after.status !== po.status) {
       track("po_status_changed", { po_id: po.id, status: after.status });
-      setJustDone({ status: after.status, label: i.m.poStatus[after.status], by: role });
+      setJustDone({ status: after.status, label: i.status.po[after.status], by: role });
     }
   };
   const d = po.creditDraw;
@@ -94,7 +93,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
         serial={po.id}
         status={
           <span data-testid="po-status" data-status={po.status}>
-            <Badge tone={PO_STATUS[po.status].tone}>{i.m.poStatus[po.status]}</Badge>
+            <Badge tone={PO_STATUS[po.status].tone}>{i.status.po[po.status]}</Badge>
           </span>
         }
         meta={
@@ -157,7 +156,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                     return (
                       <li key={ol.rfqLineId} className="flex justify-between gap-3">
                         <span className="text-ink">
-                          {line.description} <span className="text-ink-muted">· {ol.brand}</span>
+                          {i.lineName(line)} <span className="text-ink-muted">· {ol.brand}</span>
                         </span>
                         <span className="tabular-nums text-ink-muted">
                           {i.qty(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {i.f.money(ol.unitPrice)}
