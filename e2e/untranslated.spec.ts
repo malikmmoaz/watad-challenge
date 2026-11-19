@@ -80,18 +80,11 @@ for (const p of PAGES.concat([{ name: "404", path: "/does-not-exist" }])) {
   });
 }
 
-/** Pages where Arabic still renders in the mono face (#134); remove with the fix. */
-const MONO_KNOWN: Record<string, string> = Object.fromEntries(
-  ["/", "/contractor", "/contractor/rfq/new", "/contractor/rfq/rfq_1042", "/contractor/credit", "/contractor/credit/apply", "/supplier", "/supplier/rfq/rfq_1044", "/credit/cases/cc_502", "/how-we-built"].map(
-    (path) => [path, "#134: font-mono labels (eyebrow, landing hero, timeline) render Arabic in a system monospace face"],
-  ),
-);
 
 // Arabic set in a monospace face loses its letter joins (each letter gets a fixed-width cell).
 for (const p of PAGES) {
   test(`mono: ${p.name} sets no Arabic text in a monospace face`, async ({ page, appLocale }) => {
     test.skip(appLocale !== "ar", "Arabic projects only");
-    test.fixme(p.path in MONO_KNOWN, MONO_KNOWN[p.path]);
     await page.goto(p.path);
     await ready(page);
     const mono = await page.evaluate(() => {
@@ -100,8 +93,14 @@ for (const p of PAGES) {
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
         const el = n.parentElement;
         if (!el || !el.offsetParent || !/[\u0600-\u06FF]/.test(n.textContent ?? "")) continue;
-        const first = getComputedStyle(el).fontFamily.split(",")[0].toLowerCase();
-        if (/mono|courier|monospace/.test(first)) out.push(`"${(n.textContent ?? "").trim().slice(0, 30)}" in ${el.tagName.toLowerCase()}.${String(el.className).split(" ").slice(0, 3).join(".")}`);
+        // A mono face with no Arabic glyphs is fine as long as an Arabic face comes next in the
+        // stack (the browser takes the Arabic glyphs from it). It breaks when the stack falls
+        // through to a system monospace font first.
+        const stack = getComputedStyle(el).fontFamily.toLowerCase().split(",").map((f) => f.trim().replace(/["']/g, ""));
+        if (!/mono|courier|monospace/.test(stack[0] ?? "")) continue;
+        const arabic = stack.findIndex((f) => /arabic|naskh|geeza/.test(f));
+        const generic = stack.findIndex((f) => /^(ui-monospace|monospace|menlo|sf mono|courier)/.test(f));
+        if (arabic === -1 || (generic !== -1 && generic < arabic)) out.push(`"${(n.textContent ?? "").trim().slice(0, 30)}" in ${el.tagName.toLowerCase()}.${String(el.className).split(" ").slice(0, 3).join(".")}`);
       }
       return out;
     });
