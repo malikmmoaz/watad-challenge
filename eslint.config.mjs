@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Lighthouse CI output.
     ".lighthouseci/**",
+    "lighthouse-attempts/**",
     // Playwright output (bundled report JS).
     "e2e/.report/**",
     "e2e/.results/**",
