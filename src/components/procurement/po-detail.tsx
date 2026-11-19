@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Alert, Badge, Button, EmptyState, Facts, PageHeader, Panel, StatusTimeline, buttonClass, type TimelineStep } from "@/components/ui";
 import { PO_STATUS } from "@/lib/status";
-import { reference } from "@/data";
+import { demoPersona, reference } from "@/data";
 import type { PurchaseOrder } from "@/domain/types";
 import { PO_STEPS, stepIndex } from "@/lib/procurement/po";
 import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offer";
@@ -61,6 +61,20 @@ export function timelineSteps(po: PurchaseOrder, i: I18n): TimelineStep[] {
   });
 }
 
+/** Shown when a PO belongs to another company: the same wording on the PO and its tax invoice. */
+export function NotYours({ viewer }: { viewer: "contractor" | "supplier" }) {
+  const i = useProcurementI18n();
+  const pp = i.m.poPage;
+  return (
+    <div className="space-y-6" data-testid="po-not-yours">
+      <PageHeader eyebrow={viewer === "supplier" ? i.m.common.supplier : i.m.common.contractor} title={pp.notYours} />
+      <EmptyState title={pp.notYours} action={<Link href={`/${viewer}`} className={buttonClass("secondary", "sm")}>{i.m.common.back}</Link>}>
+        {pp.notYoursBody}
+      </EmptyState>
+    </div>
+  );
+}
+
 export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer?: "contractor" | "supplier" }) {
   const pos = useDemo((s) => s.purchaseOrders);
   const rfqs = useDemo((s) => s.rfqs);
@@ -81,6 +95,10 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
       </div>
     );
   }
+
+  // Each company sees only its own orders (as RFQs: a supplier only sees requests it was invited to).
+  if (po.supplierId !== demoPersona.supplier && viewer === "supplier") return <NotYours viewer={viewer} />;
+  if (po.contractorId !== demoPersona.contractor && viewer === "contractor") return <NotYours viewer={viewer} />;
 
   const rfq = rfqs.find((r) => r.id === po.rfqId);
   const offer = offers.find((o) => o.id === po.offerId);

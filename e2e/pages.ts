@@ -13,7 +13,7 @@ export const PAGES = [
   { name: "supplier offer form", path: "/supplier/rfq/rfq_1044" },
   { name: "purchase order", path: "/contractor/po/po_3007" },
   { name: "tax invoice", path: "/contractor/po/po_3007/invoice" },
-  { name: "supplier purchase order", path: "/supplier/po/po_3007" },
-  { name: "supplier tax invoice", path: "/supplier/po/po_3007/invoice" },
+  { name: "supplier purchase order", path: "/supplier/po/po_3011" },
+  { name: "supplier tax invoice", path: "/supplier/po/po_3011/invoice" },
   { name: "credit case file", path: "/credit/cases/cc_502" },
 ];

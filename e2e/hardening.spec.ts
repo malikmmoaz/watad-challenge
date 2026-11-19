@@ -112,3 +112,20 @@ test("offer errors reach Arabic: a SAR 5,000,000 unit price is refused in the re
   await expect(page.getByText("الحد الأقصى لسعر الوحدة 1,000,000 ر.س.").first()).toBeVisible();
   await expect(page.getByText("A unit price is at most SAR 1,000,000.")).toHaveCount(0);
 });
+
+test("a supplier cannot open another supplier's purchase order or tax invoice by URL", async ({ page }) => {
+  await enterAs(page, "supplier"); // Rawasi
+  // po_3007 is Sahra's: not available, nothing of the order shown.
+  for (const path of ["/supplier/po/po_3007", "/supplier/po/po_3007/invoice"]) {
+    await page.goto(path);
+    await expect(tid(page, "po-not-yours")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Order not available");
+    await expect(tid(page, "po-total")).toHaveCount(0);
+    await expect(tid(page, "invoice-qr")).toHaveCount(0);
+    await expect(page.getByText("Sahra")).toHaveCount(0);
+  }
+  // Rawasi's own order still opens.
+  await page.goto("/supplier/po/po_3011");
+  await expect(tid(page, "po-total")).toBeVisible();
+  await expect(tid(page, "po-not-yours")).toHaveCount(0);
+});
