@@ -1,7 +1,9 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, useSyncExternalStore, type ReactNode } from "react";
 import { tour } from "@/content/tour";
+import { tourAr } from "@/content/tour-ar";
+import { useLocale } from "@/i18n/locale";
 import { Icon } from "./ui";
 
 /*
@@ -65,28 +67,47 @@ export function HideGuideButton() {
       className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-on-pine/25 px-3 text-xs font-medium text-on-pine transition-colors duration-150 hover:bg-on-pine/10 focus-visible:outline-on-pine"
     >
       <Icon name="x" size={12} strokeWidth={2} />
-      {tour.dismissLabel}
+      {useLocale() === "ar" ? tourAr.dismissLabel : tour.dismissLabel}
     </button>
   );
 }
 
 /** App-bar link that reopens the guide; shown only while the guide is hidden. */
 export function RestartTour() {
+  const locale = useLocale();
   const state = useGuideState();
   if (state !== "hidden") return null;
   return (
     <button
       type="button"
       data-testid="reviewer-guide-restart"
-      aria-label={tour.restartLabel}
+      aria-label={locale === "ar" ? tourAr.restartLabel : tour.restartLabel}
       onClick={() => {
         setHidden(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }}
       className="whitespace-nowrap text-sm text-ink-muted transition-colors duration-150 hover:text-ink"
     >
-      <span className="sm:hidden">Guide</span>
-      <span className="hidden sm:inline">{tour.restartLabel}</span>
+      <span className="sm:hidden">{locale === "ar" ? "الدليل" : "Guide"}</span>
+      <span className="hidden sm:inline">{locale === "ar" ? tourAr.restartLabel : tour.restartLabel}</span>
     </button>
+  );
+}
+
+/** Guide copy in the reader's language; `**Label**` becomes the button-label style. */
+export function GuideText({ en, ar }: { en: string; ar: string }) {
+  const text = useLocale() === "ar" ? ar : en;
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+        i % 2 === 1 ? (
+          <span key={i} className="whitespace-nowrap rounded-md border border-on-pine/20 bg-on-pine/10 px-1.5 py-px font-medium text-on-pine">
+            {part}
+          </span>
+        ) : (
+          <Fragment key={i}>{part}</Fragment>
+        ),
+      )}
+    </>
   );
 }
