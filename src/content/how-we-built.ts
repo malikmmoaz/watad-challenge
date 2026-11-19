@@ -61,7 +61,7 @@ export const howWeBuilt: DocPage = {
             { when: "Hours 0 to 2", title: "Plan, scaffold and frozen types; design system; first deploy; all core logic unit-tested." },
             { when: "Hours 2 to 10", title: "The three roles built in parallel: RFQ to purchase order, supplier portal, credit application and credit manager." },
             { when: "Hours 10 to 17", title: "Credit joined to procurement; end-to-end journeys across roles; analytics and monitoring; the Arabic version." },
-            { when: "Hours 17 to 22", title: "Polish, a full pass against the brief, these pages, then code freeze." },
+            { when: "Hours 17 to 22", title: "A credit what-if simulator, a cash-flow chart, an activity feed, printable POs and tax invoices; hardening, a reviewer-eye read-through, tests in Chrome, Firefox and Safari; then code freeze." },
           ],
         },
       ],

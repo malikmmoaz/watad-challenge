@@ -74,7 +74,7 @@ export const about: DocPage = {
           items: [
             {
               title: "What we cut",
-              text: "Real accounts and a database, real AI calls, e-invoicing with ZATCA, and Arabic. Each needs a backend and a few weeks, not a different design.",
+              text: "Real accounts and a database, real AI calls, and submitting invoices to ZATCA (Phase 2). The simplified tax invoice with its Phase 1 QR is built; Phase 2 needs a backend and a certified integration, not a different design.",
             },
           ],
         },
@@ -162,6 +162,7 @@ export const about: DocPage = {
             ["Islamic finance dominates; Murabaha is a common structure for buying goods.", "Financing shown as Murabaha markup and profit rate with APR. The app never says \"interest\"."],
             ["Price alone misleads: lead time, delivery to site and payment terms decide real cost.", "A comparison on landed cost incl. delivery and 15% VAT, lead time against the site's need date, and terms."],
             ["Local content (Made in Saudi) is a growing requirement on projects.", "Made in Saudi share shown per offer."],
+            ["Every B2B sale needs a ZATCA-compliant tax invoice, and buyers and sellers work in Arabic first.", "A simplified tax invoice with a Phase 1 QR (labelled sample), printable POs, and the whole app in Arabic, right to left, with an EN / ع toggle."],
           ],
         },
         {
