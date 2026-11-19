@@ -99,7 +99,7 @@ export function SupplierHome() {
                   <Tr key={r.id} data-testid="inbox-row" state={awardedToMe ? "recommended" : "default"}>
                     <Td>
                       <Link href={`/supplier/rfq/${r.id}`} data-testid="inbox-open" className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
-                        {r.title}
+                        {i.rfqTitle(r)}
                       </Link>
                       <CellNote>
                         <span className="font-mono">{r.id}</span> · {i.name(contractor)} · {r.lines.length === 1 ? h.lineOne : fill(h.lines, { n: r.lines.length })}

@@ -43,7 +43,7 @@ export function RfqBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<Rfq | null>(null);
 
-  const { m, f, fill, terms: termsLabel, unit, city: cityName, category: categoryName, name, lineName } = useProcurementI18n();
+  const { m, f, fill, terms: termsLabel, unit, city: cityName, category: categoryName, name, lineName, rfqTitle, site: siteText } = useProcurementI18n();
   const b = m.rfqBuilder;
   const started = useRef(false);
   const idBase = useId();
@@ -128,12 +128,12 @@ export function RfqBuilder() {
             </span>
           }
         />
-        <Panel title={created.title} className="motion-safe:animate-rise">
+        <Panel title={rfqTitle(created)} className="motion-safe:animate-rise">
           <Facts
             columns={3}
             items={[
               { label: b.scope, value: created.lines.length === 1 ? b.lineCountOne : fill(b.lineCount, { n: created.lines.length }) },
-              { label: m.common.deliverTo, value: created.deliverySite.includes(created.deliveryCity) ? created.deliverySite : `${created.deliverySite}, ${cityName(created.deliveryCity)}` },
+              { label: m.common.deliverTo, value: siteText(created) },
               { label: m.common.requiredOnSiteBy, value: f.date(created.requiredBy) },
               { label: b.estimateLabel, value: <span className="tabular-nums">{f.money(estimateRfqValue(created, reference.materials))}</span> },
               { label: m.common.payment, value: created.wantsCredit ? b.fromCreditCap : b.supplierTerms },

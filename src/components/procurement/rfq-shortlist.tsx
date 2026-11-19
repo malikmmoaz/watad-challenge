@@ -134,7 +134,7 @@ function SupplierCard({ row, checked, onToggle, locked }: { row: ShortlistRow; c
 }
 
 export function RfqShortlist({ rfqId }: { rfqId: string }) {
-  const { m, status, f, fill, terms, qty, name, city } = useProcurementI18n();
+  const { m, status, f, fill, terms, qty, name, city, rfqTitle, site } = useProcurementI18n();
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
   const facilities = useDemo((s) => s.creditFacilities);
@@ -200,7 +200,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
         </Link>
         <PageHeader
           eyebrow={m.rfqPage.eyebrow}
-          title={rfq.title}
+          title={rfqTitle(rfq)}
           serial={rfq.id}
           status={
             <Badge tone={RFQ_STATUS[rfq.status].tone}>
@@ -212,7 +212,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           meta={
             <>
               <span>
-                {m.common.deliverTo} {rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${city(rfq.deliveryCity)}`}
+                {m.common.deliverTo} {site(rfq)}
               </span>
               <span>{fill(m.rfqPage.deliverBy, { date: f.date(rfq.requiredBy) })}</span>
               <span>{terms(rfq.preferredTerms)}</span>

@@ -11,7 +11,7 @@ import { useDemo } from "@/store";
 export function RfqList() {
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
-  const { m, status: st, f, fill, city } = useProcurementI18n();
+  const { m, status: st, f, fill, city, rfqTitle } = useProcurementI18n();
   const l = m.rfqList;
   const mine = rfqs.filter((r) => r.contractorId === demoPersona.contractor).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -40,7 +40,7 @@ export function RfqList() {
             <Tr key={r.id} data-testid="rfq-row">
               <Td>
                 <Link href={`/contractor/rfq/${r.id}`} className="font-medium text-ink underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
-                  {r.title}
+                  {rfqTitle(r)}
                 </Link>
                 <CellNote>
                   <span className="font-mono">{r.id}</span> · {r.lines.length === 1 ? l.lineOne : fill(l.lines, { n: r.lines.length })} · {city(r.deliveryCity)} · {r.source === "upload" ? l.fromUpload : l.fromCatalog}

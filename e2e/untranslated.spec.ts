@@ -9,8 +9,6 @@ import { PAGES } from "./pages";
 /** Pages still being translated: remove a line in the PR that converts that area. */
 const NOT_YET_TRANSLATED: Record<string, string> = {
   // Checked on main 47e12d2 (19 Nov, 01:35 UTC), every page run without skips.
-  "/contractor": "contractor home KPIs and copy: Omar (homes, in progress)",
-  "/supplier": "supplier home KPIs and copy: Omar (homes, in progress)",
   "/credit/cases/cc_502": "seed free text in the sample case findings: Hana (in progress)",
 };
 

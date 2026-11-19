@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Messages } from "./core";
 import { procurement } from "./procurement";
 import { supplier } from "./supplier";
+import { offers, purchaseOrders, rfqs } from "@/data";
 
 const leaves = (o: Messages | string, path = ""): [string, string][] =>
   typeof o === "string" ? [[path, o]] : Object.entries(o).flatMap(([k, v]) => leaves(v, path ? `${path}.${k}` : k));
@@ -55,5 +56,27 @@ describe("shortlist reasons", () => {
       }
     }
     expect(seen.size).toBeGreaterThan(10);
+  });
+});
+
+describe("seed data in Arabic", () => {
+  it("every seed RFQ has an Arabic title and delivery site, and Arabic notes when it has notes", () => {
+    for (const r of rfqs) {
+      expect(r.titleAr, r.id).toMatch(ARABIC);
+      expect(r.deliverySiteAr, r.id).toMatch(ARABIC);
+      if (r.notes) expect(r.notesAr, r.id).toMatch(ARABIC);
+    }
+  });
+
+  it("every seed offer note and PO timeline note has an Arabic variant", () => {
+    for (const o of offers) if (o.notes) expect(o.notesAr, o.id).toMatch(ARABIC);
+    for (const po of purchaseOrders) for (const e of po.timeline) if (e.note) expect(e.noteAr, `${po.id} ${e.status}`).toMatch(ARABIC);
+  });
+
+  it("po_3011's delivery plan reads in Arabic (Arabic gate)", () => {
+    const po = purchaseOrders.find((p) => p.id === "po_3011");
+    const confirmed = po?.timeline.find((e) => e.status === "confirmed");
+    expect(confirmed?.note).toBe("Rebar on 20 Nov, cement on 21 Nov");
+    expect(confirmed?.noteAr).toBe("حديد التسليح في 20 نوفمبر، والإسمنت في 21 نوفمبر");
   });
 });

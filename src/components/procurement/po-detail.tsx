@@ -17,6 +17,8 @@ type I18n = ReturnType<typeof useProcurementI18n>;
 /** A timeline note in the reader's locale: the ones procurement logic writes are recognised; seed notes are data. */
 export const poNoteText = (i: I18n, note: string): string => {
   if (!i.ar) return note;
+  const seeded = i.seedText(note);
+  if (seeded !== note) return seeded;
   const split = note.match(/^Part (\d+) of (\d+) of a split order$/);
   if (split) return i.fill(i.m.poNotes.splitPart, { i: split[1]!, n: split[2]! });
   if (note === "Supplier paid directly from the contractor's credit cap") return i.m.poNotes.paidFromCap;
@@ -101,7 +103,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
             <span>{i.fill(pp.placed, { when: i.f.dateTime(po.placedAt) })}</span>
             {rfq ? (
               <Link href={`/${viewer}/rfq/${rfq.id}`} className="underline decoration-line-strong underline-offset-[3px] hover:decoration-ink">
-                {rfq.title}
+                {i.rfqTitle(rfq)}
               </Link>
             ) : null}
             <span className="font-semibold tabular-nums text-ink">{i.f.money(po.totalInclVat)}</span>
@@ -138,7 +140,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
             <Facts
               items={[
                 { label: i.m.common.supplier, value: i.name(supplier, po.supplierId) },
-                { label: i.m.common.deliverTo, value: rfq ? (rfq.deliverySite.includes(rfq.deliveryCity) ? rfq.deliverySite : `${rfq.deliverySite}, ${i.city(rfq.deliveryCity)}`) : "" },
+                { label: i.m.common.deliverTo, value: rfq ? i.site(rfq) : "" },
                 { label: pp.expectedDelivery, value: i.f.date(po.expectedDelivery) },
                 { label: pp.goods, value: i.f.money(po.subtotal) },
                 { label: pp.delivery, value: i.f.money(po.deliveryFee) },
@@ -154,12 +156,12 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                   .map((ol) => {
                     const line = rfq.lines.find((l) => l.id === ol.rfqLineId)!;
                     return (
-                      <li key={ol.rfqLineId} className="flex justify-between gap-3">
+                      <li key={ol.rfqLineId} className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-3">
                         <span className="text-ink">
                           {i.lineName(line)} <span className="text-ink-muted">· {ol.brand}</span>
                         </span>
-                        <span className="tabular-nums text-ink-muted">
-                          {i.qty(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {i.f.money(ol.unitPrice)}
+                        <span className="whitespace-nowrap tabular-nums text-ink-muted">
+                          <bdi>{i.qty(Math.min(line.quantity, ol.quantityAvailable), line.unit)}</bdi> × <bdi>{i.f.money(ol.unitPrice)}</bdi>
                         </span>
                       </li>
                     );

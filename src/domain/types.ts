@@ -168,6 +168,8 @@ export interface Rfq {
   contractorId: OrgId;
   projectId: string;
   title: string;
+  /** Arabic for seed data only; what a user types is shown as typed. */
+  titleAr?: string;
   source: "upload" | "catalog";
   /** Original file name when `source` is "upload". */
   sourceFileName?: string;
@@ -175,6 +177,8 @@ export interface Rfq {
   lines: RfqLine[];
   deliveryCity: City;
   deliverySite: string;
+  /** Arabic for seed data only; what a user types is shown as typed. */
+  deliverySiteAr?: string;
   requiredBy: IsoDate;
   /** Offers close at this time. */
   closesAt: IsoDate;
@@ -187,6 +191,7 @@ export interface Rfq {
   blindComparison: boolean;
   createdAt: IsoDate;
   notes?: string;
+  notesAr?: string;
 }
 
 // ---------- shortlist (explainable, credit-aware) ----------
@@ -266,6 +271,8 @@ export interface Offer {
   validUntil: IsoDate;
   submittedAt: IsoDate;
   notes?: string;
+  /** Arabic for seed notes; notes typed in the app stay as typed. */
+  notesAr?: string;
 }
 
 /** Output of offer levelling; computed, never stored. */
@@ -308,6 +315,8 @@ export interface PoEvent {
   at: IsoDate;
   actor: Role | "platform";
   note?: string;
+  /** Arabic for a seed note; notes written in the app stay as typed. */
+  noteAr?: string;
 }
 
 export type PaymentMethod = "platform_credit" | "bank_transfer";
