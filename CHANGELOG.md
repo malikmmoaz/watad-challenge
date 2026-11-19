@@ -4,6 +4,7 @@ All notable changes, grouped by release. Issue and PR numbers refer to github.co
 
 ## Unreleased
 
+- Credit manager "What if" panel: move VAT reconciliation, SIMAH score, overdue receivables, returned cheques and years trading to see score, band, decision, credit cap and Murabaha profit rate with APR respond live. A labelled simulation on a copy of the file; nothing is saved.
 _Changes merged after this section was written are listed here and folded into 1.0.0 when it is tagged at the 12:20 UTC freeze._
 
 - Link previews and icons: a 1200×630 share card (headline, the Arabic line, the three roles) on every page, a title and description per page in English and Arabic (the browser tab follows the language toggle), a favicon, an Apple touch icon and an install manifest in the pine and paper of the design language (#138).
