@@ -69,7 +69,10 @@
   --color-band-d: oklch(0.52 0.18 27);
 
   /* Type: one family, fixed rem scale, ratio about 1.15 */
-  --font-sans: var(--font-public-sans), "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  /* No Arabic face here: Noto Sans Arabic's subsets also cover arrows and symbols (→),
+     so listing it would download it on English pages. Arabic switches to --font-arabic
+     via :lang(ar) below, so the Arabic font loads only when Arabic is on screen (ADR 0005). */
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
   --font-arabic: var(--font-noto-arabic), var(--font-public-sans), "Noto Sans Arabic", "Geeza Pro", sans-serif;
   /* Arabic accent: Naskh for the display phrase the English sets in italic serif */
   --font-arabic-accent: var(--font-noto-naskh), "Noto Naskh Arabic", "Geeza Pro", serif;

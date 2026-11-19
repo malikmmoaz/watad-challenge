@@ -17,7 +17,10 @@ export function LocaleToggle({ className = "" }: { className?: string }) {
       className={`flex h-8 min-w-8 items-center justify-center rounded-full border border-line-control bg-surface px-2.5 text-sm font-semibold text-ink shadow-card transition-colors duration-150 hover:bg-paper ${className}`}
     >
       {/* Accessible name starts with the visible label (WCAG 2.5.3): "EN, switch to English". */}
-      <span lang={next}>{next === "ar" ? "ع" : "EN"}</span>
+      {/* System font for the glyph: the Arabic web font loads only when the page is in Arabic. */}
+      <span lang={next} style={{ fontFamily: "system-ui, sans-serif" }}>
+        {next === "ar" ? "ع" : "EN"}
+      </span>
       <span className="sr-only">, {m.locale.switchTo}</span>
     </button>
   );

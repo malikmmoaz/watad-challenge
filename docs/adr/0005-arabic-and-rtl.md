@@ -22,6 +22,8 @@ Saudi users of a procurement platform read Arabic. The demo must offer full Arab
 
 **Right-to-left layout.** `dir="rtl"` on `<html>` mirrors flex and grid order. Use logical utilities (`ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `text-start`) instead of `ml/mr/pl/pr/left/right/text-left`, and directional icons (`arrow-right`, `chevron-right`, `external`) mirror automatically in `Icon` (#106); use `rtl:` variants for anything else. Arabic typography comes from the design language (#106, DESIGN.md): Noto Sans Arabic with Public Sans for Latin, a slightly larger scale, Noto Naskh for the display accent, never letter-spaced.
 
+**The Arabic font loads only when Arabic is on screen.** The default font stack does not name Noto Sans Arabic (its subsets also cover arrows and symbols, so "→" would download it on English pages); Arabic switches stacks through `:lang(ar)`, and the toggle's "ع" uses the system font. Measured on a local build: 0 Arabic faces on English `/credit` and `/contractor/rfq/rfq_1042`, loaded in Arabic.
+
 **Analytics unchanged.** Events and their properties stay as in `events.ts`; the locale is not tracked.
 
 ## Consequences
