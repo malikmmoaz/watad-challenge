@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { applicantName, demoPersona, reference } from "@/data";
+import { applicantName, applicantNameAr, demoPersona, reference } from "@/data";
 import type { CreditCase } from "@/domain/types";
 import { useDemo } from "@/store";
 import { CellNote, EmptyState, LoadingRows, PageHeader, SampleDataLabel, StatStrip, Table, Td, Th, THead, Tr } from "@/components/ui";
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
-import { applicantText, personName } from "../data-text";
+import { applicantLabel, personName } from "../data-text";
 import { useToday } from "../use-today";
 import { useHydrated } from "../client-state";
 import { CaseStatus, useShortDate } from "./shared";
@@ -35,7 +35,7 @@ export function CreditQueue() {
   const f = useFormat();
   const locale = useLocale();
   const shortDate = useShortDate();
-  const nameOf = (id: string) => (locale === "ar" ? reference.contractors.find((c) => c.id === id)?.nameAr : undefined) ?? applicantText(applicantName(id, reference.contractors), credit.en as never, msgs);
+  const nameOf = (id: string) => applicantLabel(applicantName(id, reference.contractors), applicantNameAr(id, reference.contractors), locale === "ar", credit.en as never, msgs);
   const all = useDemo((s) => s.creditCases);
   const cases = useMemo(
     () => [...all].sort((a, b) => ORDER[a.status] - ORDER[b.status] || (b.submittedAt ?? "").localeCompare(a.submittedAt ?? "")),

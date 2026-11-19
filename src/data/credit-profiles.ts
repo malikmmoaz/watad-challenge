@@ -121,6 +121,11 @@ export const sampleQueueCases: CreditCase[] = SAMPLE_CASES.map((p, i) => {
   };
 });
 
+/** Arabic name for any applicant that has one (contractor directory first, then the sample applicants). */
+export function applicantNameAr(contractorId: string, contractors: { id: string; nameAr?: string }[]): string | undefined {
+  return contractors.find((c) => c.id === contractorId)?.nameAr ?? creditProfiles[contractorId]?.applicant.nameAr;
+}
+
 /** Display name for any applicant, including queue-only sample applicants. */
 export function applicantName(contractorId: string, contractors: { id: string; name: string }[]): string {
   return contractors.find((c) => c.id === contractorId)?.name ?? creditProfiles[contractorId]?.applicant.name ?? contractorId;

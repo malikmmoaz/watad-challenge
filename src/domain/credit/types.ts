@@ -39,6 +39,8 @@ export interface CreditProfile {
   id: string;
   applicant: {
     name: string;
+    /** The registered Arabic name, shown to Arabic readers. */
+    nameAr?: string;
     city: string;
     crNumber: string;
     yearsTrading: number;

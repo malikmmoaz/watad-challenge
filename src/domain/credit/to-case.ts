@@ -20,7 +20,7 @@ import type {
   Scorecard,
   SimulatedAi,
 } from "../types";
-import { EN, fill, type CreditLang } from "./lang";
+import { AR_LANG, EN, fill, type CreditLang } from "./lang";
 import type { Assessment, CreditProfile, Decision, DocKey, FactorId } from "./types";
 
 export const DOC_TYPE: Record<DocKey, CreditDocumentType> = {
@@ -223,7 +223,7 @@ export function draftMemo(p: CreditProfile, a: Assessment, L: CreditLang = EN): 
   const lines = [
     `**${withCap ? fill(m.memo.recommendationCap, { ...rec, cap: money(a.limit.approvedCapSar) }) : fill(m.memo.recommendation, rec)}**`,
     "",
-    fill(m.memo.applicant, { name: p.applicant.name, city: (m.data.cities as Record<string, string>)[p.applicant.city] ?? p.applicant.city, years: p.applicant.yearsTrading, cap: money(p.request.capSar) }),
+    fill(m.memo.applicant, { name: (L === AR_LANG ? p.applicant.nameAr : undefined) ?? p.applicant.name, city: (m.data.cities as Record<string, string>)[p.applicant.city] ?? p.applicant.city, years: p.applicant.yearsTrading, cap: money(p.request.capSar) }),
     "",
     fill(m.memo.strengths, { list: factorList(top.slice(0, 2)) }),
     fill(m.memo.weaknesses, { list: factorList(top.filter((f) => f.assessed).slice(-2)) }),

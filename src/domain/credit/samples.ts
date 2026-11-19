@@ -23,6 +23,7 @@ export const rawasiNajd: CreditProfile = {
   id: 'CA-2026-0041',
   applicant: {
     name: 'Rawasi Najd Contracting Co. (sample)',
+    nameAr: 'شركة رواسي نجد للمقاولات (تجريبية)',
     city: 'Riyadh',
     crNumber: '1010-SAMPLE-41',
     yearsTrading: 14,
@@ -68,6 +69,7 @@ export const durratAlQassim: CreditProfile = {
   id: 'CA-2026-0042',
   applicant: {
     name: 'Durrat Al-Qassim Building Est. (sample)',
+    nameAr: 'مؤسسة درة القصيم للبناء (تجريبية)',
     city: 'Buraydah',
     crNumber: '1131-SAMPLE-42',
     yearsTrading: 6,
@@ -112,6 +114,7 @@ export const sahelAlSharq: CreditProfile = {
   id: 'CA-2026-0043',
   applicant: {
     name: 'Sahel Al-Sharq Contracting Co. (sample)',
+    nameAr: 'شركة ساحل الشرق للمقاولات (تجريبية)',
     city: 'Dammam',
     crNumber: '2050-SAMPLE-43',
     yearsTrading: 8,
@@ -158,6 +161,7 @@ export const bunyanAlHijaz: CreditProfile = {
   id: 'CA-2026-0044',
   applicant: {
     name: 'Bunyan Al-Hijaz Est. (sample)',
+    nameAr: 'مؤسسة بنيان الحجاز (تجريبية)',
     city: 'Jeddah',
     crNumber: '4030-SAMPLE-44',
     yearsTrading: 3,
