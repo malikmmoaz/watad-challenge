@@ -466,6 +466,7 @@ export const credit = defineMessages(
     },
 
     data: {
+      sampleSuffix: " (sample)",
       seed: {
         s01: "Active CR, owners match application.",
         s02: "Four quarters filed on time.",
@@ -1004,6 +1005,7 @@ export const credit = defineMessages(
     },
 
     data: {
+      sampleSuffix: " (تجريبية)",
       seed: {
         s01: "السجل التجاري نشط، والملّاك مطابقون للطلب.",
         s02: "أربعة أرباع مقدّمة في موعدها.",

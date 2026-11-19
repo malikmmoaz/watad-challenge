@@ -9,7 +9,7 @@ import { CellNote, EmptyState, LoadingRows, PageHeader, SampleDataLabel, StatStr
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
-import { personName } from "../data-text";
+import { applicantText, personName } from "../data-text";
 import { useToday } from "../use-today";
 import { useHydrated } from "../client-state";
 import { CaseStatus, useShortDate } from "./shared";
@@ -30,11 +30,12 @@ export function CreditQueuePage() {
 
 /** Applications waiting for the credit manager, the ones needing a decision first. */
 export function CreditQueue() {
-  const m = useMessages(credit).queue;
+  const msgs = useMessages(credit);
+  const m = msgs.queue;
   const f = useFormat();
   const locale = useLocale();
   const shortDate = useShortDate();
-  const nameOf = (id: string) => (locale === "ar" ? reference.contractors.find((c) => c.id === id)?.nameAr : undefined) ?? applicantName(id, reference.contractors);
+  const nameOf = (id: string) => (locale === "ar" ? reference.contractors.find((c) => c.id === id)?.nameAr : undefined) ?? applicantText(applicantName(id, reference.contractors), credit.en as never, msgs);
   const all = useDemo((s) => s.creditCases);
   const cases = useMemo(
     () => [...all].sort((a, b) => ORDER[a.status] - ORDER[b.status] || (b.submittedAt ?? "").localeCompare(a.submittedAt ?? "")),

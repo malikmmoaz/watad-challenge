@@ -34,3 +34,8 @@ export function seedText(text: string, en: M, m: M): string {
   const key = Object.keys(seed).find((k) => seed[k] === text);
   return key ? (m.data.seed as Record<string, string>)[key]! : text;
 }
+
+/** A sample applicant's company name: the name stays, its "(sample)" marker is translated. */
+export function applicantText(name: string, en: M, m: M): string {
+  return name.endsWith(en.data.sampleSuffix) ? name.slice(0, -en.data.sampleSuffix.length) + m.data.sampleSuffix : name;
+}
