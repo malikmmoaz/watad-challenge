@@ -933,7 +933,7 @@ export const procurement = defineMessages(
     "latestPo": "أحدث أمر شراء",
     "poNumber": "رقم أمر الشراء",
     "fromCap": "من الحد الائتماني، يستحق في {date}",
-    "markup": "هامش ربح المرابحة {markup} (معدل ربح {rate}، ومعدل سنوي {apr} APR)",
+    "markup": "هامش ربح المرابحة {markup} (معدل ربح {rate}، ومعدل سنوي {apr})",
     "timelineLabel": "حالة {id}",
     "empty": "يظهر هنا أول أمر شراء لك بعد اختيار عرض.",
     "paidFromYourCap": "دُفع للمورّد مباشرة من حدك الائتماني",

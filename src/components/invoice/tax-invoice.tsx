@@ -151,7 +151,33 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
         </div>
       </Panel>
 
-      <Table caption={`${m.title} ${number}`} minWidth={560}>
+      {/* Phones: one card per line, no sideways scroll (like the PO lines in #137). From sm, and always on paper, the table. */}
+      <ul className="space-y-2 sm:hidden print:hidden" aria-label={`${m.title} ${number}`}>
+        {lines.map((l) => (
+          <li key={l.id} data-testid="invoice-line" className="rounded-xl border border-line bg-surface p-4 text-sm shadow-card">
+            <p className="text-ink">
+              {l.name} <span className="text-ink-muted">· {l.brand}</span>
+            </p>
+            <dl className="mt-3 space-y-1.5">
+              {(
+                [
+                  [m.qty, l.qty],
+                  [m.unitPrice, i.f.money(l.unit)],
+                  [m.lineTotal, i.f.money(l.total)],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label} className="flex items-baseline justify-between gap-4">
+                  <dt className="text-ink-muted">{label}</dt>
+                  <dd className="whitespace-nowrap text-end tabular-nums text-ink">
+                    <bdi>{value}</bdi>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))}
+      </ul>
+      <Table caption={`${m.title} ${number}`} minWidth={560} className="hidden sm:block print:block">
         <THead>
           <tr>
             <Th>{m.item}</Th>
