@@ -54,6 +54,11 @@ export const common = defineMessages(
       supplier: "See matched requests, submit offers with price, stock, lead time and terms, and track awards.",
       credit: "Review documents, gated checks and the scorecard with AI assist, then approve, decline or request more information.",
     },
+    loading: {
+      rfq: "Loading RFQ…",
+      request: "Loading request…",
+      po: "Loading purchase order…",
+    },
     system: {
       backToStart: "Back to the start",
       goToRole: "Go to a role",
@@ -152,6 +157,11 @@ export const common = defineMessages(
       contractor: "ارفع طلب عروض أسعار أو اطلب من الكتالوج، وقارن العروض، وأصدر أمر الشراء، وتقدّم بطلب حد ائتماني.",
       supplier: "اطّلع على الطلبات المطابقة لك، وقدّم عروضك بالسعر والمخزون ومدة التوريد وشروط الدفع، وتابع الترسية.",
       credit: "راجع المستندات والفحوص المرحلية وبطاقة التقييم بمساعدة الذكاء الاصطناعي، ثم وافق أو ارفض أو اطلب معلومات إضافية.",
+    },
+    loading: {
+      rfq: "جارٍ تحميل طلب عروض الأسعار…",
+      request: "جارٍ تحميل الطلب…",
+      po: "جارٍ تحميل أمر الشراء…",
     },
     system: {
       backToStart: "العودة إلى البداية",

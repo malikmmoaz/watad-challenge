@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { LocaleBoundary } from "@/components/i18n/locale-boundary";
 import { CaseFile } from "@/components/credit/manager/case-file";
 import { LoadingRows } from "@/components/ui";
 
@@ -14,7 +15,9 @@ async function CaseFromParams({ params }: { params: PageProps<"/credit/cases/[id
 export default function Page({ params }: PageProps<"/credit/cases/[id]">) {
   return (
     <Suspense fallback={<LoadingRows rows={6} label="Loading credit case" />}>
-      <CaseFromParams params={params} />
+      <LocaleBoundary>
+        <CaseFromParams params={params} />
+      </LocaleBoundary>
     </Suspense>
   );
 }

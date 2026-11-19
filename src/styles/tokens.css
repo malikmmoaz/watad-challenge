@@ -232,6 +232,11 @@
   html.i18n-pending body {
     visibility: hidden;
   }
+  /* Streamed content (inside <Suspense>) arrives as English server HTML; in
+     Arabic, keep it hidden until React has hydrated it in Arabic (LocaleBoundary). */
+  html[lang="ar"] [data-i18n-hydrated="false"] {
+    visibility: hidden;
+  }
   /* The display accent: italic serif in English, Naskh in Arabic. */
   :lang(ar) .font-serif {
     font-style: normal !important;
