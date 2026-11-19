@@ -13,6 +13,10 @@ import { formatQuantity } from "@/lib/procurement/labels";
 import { common } from "@/i18n/common";
 import { msg, type Localized } from "@/i18n/core";
 import { landing } from "@/i18n/landing";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/i18n/meta";
+
+export const metadata: Metadata = pageMetadata("home");
 
 /** Fixed "today" for the seeded sample data, so the page renders the same everywhere. */
 const TODAY = "2026-11-18";

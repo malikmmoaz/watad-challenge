@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { ReviewerGuide } from "@/components/reviewer-guide";
 import { RoleNav } from "@/components/role-nav";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Credit manager workspace" };
+export const metadata: Metadata = pageMetadata("credit");
 
 export default function Layout({ children }: LayoutProps<"/credit">) {
   return (

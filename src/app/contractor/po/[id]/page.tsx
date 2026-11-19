@@ -5,8 +5,9 @@ import { T } from "@/components/i18n/t";
 import { common } from "@/i18n/common";
 import { msg } from "@/i18n/core";
 import { PoDetail } from "@/components/procurement/po-detail";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Purchase order" };
+export const metadata: Metadata = pageMetadata("contractorPo");
 
 async function Content({ params }: { params: PageProps<"/contractor/po/[id]">["params"] }) {
   const { id } = await params;

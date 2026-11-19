@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { LocaleBoundary } from "@/components/i18n/locale-boundary";
 import { CaseFile } from "@/components/credit/manager/case-file";
 import { LoadingRows } from "@/components/ui";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Credit case · Credit manager" };
+export const metadata: Metadata = pageMetadata("creditCase");
 
 async function CaseFromParams({ params }: { params: PageProps<"/credit/cases/[id]">["params"] }) {
   const { id } = await params;
