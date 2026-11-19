@@ -141,8 +141,12 @@ export const procurement = defineMessages(
     "notSent": "Not sent yet",
     "empty": "No RFQs yet",
     "emptyHint": "Upload an RFQ or pick materials from the catalog. Shortlisted suppliers then send their offers here.",
-    "fromUpload": "from upload",
-    "fromCatalog": "from catalog"
+    "fromUpload": "from uploaded RFQ",
+    "fromCatalog": "from catalog",
+    "lines": "{n} lines",
+    "lineOne": "1 line",
+    "payingCredit": " · paying from credit cap",
+    "ofInvited": "of {n} invited"
   },
   "rfqPage": {
     "eyebrow": "Request for quotation",
@@ -588,8 +592,12 @@ export const procurement = defineMessages(
     "notSent": "لم يُرسَل بعد",
     "empty": "لا توجد طلبات بعد",
     "emptyHint": "ارفع طلبًا أو اختر المواد من الكتالوج، وسيرسل الموردون في القائمة المختصرة عروضهم هنا.",
-    "fromUpload": "من ملف مرفوع",
-    "fromCatalog": "من الكتالوج"
+    "fromUpload": "من طلب مرفوع",
+    "fromCatalog": "من الكتالوج",
+    "lines": "البنود: {n}",
+    "lineOne": "بند واحد",
+    "payingCredit": " · الدفع من الحد الائتماني",
+    "ofInvited": "من {n} مدعوّين"
   },
   "rfqPage": {
     "eyebrow": "طلب عروض أسعار",
