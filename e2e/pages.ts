@@ -11,6 +11,9 @@ export const PAGES = [
   { name: "offer comparison", path: "/contractor/rfq/rfq_1042" },
   { name: "credit application", path: "/contractor/credit/apply" },
   { name: "supplier offer form", path: "/supplier/rfq/rfq_1044" },
+  { name: "purchase order", path: "/contractor/po/po_3007" },
   { name: "tax invoice", path: "/contractor/po/po_3007/invoice" },
+  { name: "supplier purchase order", path: "/supplier/po/po_3007" },
+  { name: "supplier tax invoice", path: "/supplier/po/po_3007/invoice" },
   { name: "credit case file", path: "/credit/cases/cc_502" },
 ];
