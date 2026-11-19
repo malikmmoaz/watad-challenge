@@ -60,6 +60,8 @@ export const supplier = defineMessages(
   "form": {
     "title": "Your offer (bid)",
     "intro": "Price the lines you can supply. Leave a price empty to skip a line. Prices are per unit, in SAR excluding VAT. Every invited supplier sees the same request.",
+    "startBenchmark": "Start from the 90-day benchmark (sample)",
+    "startBenchmarkHint": "Fills each empty price with its 90-day benchmark; adjust them before you submit.",
     "cannotSubmit": "Cannot submit",
     "benchmark": "{spec} · 90-day benchmark {price} per unit (sample data)",
     "noBenchmark": "n/a",
@@ -224,6 +226,8 @@ export const supplier = defineMessages(
   "form": {
     "title": "عرضك (العطاء)",
     "intro": "سعّر البنود التي يمكنك توريدها، واترك السعر فارغًا لتخطي أي بند. الأسعار للوحدة بالريال السعودي دون ضريبة القيمة المضافة، ويرى كل الموردين المدعوين الطلب نفسه.",
+    "startBenchmark": "ابدأ من السعر المرجعي لآخر 90 يومًا (بيانات تجريبية)",
+    "startBenchmarkHint": "يملأ كل سعر فارغ بالسعر المرجعي لآخر 90 يومًا؛ عدّل الأسعار قبل الإرسال.",
     "cannotSubmit": "تعذّر الإرسال",
     "benchmark": "{spec} · السعر المرجعي لآخر 90 يومًا {price} للوحدة (بيانات تجريبية)",
     "noBenchmark": "غير متاح",

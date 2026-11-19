@@ -208,6 +208,12 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
   const [errors, setErrors] = useState<OfferErrors>({});
   const { s, f, fill, terms: termsLabel, qty, name, logic } = useProcurementI18n();
   const err = (text: string | undefined) => (text ? { error: logic("supplierErrors", text) } : {});
+  /** This line's 90-day benchmark in SAR (2 decimals), or null when the material has none. */
+  const benchmarkSar = (rfqLineId: string): number | null => {
+    const id = rfq.lines.find((x) => x.id === rfqLineId)?.materialId;
+    const mat = id ? material(id) : undefined;
+    return mat ? Math.round(mat.benchmarkUnitPrice) / 100 : null;
+  };
   const setLine = (i: number, patch: Partial<OfferDraft["lines"][number]>) => setDraft((d) => ({ ...d, lines: d.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
 
   const goods = halalas(draft.lines.reduce((sum, l) => sum + (l.unitPriceSar > 0 ? sar(l.unitPriceSar) * Math.max(0, l.quantityAvailable || 0) : 0), 0));
@@ -236,6 +242,28 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
     <Panel title={s.form.title}>
       <div className="space-y-5" data-testid="offer-form">
         <p className="text-sm text-ink-muted">{s.form.intro}</p>
+        {/* A reviewer should not have to invent rebar prices: one click starts every empty line at its benchmark. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            data-testid="offer-start-benchmark"
+            disabled={!draft.lines.some((l) => Number.isNaN(l.unitPriceSar) && benchmarkSar(l.rfqLineId) !== null)}
+            onClick={() =>
+              setDraft((d) => ({
+                ...d,
+                lines: d.lines.map((l) => {
+                  const b = benchmarkSar(l.rfqLineId);
+                  return Number.isNaN(l.unitPriceSar) && b !== null ? { ...l, unitPriceSar: b } : l;
+                }),
+              }))
+            }
+          >
+            {s.form.startBenchmark}
+          </Button>
+          <span className="text-xs text-ink-muted">{s.form.startBenchmarkHint}</span>
+        </div>
         {errors.form && <Alert tone="negative" title={s.form.cannotSubmit}>{logic("supplierErrors", errors.form)}</Alert>}
         {errors.lines && <p className="text-sm text-negative">{logic("supplierErrors", errors.lines)}</p>}
         <ul className="space-y-4">
@@ -259,6 +287,7 @@ function OfferForm({ rfqId, onDone }: { rfqId: string; onDone: () => void }) {
                     step="0.01"
                     inputMode="decimal"
                     data-testid="offer-line-price"
+                    placeholder={m ? (m.benchmarkUnitPrice / 100).toFixed(2) : undefined}
                     value={Number.isNaN(l.unitPriceSar) ? "" : l.unitPriceSar}
                     onChange={(e) => setLine(i, { unitPriceSar: e.target.valueAsNumber })}
                     {...err(key("price"))}
