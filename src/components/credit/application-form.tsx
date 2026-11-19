@@ -19,7 +19,7 @@ import { sar } from "@/domain/money";
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
-import { cityName } from "./data-text";
+import { cityName, isolateLtr, projectText } from "./data-text";
 import type { Contractor, CreditDocumentType } from "@/domain/types";
 import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
@@ -145,7 +145,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
           <p className="text-sm text-ink">
             {fill(m.company, {
               name: (locale === "ar" ? contractor.nameAr : undefined) ?? contractor.name,
-              cr: contractor.crNumber,
+              cr: isolateLtr(contractor.crNumber, locale === "ar"),
               city: cityName(contractor.city, all),
               grade: contractor.classificationGrade,
               years: contractor.yearsOperating,
@@ -164,11 +164,11 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             <tbody>
               {contractor.activeProjects.map((p) => (
                 <Tr key={p.id}>
-                  <Td>{p.name}</Td>
-                  <Td>{p.payer.name}</Td>
+                  <Td>{locale === "ar" ? projectText(p.id, { name: p.name, payer: p.payer.name }, all).name : p.name}</Td>
+                  <Td>{locale === "ar" ? projectText(p.id, { name: p.name, payer: p.payer.name }, all).payer : p.payer.name}</Td>
                   <Td>{all.payerType[p.payer.type]}</Td>
                   <Td align="end">{f.money(p.contractValue)}</Td>
-                  <Td align="end">{p.percentComplete}%</Td>
+                  <Td align="end">{f.percent(p.percentComplete / 100)}</Td>
                 </Tr>
               ))}
             </tbody>

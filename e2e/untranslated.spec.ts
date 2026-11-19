@@ -9,7 +9,6 @@ import { PAGES } from "./pages";
 /** Pages still being translated: remove a line in the PR that converts that area. */
 const NOT_YET_TRANSLATED: Record<string, string> = {
   // Checked on main 47e12d2 (19 Nov, 01:35 UTC), every page run without skips.
-  "/credit/cases/cc_502": "seed free text in the sample case findings: Hana (in progress)",
 };
 
 /** Names from the sample data: companies, brands, projects, sites, specs, files. Allowed as they are. */
@@ -25,6 +24,8 @@ function sampleDataNames(): Set<string> {
   walk(reference);
   walk(seedState);
   walk(SAMPLE_CASES); // the credit engine's sample applicants
+  // The page check keeps hyphenated words whole ("Al-Hijaz"), so allow sample applicant names whole too.
+  for (const c of SAMPLE_CASES) for (const w of c.applicant.name.match(/[A-Za-z][\w'’-]*/g) ?? []) words.add(w.toLowerCase());
   return words;
 }
 

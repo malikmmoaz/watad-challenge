@@ -12,7 +12,7 @@ import { track } from "@/lib/analytics";
 import { update } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 import { logAction, logDetail } from "./log-text";
-import { personName, purposeText } from "./data-text";
+import { personName, purposeText, seedText } from "./data-text";
 
 const GATE_TONE: Record<GateResult, Tone> = { pass: "positive", flag: "caution", fail: "negative", pending: "neutral" };
 
@@ -111,13 +111,13 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
         <DecisionStamp decision={d.outcome} by={personName(d.decidedBy, credit.en as never, all)} at={f.date(d.decidedAt)} />
       </div>
       {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">{fill(m.capApproved, { cap: f.money(d.approvedCap) })}</p>}
-      <p className="text-sm text-ink">{d.reasonText}</p>
+      <p className="text-sm text-ink">{seedText(d.reasonText, credit.en as never, all)}</p>
       {d.conditions && d.conditions.length > 0 && (
         <div className="text-sm">
           <p className="font-medium text-ink">{m.conditions}</p>
           <ul className="list-disc ps-5 text-ink-muted">
             {d.conditions.map((x) => (
-              <li key={x}>{x}</li>
+              <li key={x}>{seedText(x, credit.en as never, all)}</li>
             ))}
           </ul>
         </div>

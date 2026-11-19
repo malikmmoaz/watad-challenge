@@ -4,7 +4,8 @@
  * language; anything else (free text a person wrote) is shown as written.
  */
 import { fill, type SameShape } from "@/i18n/core";
-import type { credit } from "@/i18n/credit";
+import { credit } from "@/i18n/credit";
+import { seedText } from "./data-text";
 
 type M = SameShape<typeof credit.en>;
 type LogKey = keyof M["log"];
@@ -32,12 +33,12 @@ export function logDetail(detail: string, m: M): string {
   if ((r = detail.match(/^(\d+) documents uploaded$/))) return fill(m.log.documentsUploaded, { n: r[1]! });
   if ((r = detail.match(/^(\d+) of (\d+) documents uploaded$/))) return fill(m.log.documentsOfUploaded, { n: r[1]!, total: r[2]! });
   if ((r = detail.match(/^(\d+) fields extracted$/))) return fill(m.log.fieldsExtracted, { n: r[1]! });
-  if ((r = detail.match(/^(\d+) pass, (\d+) flag, (\d+) fail(?:, (\d+) not run)?$/)))
-    return fill(m.log.gatesSummary, { pass: r[1]!, flag: r[2]!, fail: r[3]! }) + (r[4] ? fill(m.log.gatesNotRun, { n: r[4] }) : "");
+  if ((r = detail.match(/^(\d+) pass, (\d+) flag(?:, (\d+) fail)?(?:, (\d+) not run)?$/)))
+    return fill(m.log.gatesSummary, { pass: r[1]!, flag: r[2]!, fail: r[3] ?? "0" }) + (r[4] ? fill(m.log.gatesNotRun, { n: r[4] }) : "");
   if ((r = detail.match(/^Proposes (approve|request info|decline)$/))) {
     const o = r[1] === "request info" ? "request_info" : (r[1] as "approve" | "decline");
     return fill(m.log.proposes, { outcome: m.decision.outcomes[o] });
   }
   if ((r = detail.match(/^Credit cap ([\d,]+) SAR, (\d+) days$/))) return fill(m.log.capFor, { amount: r[1]!, days: r[2]! });
-  return detail;
+  return seedText(detail, credit.en as never, m);
 }
