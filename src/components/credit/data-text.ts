@@ -40,6 +40,18 @@ export function applicantText(name: string, en: M, m: M): string {
   return name.endsWith(en.data.sampleSuffix) ? name.slice(0, -en.data.sampleSuffix.length) + m.data.sampleSuffix : name;
 }
 
+/**
+ * An applicant's name for the reader: the Arabic name when there is one; otherwise the
+ * Latin name, isolated so its punctuation ("Est.") is not reordered in Arabic text, with
+ * the sample marker in the reader's language.
+ */
+export function applicantLabel(name: string, nameAr: string | undefined, rtl: boolean, en: M, m: M): string {
+  if (rtl && nameAr) return nameAr;
+  const sample = name.endsWith(en.data.sampleSuffix);
+  const base = sample ? name.slice(0, -en.data.sampleSuffix.length) : name;
+  return isolateLtr(base, rtl) + (sample ? m.data.sampleSuffix : "");
+}
+
 /** A sample project's name and payer in the reader's language, by project id; unknown ids keep their data. */
 export function projectText(id: string, fallback: { name: string; payer: string }, m: M): { name: string; payer: string } {
   return (m.data.projects as Record<string, { name: string; payer: string }>)[id] ?? fallback;

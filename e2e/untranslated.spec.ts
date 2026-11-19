@@ -23,9 +23,8 @@ function sampleDataNames(): Set<string> {
   };
   walk(reference);
   walk(seedState);
-  walk(SAMPLE_CASES); // the credit engine's sample applicants
-  // The page check keeps hyphenated words whole ("Al-Hijaz"), so allow sample applicant names whole too.
-  for (const c of SAMPLE_CASES) for (const w of c.applicant.name.match(/[A-Za-z][\w'’-]*/g) ?? []) words.add(w.toLowerCase());
+  // The credit engine's sample applicants have Arabic names, so their English names are not allowed in Arabic.
+  walk(SAMPLE_CASES.map((c) => ({ ...c, applicant: undefined })));
   return words;
 }
 

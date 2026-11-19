@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { applicantName, creditProfiles, reference } from "@/data";
+import { applicantName, applicantNameAr, creditProfiles, reference } from "@/data";
 import { checkConsistency } from "@/domain/credit/checks";
 import type { FactorImpact, Outcome } from "@/domain/credit/impact";
 import { sar } from "@/domain/money";
@@ -27,7 +27,7 @@ import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
 import { logAction, logDetail } from "../log-text";
 import { fieldLabel, fieldValue } from "../field-text";
-import { applicantText, isolateLtr, purposeText, seedText } from "../data-text";
+import { applicantLabel, isolateLtr, purposeText, seedText } from "../data-text";
 
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
@@ -186,8 +186,7 @@ export function CaseFile({ id }: { id: string }) {
   const memo = view?.memo ?? c.aiProposal?.memo;
   const gateDetail = (g: CreditCase["gates"][number]) =>
     view?.gates.find((x) => x.id === g.id)?.detail ?? (g.detail === "Queued." ? all.checks.queued : g.detail === "Runs last." ? all.checks.runsLast : seedText(g.detail, credit.en as never, all));
-  const contractor = reference.contractors.find((x) => x.id === c.contractorId);
-  const title = (locale === "ar" ? contractor?.nameAr : undefined) ?? applicantText(applicantName(c.contractorId, reference.contractors), credit.en as never, all);
+  const title = applicantLabel(applicantName(c.contractorId, reference.contractors), applicantNameAr(c.contractorId, reference.contractors), locale === "ar", credit.en as never, all);
   const pct = (n: number | null) => (n === null ? m.notAvailable : f.percent(n, 1));
   const impacts = card ? factorImpacts(card, c.requestedCap) : [];
 
