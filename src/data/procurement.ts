@@ -388,12 +388,15 @@ const po1038 = (() => {
     offerId: offer.id,
     contractorId: rfq.contractorId,
     supplierId: offer.supplierId,
-    status: "delivered",
+    status: "paid",
     timeline: [
       { status: "placed", at: "2026-11-06T08:30:00Z", actor: "contractor" },
       { status: "confirmed", at: "2026-11-06T09:10:00Z", actor: "supplier", note: "Pour scheduled 11 Nov, 22:00", noteAr: "الصبّ مجدول في 11 نوفمبر، الساعة 22:00" },
       { status: "dispatched", at: "2026-11-11T19:00:00Z", actor: "supplier" },
       { status: "delivered", at: "2026-11-12T04:40:00Z", actor: "contractor", note: "620 m³ received, cube samples taken", noteAr: "استُلم 620 م³، وأُخذت عينات المكعبات" },
+      // Credit PO: invoicing triggers the financier's payment to the supplier (supplierPaidAt below).
+      { status: "invoiced", at: "2026-11-13T09:30:00Z", actor: "supplier", note: "ZATCA e-invoice INV-2026-0412", noteAr: "فاتورة إلكترونية (زاتكا) INV-2026-0412" },
+      { status: "paid", at: "2026-11-13T10:00:00Z", actor: "platform" },
     ],
     subtotal,
     deliveryFee: offer.deliveryFee,

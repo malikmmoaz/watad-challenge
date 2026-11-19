@@ -11,6 +11,9 @@ import { actOnPurchaseOrder, poActionFor } from "@/lib/procurement/supplier-offe
 import { track } from "@/lib/analytics";
 import { getState, update, useDemo } from "@/store";
 import { useProcurementI18n } from "./use-procurement-i18n";
+import { PrintButton } from "@/components/invoice/print-button";
+import { invoice } from "@/i18n/invoice";
+import { useMessages } from "@/i18n/locale";
 
 type I18n = ReturnType<typeof useProcurementI18n>;
 
@@ -30,6 +33,20 @@ export const poNoteText = (i: I18n, note: string): string => {
 /** The action label for the party whose step it is, by PO status. */
 const actionLabel = (i: I18n, status: string): string =>
   status === "placed" ? i.m.poActions.accept : status === "confirmed" ? i.m.poActions.dispatch : status === "dispatched" ? i.m.poActions.confirmDelivery : status === "delivered" ? i.m.poActions.invoice : i.m.poActions.markPaid;
+
+/** A party on the order: name, and its VAT registration number for the printed PO. */
+function Party({ name, vat, label }: { name: string; vat: string | undefined; label: string }) {
+  return (
+    <>
+      {name}
+      {vat ? (
+        <span className="mt-0.5 block text-xs font-normal text-ink-muted">
+          {label} <bdi className="font-mono">{vat}</bdi>
+        </span>
+      ) : null}
+    </>
+  );
+}
 
 export function timelineSteps(po: PurchaseOrder, i: I18n): TimelineStep[] {
   const at = stepIndex(po.status);
@@ -51,6 +68,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const po = pos.find((p) => p.id === poId);
   const [justDone, setJustDone] = useState<{ status: string; label: string; by: string } | null>(null);
   const i = useProcurementI18n();
+  const inv = useMessages(invoice);
   const pp = i.m.poPage;
 
   if (!po) {
@@ -67,6 +85,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
   const rfq = rfqs.find((r) => r.id === po.rfqId);
   const offer = offers.find((o) => o.id === po.offerId);
   const supplier = reference.suppliers.find((s) => s.id === po.supplierId);
+  const contractor = reference.contractors.find((c) => c.id === po.contractorId);
   const other = viewer === "supplier" ? "contractor" : "supplier";
   const mine = poActionFor(po, viewer);
   const theirs = poActionFor(po, other);
@@ -110,7 +129,9 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
           </>
         }
         actions={
-          mine ? (
+          <span className="flex flex-wrap items-center gap-2">
+          <span className="contents print:hidden">
+          {mine ? (
             <Button variant="primary" data-testid="po-action" onClick={() => act(viewer)}>
               {actionLabel(i, po.status)}
             </Button>
@@ -121,7 +142,15 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                 {other === "supplier" ? pp.demoAsSupplier : pp.demoAsContractor}
               </Button>
             </span>
-          ) : null
+          ) : null}
+          </span>
+          {po.status === "invoiced" || po.status === "paid" ? (
+            <Link href={`/${viewer}/po/${po.id}/invoice`} data-testid="po-invoice-link" className={buttonClass("secondary", "sm", "print:hidden")}>
+              {inv.viewInvoice}
+            </Link>
+          ) : null}
+          <PrintButton testId="po-print" />
+          </span>
         }
       />
       {justDone && justDone.status === po.status ? (
@@ -139,7 +168,8 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
           <Panel title={pp.order}>
             <Facts
               items={[
-                { label: i.m.common.supplier, value: i.name(supplier, po.supplierId) },
+                { label: i.m.common.supplier, value: <Party name={i.name(supplier, po.supplierId)} vat={supplier?.vatNumber} label={inv.vatNumber} /> },
+                { label: inv.buyer, value: <Party name={i.name(contractor, po.contractorId)} vat={contractor?.vatNumber} label={inv.vatNumber} /> },
                 { label: i.m.common.deliverTo, value: rfq ? i.site(rfq) : "" },
                 { label: pp.expectedDelivery, value: i.f.date(po.expectedDelivery) },
                 { label: pp.goods, value: i.f.money(po.subtotal) },

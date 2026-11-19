@@ -24,7 +24,7 @@ export function ReviewerGuide({ role }: { role: Role }) {
     <section
       aria-labelledby="reviewer-guide-h"
       data-testid="reviewer-guide"
-      className="relative isolate overflow-hidden border-b border-pine-raised bg-pine-deep text-on-pine"
+      className="relative isolate overflow-hidden border-b border-pine-raised bg-pine-deep text-on-pine print:hidden"
     >
       <div aria-hidden="true" className="pointer-events-none absolute -top-24 start-1/3 -z-10 h-56 w-[40rem] rounded-full bg-glow/15 blur-3xl" />
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-8 sm:py-6">

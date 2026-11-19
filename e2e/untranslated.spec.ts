@@ -14,7 +14,7 @@ const NOT_YET_TRANSLATED: Record<string, string> = {
 /** Names from the sample data: companies, brands, projects, sites, specs, files. Allowed as they are. */
 function sampleDataNames(): Set<string> {
   const words = new Set<string>();
-  const NAME_KEYS = /^(name|title|spec|brands|brandsStocked|deliverySite|deliveryCity|city|sourceFileName|fileName|projectName|applicantName)$/;
+  const NAME_KEYS = /^(name|title|spec|brands|brandsStocked|deliverySite|deliveryCity|city|brand|sourceFileName|fileName|projectName|applicantName)$/;
   const walk = (v: unknown, key = "") => {
     if (typeof v === "string") {
       if (NAME_KEYS.test(key)) for (const w of v.match(/[A-Za-z][A-Za-z'’]*/g) ?? []) words.add(w.toLowerCase());

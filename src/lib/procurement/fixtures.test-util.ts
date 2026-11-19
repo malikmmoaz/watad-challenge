@@ -41,6 +41,7 @@ export const supplier = (id: string, over: Partial<Supplier> = {}, perf: Partial
   kind: "supplier",
   name: `Supplier ${id}`,
   city: "Riyadh",
+  vatNumber: "300000000000003",
   categories: ["rebar_steel", "cement"],
   brandsStocked: [],
   serviceCities: ["Riyadh"],
