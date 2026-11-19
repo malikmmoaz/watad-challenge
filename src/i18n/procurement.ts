@@ -535,7 +535,7 @@ export const procurement = defineMessages(
     "simulatedAi": "ذكاء اصطناعي محاكى",
     "madeInSaudi": "صنع في السعودية",
     "bankTransfer": "تحويل بنكي",
-    "payWithCredit": "الدفع بالائتمان",
+    "payWithCredit": "الدفع من الحد الائتماني",
     "notInBrowser": "ربما أُنشئ في متصفح آخر، أو أُعيد ضبط بيانات العرض التجريبي."
   },
   "rfqBuilder": {
@@ -746,7 +746,7 @@ export const procurement = defineMessages(
     "split": {
       "save": "قسّم الطلب على الموردين ({n}) لتوفير {saving}",
       "noSingle": "لا يغطي عرض واحد كل البنود: قسّم الطلب على الموردين ({n})",
-      "use": "استخدام هذا التقسيم",
+      "use": "اعتماد هذا التقسيم",
       "allocation": "{supplier}: {lines} · {total} شامل التوصيل والضريبة",
       "total": "الإجمالي {total}. لكل مورّد رسوم توصيل خاصة به، وهي مُضمَّنة.",
       "totalVsSingle": "الإجمالي {total} مقابل {single} لأفضل عرض منفرد. لكل مورّد رسوم توصيل خاصة به، وهي مُضمَّنة."
@@ -762,9 +762,9 @@ export const procurement = defineMessages(
     "breakdown": "{goods} + توصيل {delivery} + ضريبة {vat}",
     "total": "الإجمالي {total} شامل ضريبة القيمة المضافة 15%",
     "payment": "الدفع",
-    "payCredit": "الدفع بالائتمان: يُسحب من حدك الائتماني، ويُدفع للمورّد مباشرة",
+    "payCredit": "الدفع من الحد الائتماني: يُدفع للمورّد مباشرة",
     "payBank": "تحويل بنكي للمورّد وفق شروطه المتفق عليها",
-    "blockedTitle": "الدفع بالائتمان غير متاح لهذا الطلب",
+    "blockedTitle": "الدفع من الحد الائتماني غير متاح لهذا الطلب",
     "youCan": "يمكنك:",
     "altBank": "الدفع للمورّد وفق شروطه بالتحويل البنكي (محدد أدناه)؛",
     "altSplit": "تقسيم السلة على عدة موردين",
@@ -789,7 +789,7 @@ export const procurement = defineMessages(
     "one": "تم إصدار أمر الشراء",
     "many": "تم إصدار أوامر الشراء ({n})",
     "announce": "{title}: {ids}، والإجمالي {total} شامل الضريبة.",
-    "methodCredit": "الدفع بالائتمان (يُدفع للمورّد مباشرة من حدك الائتماني)",
+    "methodCredit": "الدفع من الحد الائتماني (يُدفع للمورّد مباشرة)",
     "methodBank": "تحويل بنكي",
     "total": "الإجمالي {total} شامل ضريبة القيمة المضافة 15%",
     "poNumber": "رقم أمر الشراء",
@@ -830,7 +830,7 @@ export const procurement = defineMessages(
     "goods": "المواد",
     "delivery": "التوصيل",
     "vat": "ضريبة القيمة المضافة 15%",
-    "paymentCredit": "الدفع بالائتمان، ويُدفع للمورّد مباشرة",
+    "paymentCredit": "الدفع من الحد الائتماني، ويُدفع للمورّد مباشرة",
     "creditDrawTitle": "السحب الائتماني (مرابحة)",
     "drawn": "المسحوب من الحد الائتماني",
     "markup": "هامش الربح",
@@ -906,7 +906,7 @@ export const procurement = defineMessages(
   "home": {
     "title": "مساحة عمل المقاول",
     "cr": "س.ت {number}",
-    "newRfq": "طلب عروض أسعار جديد",
+    "newRfq": "طلب جديد",
     "creditLink": "الحد الائتماني والطلبات ومتابعتها",
     "openRfqs": "طلبات عروض الأسعار المفتوحة",
     "openRfqsNote": "المسودات والمرسلة وما وصلته عروض",

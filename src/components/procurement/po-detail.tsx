@@ -156,7 +156,7 @@ export function PoDetail({ poId, viewer = "contractor" }: { poId: string; viewer
                     return (
                       <li key={ol.rfqLineId} className="flex justify-between gap-3">
                         <span className="text-ink">
-                          {line.description} <span className="text-ink-muted">· {ol.brand}</span>
+                          {i.lineName(line)} <span className="text-ink-muted">· {ol.brand}</span>
                         </span>
                         <span className="tabular-nums text-ink-muted">
                           {i.qty(Math.min(line.quantity, ol.quantityAvailable), line.unit)} × {i.f.money(ol.unitPrice)}

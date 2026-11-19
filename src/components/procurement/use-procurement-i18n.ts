@@ -10,7 +10,8 @@ import { fill } from "@/i18n/core";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { procurement } from "@/i18n/procurement";
 import { supplier } from "@/i18n/supplier";
-import type { City, MaterialCategory, PaymentTerms, Unit } from "@/domain/types";
+import { reference } from "@/data";
+import type { City, MaterialCategory, PaymentTerms, RfqLine, Unit } from "@/domain/types";
 
 type Named = { name: string; nameAr?: string | undefined };
 
@@ -49,6 +50,8 @@ export function useProcurementI18n() {
           ? fill(m.terms.net, { days: t.days })
           : fill(m.terms.platformCredit, { days: t.days });
 
+  const name = (o: Named | undefined, fallback = "") => (o ? (ar && o.nameAr ? o.nameAr : o.name) : fallback);
+
   return {
     locale,
     ar,
@@ -65,7 +68,12 @@ export function useProcurementI18n() {
     city: (c: City) => m.cities[c],
     category: (c: MaterialCategory) => m.categories[c],
     /** Company, project and material names: the Arabic name from the data when there is one. */
-    name: (o: Named | undefined, fallback = "") => (o ? (ar && o.nameAr ? o.nameAr : o.name) : fallback),
+    name,
+    /** An RFQ line's material in the reader's locale; a free-text description (from a BOQ) stays as written. */
+    lineName: (l: Pick<RfqLine, "materialId" | "description">) => {
+      const mat = reference.materials.find((x) => x.id === l.materialId);
+      return mat && l.description === mat.name ? name(mat) : l.description;
+    },
     /** Show a message produced by procurement logic (English) in the reader's locale. */
     logic: (group: "supplierErrors" | "poErrors", text: string): string => {
       if (!ar) return text;
