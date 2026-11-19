@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Role } from "@/domain/types";
 import { common } from "@/i18n/common";
 import { useMessages } from "@/i18n/locale";
+import { ActivityBell } from "./activity/activity-bell";
 import { LocaleToggle } from "./i18n/locale-toggle";
 import { ROLES } from "./roles";
 import { Icon } from "./ui";
@@ -20,7 +21,7 @@ import { RoleLink } from "./role-link";
 export function RoleNav({ current }: { current: Role }) {
   const m = useMessages(common);
   return (
-    <header className="z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
+    <header className="relative z-20 border-b border-line/70 bg-paper/85 backdrop-blur-md sm:sticky sm:top-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-3 focus:top-3 focus:z-30 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-ink">
         {m.skipToContent}
       </a>
@@ -60,7 +61,13 @@ export function RoleNav({ current }: { current: Role }) {
           <Link href="/how-we-built" data-testid="nav-how-we-built" className="hidden whitespace-nowrap text-ink-muted transition-colors duration-150 hover:text-ink xl:inline">
             {m.appBar.howWeBuilt}
           </Link>
-          <span className="whitespace-nowrap rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs text-ink-muted">{m.sampleData}</span>
+          {/* "Simulated AI" always shows (the brief asks for it to be labelled); the "Sample data" prefix only from sm,
+              since every page header already has a Sample data label and the full Arabic pill wrapped the bar on phones. */}
+          <span className="whitespace-nowrap rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs text-ink-muted">
+            <span className="hidden sm:inline">{m.ui.sampleDataShort} · </span>
+            {m.ui.simulatedAi}
+          </span>
+          <ActivityBell role={current} />
           <LocaleToggle />
           <ResetDemoButton />
         </div>

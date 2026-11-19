@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Messages } from "./core";
 import { procurement } from "./procurement";
 import { supplier } from "./supplier";
+import { activity } from "./activity";
 import { offers, purchaseOrders, rfqs } from "@/data";
 
 const leaves = (o: Messages | string, path = ""): [string, string][] =>
@@ -14,6 +15,7 @@ const SAME_IN_BOTH = /^units(One)?\.(m3|m|m2)$|^offer\.lineSummary$/;
 describe.each([
   ["procurement", procurement],
   ["supplier", supplier],
+  ["activity", activity],
 ])("%s messages", (_name, dict) => {
   const en = new Map(leaves(dict.en as Messages));
   const ar = new Map(leaves(dict.ar as Messages));
