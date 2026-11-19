@@ -439,7 +439,7 @@ export const procurement = defineMessages(
   },
   "home": {
     "title": "Contractor workspace",
-    "cr": "CR {number}",
+    "cr": "CR",
     "newRfq": "New RFQ",
     "creditLink": "Credit cap, applications and progress",
     "openRfqs": "Open RFQs",
@@ -905,7 +905,7 @@ export const procurement = defineMessages(
   },
   "home": {
     "title": "مساحة عمل المقاول",
-    "cr": "س.ت {number}",
+    "cr": "السجل التجاري",
     "newRfq": "طلب جديد",
     "creditLink": "الحد الائتماني والطلبات ومتابعتها",
     "openRfqs": "طلبات عروض الأسعار المفتوحة",

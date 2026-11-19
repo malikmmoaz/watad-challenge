@@ -70,7 +70,11 @@ export function ContractorHome() {
         meta={
           <>
             <span>{i.name(me)}</span>
-            {me ? <span className="font-mono text-xs">{fill(h.cr, { number: me.crNumber })}</span> : null}
+            {me ? (
+              <span className="text-xs">
+                {h.cr} <span className="font-mono">{me.crNumber}</span>
+              </span>
+            ) : null}
           </>
         }
         actions={
