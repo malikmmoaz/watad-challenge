@@ -1,6 +1,8 @@
 import { test as base, expect, type Page } from "@playwright/test";
 
 export type Role = "contractor" | "supplier" | "credit";
+/** App language (ADR 0005). The Arabic projects in playwright.config.ts set "ar". */
+export type AppLocale = "en" | "ar";
 export const ROLES: Role[] = ["contractor", "supplier", "credit"];
 
 // Third-party noise that is not ours to fix (analytics blocked in CI, etc.).
@@ -10,7 +12,16 @@ const IGNORED = [/posthog/i, /betterstack|logtail/i, /favicon/i, /Failed to load
  * Shared fixture: fails a test on uncaught page errors or console errors,
  * so every smoke test also covers checklist row A11.
  */
-export const test = base.extend<{ errors: string[] }>({
+export const test = base.extend<{ errors: string[]; appLocale: AppLocale; localeSetup: void }>({
+  appLocale: ["en", { option: true }],
+  // Store the locale before any page script runs, as a returning Arabic reader would have it.
+  localeSetup: [
+    async ({ page, appLocale }, use) => {
+      if (appLocale === "ar") await page.addInitScript(() => window.localStorage.setItem("watad-locale", "ar"));
+      await use();
+    },
+    { auto: true },
+  ],
   errors: [
     async ({ page }, use) => {
       const errors: string[] = [];
@@ -44,11 +55,24 @@ export function tid(page: Page, id: string) {
   return page.getByTestId(id).filter({ visible: true });
 }
 
+/**
+ * Wait until the page is shown in the stored locale: for Arabic, the boot script hides
+ * the body (`html.i18n-pending`) until React has re-rendered in Arabic.
+ */
+export async function ready(page: Page) {
+  await expect(page.locator("html")).not.toHaveClass(/i18n-pending/);
+}
+
+/** Pick the expected text for the current locale. */
+export const inLocale = <T>(locale: AppLocale, text: { en: T; ar: T }): T => text[locale];
+
 /** Enter the app as a role from the landing page, the way a reviewer does. */
 export async function enterAs(page: Page, role: Role) {
   await page.goto("/");
+  await ready(page);
   await tid(page, `role-${role}`).click();
   await expect(page).toHaveURL(new RegExp(`/${role}(/|$)`));
+  await ready(page);
 }
 
 /** Switch role from inside the app using the role switcher in the header. */

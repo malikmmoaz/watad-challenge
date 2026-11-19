@@ -148,6 +148,21 @@ Checked by searching the live app and the repo.
 | H4 | No lorem ipsum, placeholder text, TODOs or broken images on any reviewer-reachable page | ✅ |
 | H5 | No secrets, real personal data or real company financials in the repo or the app | ✅ |
 
+## I. Arabic and right to left
+
+Ours (Safina's priority, ADR 0005). Checked on a local production build in the `desktop-ar` and `mobile-ar` e2e projects, never against production.
+
+| ID | Type | Requirement | Owner | Issue | E2E | Status |
+|----|------|-------------|-------|-------|-----|--------|
+| I1 | Ours | Full Arabic with RTL: an **EN / ع** toggle in both app bars; the choice survives a reload and applies on every page | Tariq | #108 | i18n | ✅ |
+| I2 | Ours | `<html lang dir>` match the language on every page (`ar` / `rtl`, `en` / `ltr`) | Tariq | #108 | a11y (en + ar) | ✅ |
+| I3 | Ours | No serious or critical axe issues in Arabic on all 11 pages, desktop and phone | all | #108 | a11y (ar) | ✅ |
+| I4 | Ours | Every visible word is Arabic, except names, codes and figures from an allow-list | Omar, Hana, Layla, Safina | #109 | untranslated | ⚠️ #109 |
+| I5 | Ours | No sideways scroll in Arabic at 320 and 390 px | Tariq | #120 | rtl | ⚠️ #120 |
+| I6 | Ours | Money (riyal sign), numbers and dates formatted for Arabic, Latin digits, Gregorian calendar | Tariq | #108 | – | ☐ |
+| I7 | Ours | Directional icons, bars and meters mirror in RTL; numbers stay left-to-right | Layla | #106 | – | ☐ |
+| I8 | Ours | One journey per role completes in Arabic (contractor RFQ to PO, supplier offer, credit decision) | Noor | #15 | – | ☐ |
+
 ## What reviewers look for
 
 Not pass/fail; judged at each full pass and reported to Safina with examples.
