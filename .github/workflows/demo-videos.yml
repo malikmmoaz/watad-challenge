@@ -4,8 +4,6 @@ name: Demo videos
 # (never the live site) and uploads docs/demo/*.mp4 and *.gif as an artifact.
 on:
   workflow_dispatch:
-  push:
-    branches: ["feat/16-demo-videos"]
 
 permissions:
   contents: read

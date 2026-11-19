@@ -11,6 +11,16 @@ All companies, prices and credit files are **sample data**. AI features are **si
 
 ## For reviewers
 
+**Watch first (about 80 seconds in total).** Each clip is a real run of the app, recorded with Playwright on a production build (sample data, simulated AI labelled). Click a preview for the full-quality MP4.
+
+| Contractor: BOQ to RFQ to explainable shortlist | Contractor: compare offers, pay with credit |
+|---|---|
+| [![Contractor: BOQ upload, confirm the RFQ, explainable shortlist](docs/demo/1-contractor-rfq.gif)](docs/demo/1-contractor-rfq.mp4) | [![Contractor: compare offers and place a PO paid from the credit cap](docs/demo/2-contractor-po-on-credit.gif)](docs/demo/2-contractor-po-on-credit.mp4) |
+| **Supplier: offer (bid), then fulfil a PO** | **Independent credit manager: checks, scorecard, decision** |
+| [![Supplier: price an offer, then move a won PO to dispatched](docs/demo/3-supplier-offer-and-po.gif)](docs/demo/3-supplier-offer-and-po.mp4) | [![Credit manager: run checks, read the scorecard, request more information with a reason](docs/demo/4-credit-manager-decision.gif)](docs/demo/4-credit-manager-decision.mp4) |
+
+Re-record after UI changes: `pnpm demo` locally (needs ffmpeg), or Actions → "Demo videos" → Run workflow. Both use a local production build, never the live site.
+
 | | |
 |---|---|
 | Try it | [5-minute tour](#explore-the-three-roles-in-5-minutes) below · each role also has a **reviewer guide** panel at the top · full path with what to notice: [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) |
