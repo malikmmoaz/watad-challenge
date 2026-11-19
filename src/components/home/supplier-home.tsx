@@ -4,25 +4,30 @@ import Link from "next/link";
 import { demoPersona, reference } from "@/data";
 import { Badge, CellNote, EmptyState, Facts, PageHeader, Panel, SampleDataLabel, StatStrip, Table, Td, Th, THead, Tr } from "@/components/ui";
 import type { Rfq, Supplier } from "@/domain/types";
-import { formatDate, formatPercent } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/procurement/labels";
-import { describeTerms } from "@/lib/procurement/comparison";
 import { SupplierPurchaseOrders } from "@/components/procurement/supplier-pos";
+import { useProcurementI18n } from "@/components/procurement/use-procurement-i18n";
 import { useDemo } from "@/store";
 
-/** Plain-language reasons this request reached this supplier. */
-function whyRelevant(rfq: Rfq, me: Supplier): string[] {
+type I18n = ReturnType<typeof useProcurementI18n>;
+
+/** Plain-language reasons this request reached this supplier, in the reader's locale. */
+function whyRelevant(rfq: Rfq, me: Supplier, i: I18n): string[] {
+  const h = i.s.home;
   const categories = new Set(rfq.lines.map((l) => reference.materials.find((m) => m.id === l.materialId)?.category).filter((c) => c !== undefined));
   const stocked = [...categories].filter((c) => me.categories.includes(c));
   const reasons: string[] = [];
-  if (stocked.length) reasons.push(`You stock ${stocked.map((c) => CATEGORY_LABELS[c].toLowerCase()).join(" and ")}`);
-  if (me.serviceCities.includes(rfq.deliveryCity)) reasons.push(`You deliver to ${rfq.deliveryCity}`);
-  if (rfq.wantsCredit && me.acceptsPlatformCredit) reasons.push("Paid directly from the contractor's credit cap, which you accept");
+  if (stocked.length) reasons.push(i.fill(h.whyStock, { categories: stocked.map((c) => (i.ar ? i.category(c) : CATEGORY_LABELS[c].toLowerCase())).join(h.and) }));
+  if (me.serviceCities.includes(rfq.deliveryCity)) reasons.push(i.fill(h.whyDeliver, { city: i.city(rfq.deliveryCity) }));
+  if (rfq.wantsCredit && me.acceptsPlatformCredit) reasons.push(h.whyCredit);
   return reasons;
 }
 
 /** First view for the supplier: requests matched to them, why, and whether they have offered. */
 export function SupplierHome() {
+  const i = useProcurementI18n();
+  const { s: sm, f, fill } = i;
+  const h = sm.home;
   const rfqs = useDemo((s) => s.rfqs);
   const offers = useDemo((s) => s.offers);
   const pos = useDemo((s) => s.purchaseOrders);
@@ -39,13 +44,13 @@ export function SupplierHome() {
   return (
     <>
       <PageHeader
-        eyebrow="Supplier"
-        title="Supplier portal"
+        eyebrow={h.eyebrow}
+        title={h.title}
         status={<SampleDataLabel />}
         meta={
           <>
-            <span>{me.name}</span>
-            {me.nameAr ? (
+            <span>{i.name(me)}</span>
+            {me.nameAr && !i.ar ? (
               <span lang="ar" dir="rtl">
                 {me.nameAr}
               </span>
@@ -56,33 +61,33 @@ export function SupplierHome() {
 
       <StatStrip
         items={[
-          { label: "Requests waiting for your offer", value: awaitingOffer },
-          { label: "Offers submitted", value: submitted, note: "the contractor has not chosen yet" },
-          { label: "POs to fulfil", value: toFulfil },
-          { label: "Delivered on time", value: formatPercent(me.performance.onTimeRate), note: `over ${me.performance.ordersCompleted.toLocaleString("en-SA")} orders` },
+          { label: h.awaitingOffer, value: awaitingOffer },
+          { label: h.submitted, value: submitted, note: h.submittedNote },
+          { label: h.toFulfil, value: toFulfil },
+          { label: h.onTime, value: f.percent(me.performance.onTimeRate), note: fill(h.overOrders, { n: f.number(me.performance.ordersCompleted) }) },
         ]}
       />
 
       <section aria-labelledby="inbox-h" className="flex flex-col gap-3">
         <div>
           <h2 id="inbox-h" className="text-lg font-semibold text-ink">
-            Requests for you
+            {h.inboxTitle}
           </h2>
           <p className="mt-1 max-w-prose text-sm text-ink-muted">
-            Contractors invite suppliers from a shortlist. Each request says why you were matched. The platform is neutral: every invited supplier sees the same request.
+            {h.inboxIntro}
           </p>
         </div>
         {requests.length === 0 ? (
-          <EmptyState title="No requests right now">New RFQs that match what you stock and where you deliver will appear here.</EmptyState>
+          <EmptyState title={h.emptyTitle}>{h.emptyBody}</EmptyState>
         ) : (
-          <Table caption="Requests for you" minWidth={820}>
+          <Table caption={h.inboxTitle} minWidth={820}>
             <THead>
               <tr>
-                <Th>Request</Th>
-                <Th>Why you were matched</Th>
-                <Th>Required on site</Th>
-                <Th>Offers close</Th>
-                <Th>Your offer</Th>
+                <Th>{h.colRequest}</Th>
+                <Th>{h.colWhy}</Th>
+                <Th>{h.colRequired}</Th>
+                <Th>{h.colCloses}</Th>
+                <Th>{h.colYourOffer}</Th>
               </tr>
             </THead>
             <tbody>
@@ -97,36 +102,36 @@ export function SupplierHome() {
                         {r.title}
                       </Link>
                       <CellNote>
-                        <span className="font-mono">{r.id}</span> · {contractor?.name} · {r.lines.length} {r.lines.length === 1 ? "line" : "lines"}
+                        <span className="font-mono">{r.id}</span> · {i.name(contractor)} · {r.lines.length === 1 ? h.lineOne : fill(h.lines, { n: r.lines.length })}
                       </CellNote>
-                      <CellNote>Preferred terms: {describeTerms(r.preferredTerms)}</CellNote>
+                      <CellNote>{fill(h.preferredTerms, { terms: i.terms(r.preferredTerms) })}</CellNote>
                     </Td>
                     <Td>
                       <ul className="flex flex-col gap-0.5 text-sm text-ink">
-                        {whyRelevant(r, me).map((reason) => (
+                        {whyRelevant(r, me, i).map((reason) => (
                           <li key={reason}>{reason}</li>
                         ))}
                       </ul>
                     </Td>
                     <Td className="whitespace-nowrap">
-                      {formatDate(r.requiredBy)}
-                      <CellNote>{r.deliveryCity}</CellNote>
+                      {f.date(r.requiredBy)}
+                      <CellNote>{i.city(r.deliveryCity)}</CellNote>
                     </Td>
-                    <Td className="whitespace-nowrap">{formatDate(r.closesAt)}</Td>
+                    <Td className="whitespace-nowrap">{f.date(r.closesAt)}</Td>
                     <Td>
                       {awardedToMe ? (
-                        <Badge tone="positive">Chosen · PO placed</Badge>
+                        <Badge tone="positive">{h.chosen}</Badge>
                       ) : mine?.status === "not_selected" ? (
-                        <Badge>Not chosen</Badge>
+                        <Badge>{h.notChosen}</Badge>
                       ) : mine ? (
                         <>
-                          <Badge tone="info">Offer submitted</Badge>
+                          <Badge tone="info">{h.offerSubmitted}</Badge>
                           <CellNote>
-                            {formatDate(mine.submittedAt)} · {mine.leadTimeDays} days lead time
+                            {fill(h.submittedOn, { when: f.date(mine.submittedAt), days: mine.leadTimeDays })}
                           </CellNote>
                         </>
                       ) : (
-                        <Badge tone="caution">Offer not sent</Badge>
+                        <Badge tone="caution">{h.offerNotSent}</Badge>
                       )}
                     </Td>
                   </Tr>
@@ -139,20 +144,20 @@ export function SupplierHome() {
 
       <SupplierPurchaseOrders supplierId={me.id} />
 
-      <Panel title="Your record on the platform" aside={<SampleDataLabel />}>
+      <Panel title={h.recordTitle} aside={<SampleDataLabel />}>
         <div className="flex flex-col gap-4">
           <Facts
             columns={3}
             items={[
-              { label: "Delivered on time", value: formatPercent(me.performance.onTimeRate) },
-              { label: "Delivered complete and to spec", value: formatPercent(me.performance.fillRate) },
-              { label: "Orders completed", value: me.performance.ordersCompleted.toLocaleString("en-SA") },
-              { label: "Average time to respond", value: `${me.performance.avgResponseHours} hours` },
-              { label: "Orders with a dispute", value: formatPercent(me.performance.disputeRate) },
-              { label: "Platform credit", value: me.acceptsPlatformCredit ? "Accepted: you are paid directly" : "Not accepted" },
+              { label: h.onTime, value: f.percent(me.performance.onTimeRate) },
+              { label: h.fillRate, value: f.percent(me.performance.fillRate) },
+              { label: h.ordersCompleted, value: f.number(me.performance.ordersCompleted) },
+              { label: h.avgResponse, value: fill(h.hours, { n: me.performance.avgResponseHours }) },
+              { label: h.disputes, value: f.percent(me.performance.disputeRate) },
+              { label: h.platformCredit, value: me.acceptsPlatformCredit ? h.creditAccepted : h.creditNotAccepted },
             ]}
           />
-          <p className="max-w-prose text-sm text-ink-muted">Contractors see these figures as match reasons on their shortlist. They are the same fields, in the same order, for every supplier.</p>
+          <p className="max-w-prose text-sm text-ink-muted">{h.recordNote}</p>
         </div>
       </Panel>
     </>
