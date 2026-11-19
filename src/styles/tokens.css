@@ -242,10 +242,18 @@
     font-style: normal !important;
     font-weight: 700 !important;
   }
+  /*
+   * Reduced motion. Animations end at once (0.01ms, so they still land on their
+   * final frame). Transitions are switched off (0s), not shortened: the initial
+   * transition-property is "all", so a non-zero duration on * makes every element
+   * transition every property, visibility included. In WebKit that briefly kept
+   * the app bar hidden after the Arabic reveal (found by axe on WebKit, 19 Nov).
+   * Nothing in the app waits for transitionend.
+   */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
+      transition-duration: 0s !important;
     }
   }
 }
