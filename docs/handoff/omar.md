@@ -2,6 +2,33 @@
 
 Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comparison + PO.
 
+## Current state (19 Nov, 02:20 UTC). Read this first; the sections below are history.
+- **Arabic and RTL (all merged):** #109 messages, #112 supplier portal, #114 RFQ builder/list, #115 shortlist,
+  #119 comparison/PO, #127 statuses in `common.status` plus contractor home, #128 supplier home,
+  #137 seed titles/sites/notes in Arabic plus PO lines stacking on phones.
+  - Pattern: dictionaries `src/i18n/procurement.ts`, `supplier.ts`, `activity.ts` (`defineMessages(en, ar)`).
+  - Screens use `useProcurementI18n()` (`src/components/procurement/use-procurement-i18n.ts`):
+    `m`/`s`/`status`, `f` formatters, `terms`, `qty`, `city`, `category`, `name`, `lineName`, `rfqTitle`, `site`,
+    `seedText`, and `logic()` for English text produced by the pure logic.
+  - Logic attaches `msg: { key, values }` to shortlist reasons and comparison notes; the UI renders Arabic from those.
+  - Seed Arabic: optional `titleAr`/`deliverySiteAr`/`notesAr`/`noteAr`, also looked up by the English text,
+    so old browser state reads in Arabic. User-typed text stays as typed.
+  - Guards: `src/i18n/procurement-dicts.test.ts` checks placeholder parity, that Arabic is Arabic, no فائدة or
+    "interest", every reason key, and that every seed title/site/note has Arabic.
+  - Arabic button names match Layla's reviewer guide (`src/content/tour-ar.ts`).
+- **Open: #140, cross-role activity feed** (bell in `RoleNav`, `src/lib/activity/feed.ts`, `src/components/activity/`).
+  Waiting on Layla's design review and Tariq/Noor's code review; authors merge after approval and green CI.
+- **How I test on srv1041554:**
+  - e2e from my own shell needs `HOME=/home/nuphos`, node22 on PATH, `. ~/watad-team/env.sh`, and
+    `LD_LIBRARY_PATH=~/watad-team/.cache/chromium-libs/root/usr/lib/x86_64-linux-gnu`.
+  - Use `E2E_PORT=3147` (my port) and `E2E_PREBUILT=1` to reuse a build.
+  - Arabic projects: `desktop-ar`, `mobile-ar` (a11y, rtl, untranslated).
+- **Rules I keep:**
+  - No automated traffic to production.
+  - Verify the merged diff on main before reporting.
+  - Stage named files only (worktrees share refs).
+  - Retarget stacked PRs to main before merging their base.
+
 ## Done
 - `src/lib/procurement/shortlist.ts`: explainable, credit-aware shortlist (pure). 22 unit tests.
 - `src/lib/procurement/comparison.ts`: landed cost, benchmark flag, scored comparison, blind labels, basket split (pure). 34 unit tests.
@@ -71,9 +98,7 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
 - Rule I follow after two misses: check the merged diff on main and the live site before reporting a fix done.
 - Polish pass waits for Layla's design checklist (~18:00 UTC).
 
-## Next
-- #9 shortlist UI on the draft RFQ (choose who receives it), then #11 comparison / PO / timeline,
-  #10 supplier inbox and offer form.
+## Test ids (stable; translations never changed them)
 - Test ids: `shortlist-row`, `shortlist-excluded` (both with `data-supplier`), `shortlist-select`,
   `shortlist-new-slot`, `shortlist-score`, `shortlist-why`, `shortlist-why-not`, `rfq-blind-toggle`,
   `shortlist-send`, `shortlist-sent`, `offer-row`, `offer-supplier`, `offer-landed`, `offer-score`,
