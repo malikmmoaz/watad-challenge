@@ -19,6 +19,8 @@ import { useHydrated, useReducedMotion } from "../client-state";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
 import { UtilisationPanel } from "./utilisation-panel";
+import { WhatIfPanel } from "./what-if-panel";
+import { outcomeOf } from "@/domain/credit/what-if";
 import { GATE_RESULT } from "@/lib/status";
 import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
@@ -172,6 +174,11 @@ export function CaseFile({ id }: { id: string }) {
     setTimeout(commit, STEP_MS * (PREP_STEPS.length + 1));
   };
   const consistency = profile && c.scorecard ? checkConsistency(profile) : null;
+  // The what-if uses the same date the checks ran, so "today" matches the scorecard above.
+  const checksRanOn = ([...c.log].reverse().find((l) => l.action === "Gated checks run (simulated)")?.at ?? c.updatedAt).slice(0, 10);
+  const caseProfile = profile ? { ...profile, id: c.id, request: { capSar: c.requestedCap / 100, tenorDays: c.requestedTenorDays } } : null;
+  // Only for files the engine scored: a hand-written seed scorecard would not match "today" in the simulation.
+  const whatIfProfile = caseProfile && c.scorecard && Math.abs(outcomeOf(caseProfile, checksRanOn).score - c.scorecard.total) <= 1 ? caseProfile : null;
   // Stored text is English; in Arabic re-render the engine's text from the same inputs.
   const view = locale === "ar" ? localizedAssessment(c, profile, langFor("ar")) : null;
   const card = view && c.scorecard ? { ...c.scorecard, factors: view.scorecard.factors.map((vf) => ({ ...vf, evidence: c.scorecard!.factors.find((x) => x.id === vf.id)?.evidence ?? vf.evidence })), policyChecks: view.scorecard.policyChecks, capBasis: view.scorecard.capBasis } : c.scorecard;
@@ -249,6 +256,8 @@ export function CaseFile({ id }: { id: string }) {
               </div>
             </Panel>
           )}
+
+          {whatIfProfile && <WhatIfPanel key={c.id} profile={whatIfProfile} asOf={checksRanOn} />}
 
           {card && (
             <Panel title={m.policyTitle}>
