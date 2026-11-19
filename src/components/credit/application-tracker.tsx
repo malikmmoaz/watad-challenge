@@ -247,7 +247,7 @@ function ForYou({ c }: { c: CreditCase }) {
               <dd className="text-end tabular-nums">
                 {/* Amounts stay whole on narrow screens; the longer rate line may wrap. */}
                 <span className={`font-semibold ${r.key === "rate" ? "" : "whitespace-nowrap "}${changed ? "text-positive" : "text-ink"}`}>{r.now}</span>
-                {changed && <span className="block text-xs text-ink-muted">{fill(m.forYou.was, { value: r.was! })}</span>}
+                {changed && <span className={`block text-xs text-ink-muted ${r.key === "rate" ? "" : "whitespace-nowrap"}`}>{fill(m.forYou.was, { value: r.was! })}</span>}
               </dd>
             </div>
           );
