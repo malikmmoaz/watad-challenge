@@ -1,0 +1,131 @@
+/**
+ * Strings shared by every area: app bar, role names, shared UI components.
+ * Arabic: Modern Standard Arabic, the register Saudi B2B software uses.
+ * Keep company and material names in their own data (`nameAr`), not here.
+ */
+import { defineMessages } from "./core";
+
+export const common = defineMessages(
+  {
+    product: "Watad challenge demo",
+    skipToContent: "Skip to content",
+    sampleData: "Sample data · simulated AI",
+    locale: { switchTo: "Switch to Arabic" },
+    appBar: {
+      about: "About",
+      howWeBuilt: "How we built it",
+      aboutNav: "About this demo",
+      chooseRole: "Choose a role",
+      switchRole: "Switch role",
+      reset: "Reset",
+      resetDemo: "Reset demo data",
+    },
+    roles: {
+      contractor: "Contractor",
+      supplier: "Supplier",
+      credit: "Credit manager",
+    },
+    personas: {
+      contractor: "Najd Horizon Contracting Co.",
+      supplier: "Rawasi Building Materials Trading",
+      credit: "Independent credit manager",
+    },
+    blurbs: {
+      contractor: "Upload an RFQ or order from the catalog, compare offers, place a PO and apply for a credit cap.",
+      supplier: "See matched requests, submit offers with price, stock, lead time and terms, and track awards.",
+      credit: "Review documents, gated checks and the scorecard with AI assist, then approve, decline or request more information.",
+    },
+    system: {
+      backToStart: "Back to the start",
+      goToRole: "Go to a role",
+      orGoToRole: "Or go straight to a role:",
+      notFoundTitle: "This page is not part of the demo",
+      notFoundBody:
+        "The link may be mistyped, or it points to a request, order or credit case that only exists in another browser: the demo keeps everything you create in this browser. Start again from the landing page or open a role.",
+      errorCode: "Error",
+      errorTitle: "Something went wrong on this page",
+      errorBody:
+        "The error has been reported. If it keeps happening, the demo data saved in this browser may be out of date: resetting it restores the sample data and keeps nothing else.",
+      tryAgain: "Try again",
+      resetAndTryAgain: "Reset demo data and try again",
+    },
+    ui: {
+      noEvidence: "No document on file",
+      creditScore: "Credit score",
+      outOf100: "of 100",
+      band: "Band {name}",
+      bands: {
+        A: "Approve",
+        B: "Approve",
+        C: "Approve with conditions",
+        D: "Decline",
+      },
+      stamp: {
+        approved: "Approved",
+        declined: "Declined",
+        referred: "More information requested",
+      },
+    },
+  },
+  {
+    product: "عرض تحدي وتد",
+    skipToContent: "تخطَّ إلى المحتوى",
+    sampleData: "بيانات تجريبية · ذكاء اصطناعي محاكى",
+    locale: { switchTo: "التبديل إلى الإنجليزية" },
+    appBar: {
+      about: "عن العرض",
+      howWeBuilt: "كيف بنيناه",
+      aboutNav: "عن هذا العرض",
+      chooseRole: "اختر دورًا",
+      switchRole: "تبديل الدور",
+      reset: "إعادة",
+      resetDemo: "إعادة ضبط بيانات العرض",
+    },
+    roles: {
+      contractor: "المقاول",
+      supplier: "المورّد",
+      credit: "مدير الائتمان",
+    },
+    personas: {
+      contractor: "شركة أفق نجد للمقاولات",
+      supplier: "رواسي لتجارة مواد البناء",
+      credit: "مدير ائتمان مستقل",
+    },
+    blurbs: {
+      contractor: "ارفع طلب عروض أسعار أو اطلب من الكتالوج، وقارن العروض، وأصدر أمر الشراء، وتقدّم بطلب حد ائتماني.",
+      supplier: "اطّلع على الطلبات المطابقة لك، وقدّم عروضك بالسعر والمخزون ومدة التوريد وشروط الدفع، وتابع الترسية.",
+      credit: "راجع المستندات والفحوص المرحلية وبطاقة التقييم بمساعدة الذكاء الاصطناعي، ثم وافق أو ارفض أو اطلب معلومات إضافية.",
+    },
+    system: {
+      backToStart: "العودة إلى البداية",
+      goToRole: "الانتقال إلى دور",
+      orGoToRole: "أو انتقل مباشرة إلى دور:",
+      notFoundTitle: "هذه الصفحة ليست جزءًا من العرض",
+      notFoundBody:
+        "قد يكون الرابط مكتوبًا بشكل خاطئ، أو يشير إلى طلب أو أمر شراء أو ملف ائتمان موجود في متصفح آخر فقط: يحفظ العرض كل ما تنشئه في هذا المتصفح. ابدأ من جديد من الصفحة الرئيسية أو افتح أحد الأدوار.",
+      errorCode: "خطأ",
+      errorTitle: "حدث خطأ في هذه الصفحة",
+      errorBody:
+        "تم الإبلاغ عن الخطأ. إذا تكرر، فقد تكون بيانات العرض المحفوظة في هذا المتصفح قديمة: إعادة ضبطها تستعيد البيانات التجريبية ولا تحتفظ بأي شيء آخر.",
+      tryAgain: "حاول مرة أخرى",
+      resetAndTryAgain: "إعادة ضبط بيانات العرض والمحاولة مرة أخرى",
+    },
+    ui: {
+      noEvidence: "لا يوجد مستند في الملف",
+      creditScore: "التقييم الائتماني",
+      outOf100: "من 100",
+      band: "الفئة {name}",
+      bands: {
+        A: "موافقة",
+        B: "موافقة",
+        C: "موافقة بشروط",
+        D: "رفض",
+      },
+      stamp: {
+        approved: "تمت الموافقة",
+        declined: "مرفوض",
+        referred: "طُلبت معلومات إضافية",
+      },
+    },
+  },
+);
