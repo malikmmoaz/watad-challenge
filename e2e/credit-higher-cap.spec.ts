@@ -56,7 +56,7 @@ test("apply for a higher cap, approve it, then pay a purchase order on credit", 
   await expect(forYou).not.toContainText(/interest/i);
   await expect(card.getByTestId("credit-reasons-for")).toBeVisible();
 
-  // The next purchase order (SAR 560,993.00) fits and is paid on credit.
+  // The next purchase order (SAR 488,169.25) fits and is paid on credit.
   await page.goto("/contractor/rfq/rfq_1042");
   await tid(page, "offer-choose").first().click();
   await expect(tid(page, "po-pay-credit")).toBeEnabled();

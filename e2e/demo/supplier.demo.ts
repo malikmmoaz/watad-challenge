@@ -14,7 +14,7 @@ test("3-supplier-offer-and-po", async ({ page }) => {
   await beat(page, 1200);
   const prices = page.getByTestId("offer-line-price").filter({ visible: true });
   await expect(prices.nth(1)).toHaveValue("15.81");
-  await type(page, prices.nth(0), "3380");
+  await type(page, prices.nth(0), "2925");
   await type(page, tid(page, "offer-delivery"), "2500");
   await type(page, tid(page, "offer-lead-time"), "3");
   await show(page, tid(page, "offer-summary"), 2000);

@@ -51,12 +51,12 @@ test("end to end: supplier offer, contractor PO paid with credit, supplier paid 
   await expect(page.getByText("Your offer (bid)")).toBeVisible();
   await tid(page, "offer-submit").click();
   await expect(page.getByText(/(Quote|Enter) a unit price for at least one line\./)).toBeVisible();
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await tid(page, "offer-line-price").nth(0).fill("2925");
   await tid(page, "offer-line-price").nth(1).fill("15.4");
   await tid(page, "offer-delivery").fill("2500");
   await tid(page, "offer-lead-time").fill("3");
-  // (3,380 x 24 + 15.40 x 1,800) = 108,840 goods + 2,500 delivery + 15% VAT = 128,041
-  await expect(tid(page, "offer-summary")).toContainText("SAR 128,041.00");
+  // (2,925 x 24 + 15.40 x 1,800) = 97,920 goods + 2,500 delivery + 15% VAT = 115,483
+  await expect(tid(page, "offer-summary")).toContainText("SAR 115,483.00");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toHaveAttribute("data-status", "submitted");
 
@@ -71,8 +71,8 @@ test("end to end: supplier offer, contractor PO paid with credit, supplier paid 
   await tid(page, "po-place").click();
   // Keyboard and screen-reader users land on the result, not on <body> (#75).
   await expect(tid(page, "po-confirmation-heading")).toBeFocused();
-  await expect(page.getByTestId("po-announcement")).toHaveText(/Purchase order issued: po_.*SAR 128,041\.00/);
-  await expect(tid(page, "po-confirmation")).toContainText("SAR 128,041.00");
+  await expect(page.getByTestId("po-announcement")).toHaveText(/Purchase order issued: po_.*SAR 115,483\.00/);
+  await expect(tid(page, "po-confirmation")).toContainText("SAR 115,483.00");
   await expect(tid(page, "po-confirmation")).toContainText(/supplier paid directly/i);
   await expect(tid(page, "po-status")).toHaveAttribute("data-status", "placed");
   const po = (await tid(page, "po-number").first().textContent())!.trim();

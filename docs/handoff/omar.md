@@ -87,7 +87,7 @@ Owner of #8 RFQ/BOQ + catalog, #9 shortlist, #10 supplier portal, #11 offer comp
   table's optional `creditFit` prop (`offer-credit-fit`, `data-fits`). Hana owns repayments, the
   draws ledger and utilisation.
 - `po_placed.within_credit_cap` now reads the cap before drawing; supplier form uses shared `termsKey`.
-- Seed `rfq_1045` (Nakheel full, Sawari rebar, Sahra blocks) produces a split saving SAR 7,705;
+- Seed `rfq_1045` (Nakheel full, Sawari rebar, Sahra blocks) produces a split saving SAR 7,015 (since the 19 Nov rebar repricing);
   `seed-scenarios.test.ts` guards it and rfq_1044.
 - Files released to Layla for restyling: rfq-builder, rfq-shortlist, supplier-rfq, po-detail.
 

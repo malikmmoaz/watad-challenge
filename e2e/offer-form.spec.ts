@@ -7,15 +7,15 @@ test("benchmark placeholders, and one click starts every empty price at its benc
   await page.goto("/supplier/rfq/rfq_1044");
   const prices = tid(page, "offer-line-price");
   await expect(prices).toHaveCount(2);
-  // Placeholders show each line's benchmark (rebar 12 mm SAR 3,445.00/t, OPC SAR 15.81/bag).
-  await expect(prices.nth(0)).toHaveAttribute("placeholder", "3445.00");
+  // Placeholders show each line's benchmark (rebar 12 mm SAR 2,945.00/t, OPC SAR 15.81/bag).
+  await expect(prices.nth(0)).toHaveAttribute("placeholder", "2945.00");
   await expect(prices.nth(1)).toHaveAttribute("placeholder", "15.81");
   await expect(tid(page, "offer-summary")).toContainText("SAR 0.00");
 
   // A price the supplier already typed is kept; only empty lines are filled.
   await typeNumber(prices.nth(1), "15.2");
   await tid(page, "offer-start-benchmark").click();
-  await expect(prices.nth(0)).toHaveValue("3445");
+  await expect(prices.nth(0)).toHaveValue("2945");
   await expect(prices.nth(1)).toHaveValue("15.2");
   await expect(tid(page, "offer-start-benchmark")).toBeDisabled();
   await expect(tid(page, "offer-summary")).not.toContainText("= SAR 0.00");
