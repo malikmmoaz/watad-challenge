@@ -21,9 +21,19 @@ for (const locale of ["en", "ar"] as const) {
     const plot = chart.locator('svg[role="img"]');
     await expect(plot).toHaveAttribute("aria-label", /.+/);
     expect(await plot.evaluate((el) => getComputedStyle(el.parentElement!).direction)).toBe("ltr");
-    const xs = await plot.locator("text[text-anchor='middle'][y]").evaluateAll((els) => els.filter((e) => !e.getAttribute("font-weight")).map((e) => Number(e.getAttribute("x"))));
-    expect(xs.length).toBeGreaterThanOrEqual(12);
-    expect(xs[0]!).toBeLessThan(xs[11]!);
+    // All twelve months fit the frame at any width (every other one labelled on phones), oldest on the left.
+    const labels = plot.locator("text[data-month]");
+    const xs = await labels.evaluateAll((els) => els.map((e) => Number(e.getAttribute("x"))));
+    expect(xs.length).toBeGreaterThanOrEqual(4);
+    expect(xs[0]!).toBeLessThan(xs[xs.length - 1]!);
+    const months = await labels.evaluateAll((els) => els.map((e) => e.getAttribute("data-month")!));
+    expect([...months].sort()).toEqual(months);
+    const frame = await plot.evaluate((el) => ({ svg: el.getBoundingClientRect().width, box: el.parentElement!.getBoundingClientRect().width }));
+    expect(frame.svg).toBeLessThanOrEqual(frame.box + 1);
+    // Axis labels are readable: 12px as rendered.
+    expect(await labels.first().evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(11);
+    // The overdrawn month is marked in the closing-balance strip.
+    await expect(plot.locator("circle[data-overdrawn]")).not.toHaveCount(0);
 
     // Notes: returned cheques and the overdrawn month for this file, each linking to the bank-statement evidence.
     const notes = tid(page, "credit-cashflow-notes").locator("li");

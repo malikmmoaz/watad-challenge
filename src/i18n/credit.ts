@@ -578,8 +578,10 @@ export const credit = defineMessages(
       noNotes: "Nothing unusual: steady inflows, no returned cheques, never overdrawn.",
       note: {
         one_off_inflow: "One-off inflow in {month}: {times}x a typical month. Check it is trading income, not a loan or asset sale.",
+        one_off_inflow_double: "One-off inflow in {month}: twice a typical month. Check it is trading income, not a loan or asset sale.",
         seasonal_dip: "Seasonal dip in {month}: inflows at {times}x a typical month, in line with the summer slowdown.",
         returned_cheque: "A returned cheque in {month}, when the balance was tight.",
+        returned_cheques_two: "2 returned cheques in {month}, when the balance was tight.",
         returned_cheques: "{n} returned cheques in {month}, when the balance was tight.",
         overdrawn: "Overdrawn in {month}: the balance closed {amount} below zero.",
       },
@@ -1174,9 +1176,11 @@ export const credit = defineMessages(
       noNotes: "لا شيء غير معتاد: تدفقات منتظمة، دون شيكات مرتجعة، ودون رصيد مكشوف.",
       note: {
         one_off_inflow: "تدفق استثنائي في {month}: {times} ضعف الشهر المعتاد. تحقق من أنه دخل تشغيلي وليس قرضًا أو بيع أصل.",
+        one_off_inflow_double: "تدفق استثنائي في {month}: ضعفا الشهر المعتاد. تحقق من أنه دخل تشغيلي وليس قرضًا أو بيع أصل.",
         seasonal_dip: "انخفاض موسمي في {month}: التدفقات {times} من الشهر المعتاد، بما يتوافق مع تباطؤ الصيف.",
         returned_cheque: "شيك مرتجع في {month}، حين كان الرصيد ضيقًا.",
-        returned_cheques: "شيكات مرتجعة في {month}: {n}، حين كان الرصيد ضيقًا.",
+        returned_cheques_two: "شيكان مرتجعان في {month}، حين كان الرصيد ضيقًا.",
+        returned_cheques: "{n} شيكات مرتجعة في {month}، حين كان الرصيد ضيقًا.",
         overdrawn: "رصيد مكشوف في {month}: أُقفل الرصيد دون الصفر بمبلغ {amount}.",
       },
       evidence: "كشوف الحساب البنكية",
