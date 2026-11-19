@@ -14,7 +14,7 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 
 Last full pass: 19 Nov 02:45 UTC, pass 5, Arabic gate (97/98 rows) · Live link: https://watad-challenge.vercel.app
 
-Browsers tested (18 Nov 19:30, production after the redesign, full e2e suite incl. axe and keyboard): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 37/37; WebKit (Safari engine) desktop 37/37 and iPhone 14 34/34 (+3 desktop-only keyboard tests skipped). #80 and #81 verified fixed. Re-run: Actions → "Cross-browser e2e" → Run workflow.
+Browsers tested (19 Nov 06:55 UTC, main `1c9e484`, local production build, never production; full e2e suite incl. axe in English and Arabic, keyboard and layout-shift checks): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 86 passed; WebKit (Safari engine) desktop 85 passed; WebKit iPhone 82 passed, 1 flaky (analytics funnel, passed on retry). 0 failed. Skips are the other-locale and desktop-only tests, plus the keyboard RFQ journey in WebKit (Safari needs Option+Tab with the system setting; covered in Chromium and Firefox, #166). Run [44474357387](https://github.com/malikmmoaz/watad-challenge/actions/runs/44474357387). Fixed on the way: WebKit timing in the credit and Arabic axe checks, and a keyboard-unreachable guide scroller on phones (#169); number inputs in WebKit (#166); Firefox crash scanning several cached routes in one tab (#170).
 
 ## A. Platform and access
 
