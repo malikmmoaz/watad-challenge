@@ -5,8 +5,9 @@ import { T } from "@/components/i18n/t";
 import { common } from "@/i18n/common";
 import { msg } from "@/i18n/core";
 import { TaxInvoice } from "@/components/invoice/tax-invoice";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Tax invoice" };
+export const metadata: Metadata = pageMetadata("supplierInvoice");
 
 async function Content({ params }: { params: PageProps<"/supplier/po/[id]/invoice">["params"] }) {
   const { id } = await params;
