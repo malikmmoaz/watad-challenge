@@ -51,7 +51,8 @@ export function RoleNav({ current }: { current: Role }) {
             );
           })}
         </nav>
-        <div className="ms-auto flex items-center gap-x-2 text-sm sm:gap-x-4">
+        {/* Wraps instead of overflowing on the narrowest phones (Arabic labels are wider, #120). */}
+        <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 text-sm sm:gap-x-4">
           <RestartTour />
           <Link href="/about" data-testid="nav-about" className="hidden text-ink-muted transition-colors duration-150 hover:text-ink xl:inline">
             {m.appBar.about}
