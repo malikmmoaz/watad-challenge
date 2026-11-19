@@ -47,9 +47,9 @@ describe("creditEligibility", () => {
   });
 
   it("explains each refusal", () => {
-    expect(creditEligibility(sar(1), null, [])).toMatchObject({ ok: false, reason: expect.stringContaining("no approved credit cap") });
-    expect(creditEligibility(sar(1), facility, [suppliers[2]!])).toMatchObject({ ok: false, reason: expect.stringContaining("does not accept platform credit") });
-    expect(creditEligibility(sar(400_000.01), facility, [suppliers[0]!])).toMatchObject({ ok: false, reason: expect.stringContaining("above what is left of your credit cap") });
+    expect(creditEligibility(sar(1), null, [])).toMatchObject({ ok: false, kind: "no_cap", reason: expect.stringContaining("no approved credit cap") });
+    expect(creditEligibility(sar(1), facility, [suppliers[2]!])).toMatchObject({ ok: false, kind: "supplier_refuses", reason: expect.stringContaining("does not accept platform credit") });
+    expect(creditEligibility(sar(400_000.01), facility, [suppliers[0]!])).toMatchObject({ ok: false, kind: "over_cap", reason: expect.stringContaining("above what is left of your credit cap") });
   });
 });
 

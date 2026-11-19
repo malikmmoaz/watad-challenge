@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
 import { Alert, Badge, Button, CellNote, CreditCapMeter, Facts, Icon, Panel, StatusTimeline, Table, Td, Th, THead, Tr, buttonClass } from "@/components/ui";
 import { PO_STATUS } from "@/lib/status";
@@ -60,7 +60,7 @@ export function OfferComparison({ rfq }: { rfq: Rfq }) {
     return (
       <>
         {live}
-        <PoConfirmation pos={placed} />
+        <PoConfirmation pos={placed} wantedCredit={rfq.wantsCredit} />
       </>
     );
   if (offers.length === 0) {
@@ -157,13 +157,19 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
   });
   const total = add(...quotes.map((q) => q.totalInclVat));
   const eligibility = creditEligibility(total, facility, quotes.flatMap((q) => reference.suppliers.filter((s) => s.id === q.offer.supplierId)));
-  const [method, setMethod] = useState<PaymentMethod>(rfq.wantsCredit && eligibility.ok ? "platform_credit" : "bank_transfer");
+  // Never switch to bank transfer silently: if credit was the plan (or was selected) and this order
+  // cannot use it, nothing is selected until the contractor picks bank transfer, and the alert says why.
+  const [method, setMethod] = useState<PaymentMethod>(rfq.wantsCredit ? "platform_credit" : "bank_transfer");
   const [error, setError] = useState<string | null>(null);
   const useCredit = method === "platform_credit" && eligibility.ok;
+  const blocked = method === "platform_credit" && !eligibility.ok;
+  const showAlert = !eligibility.ok && (rfq.wantsCredit || facility !== null);
   const markup = useCredit && facility ? Math.round(total * facility.profitRate) : 0;
   const tenor = facility?.maxTenorDays ?? 60;
+  const chooseId = useId();
 
   const place = () => {
+    if (blocked) return;
     // Read the cap before this order is drawn, so the funnel records whether it fitted.
     const before = getState();
     const fit = creditFit(total, before.creditFacilities.find((f) => f.contractorId === rfq.contractorId) ?? null);
@@ -212,16 +218,17 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
             <input type="radio" name="pay" data-testid="po-pay-credit" disabled={!eligibility.ok} checked={useCredit} onChange={() => setMethod("platform_credit")} className="mt-1" />
             <span>
               {d.payCredit}
-              {!eligibility.ok && <span className="block text-ink-muted">{eligibility.reason}</span>}
+              {!eligibility.ok && !showAlert && <span className="block text-ink-muted">{i.logic("poErrors", eligibility.reason)}</span>}
             </span>
           </label>
-          {rfq.wantsCredit && !eligibility.ok && (
+          {showAlert && (
             <div data-testid="po-credit-blocked">
               <Alert tone="caution" title={d.blockedTitle}>
                 <span className="block">{i.logic("poErrors", eligibility.reason)}</span>
                 <span className="mt-1 block">{d.youCan}</span>
                 <span className="block">· {d.altBank}</span>
-                {onUseSplit && (
+                {/* A split or a higher cap only helps when the order is too big for the cap. */}
+                {onUseSplit && !eligibility.ok && eligibility.kind === "over_cap" && (
                   <span className="block">
                     ·{" "}
                     <button type="button" className="underline" data-testid="po-blocked-split" onClick={onUseSplit}>
@@ -230,18 +237,20 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
                     {d.altSplitTail}
                   </span>
                 )}
-                <span className="block">
-                  ·{" "}
-                  <Link href="/contractor/credit/apply" className="underline" data-testid="po-blocked-apply">
-                    {facility ? d.altApplyHigher : d.altApply}
-                  </Link>
-                  .
-                </span>
+                {!eligibility.ok && eligibility.kind !== "supplier_refuses" && (
+                  <span className="block">
+                    ·{" "}
+                    <Link href="/contractor/credit/apply" className="underline" data-testid="po-blocked-apply">
+                      {eligibility.kind === "over_cap" ? d.altApplyHigher : d.altApply}
+                    </Link>
+                    .
+                  </span>
+                )}
               </Alert>
             </div>
           )}
           <label className="flex items-start gap-2">
-            <input type="radio" name="pay" data-testid="po-pay-bank" checked={!useCredit} onChange={() => setMethod("bank_transfer")} className="mt-1" />
+            <input type="radio" name="pay" data-testid="po-pay-bank" checked={method === "bank_transfer"} onChange={() => setMethod("bank_transfer")} className="mt-1" />
             <span>{d.payBank}</span>
           </label>
         </fieldset>
@@ -265,10 +274,16 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
 
         {error && <Alert tone="negative" title={d.error}>{i.logic("poErrors", error)}</Alert>}
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="primary" data-testid="po-place" onClick={place}>
+          <Button variant="primary" data-testid="po-place" onClick={place} disabled={blocked} aria-describedby={blocked ? chooseId : undefined}>
             {quotes.length > 1 ? i.fill(d.placeMany, { n: quotes.length }) : d.placeOne}
           </Button>
-          <span className="text-sm text-ink-muted">{d.reveal}</span>
+          {blocked ? (
+            <span id={chooseId} className="text-sm font-medium text-caution" data-testid="po-choose-method">
+              {d.chooseMethod}
+            </span>
+          ) : (
+            <span className="text-sm text-ink-muted">{d.reveal}</span>
+          )}
         </div>
       </div>
     </Panel>
@@ -276,7 +291,7 @@ function PoDraft({ rfq, orders, ranks, onUseSplit, onCancel, onPlaced }: { rfq: 
 }
 
 
-function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
+function PoConfirmation({ pos, wantedCredit }: { pos: PurchaseOrder[]; wantedCredit: boolean }) {
   const total = add(...pos.map((p) => p.totalInclVat));
   const i = useProcurementI18n();
   const x = i.m.poIssued;
@@ -323,7 +338,7 @@ function PoConfirmation({ pos }: { pos: PurchaseOrder[] }) {
                       label: i.m.common.payment,
                       value: po.creditDraw ? i.fill(x.creditDraw, { repay: i.f.money(po.creditDraw.totalRepayable), due: i.f.date(po.creditDraw.dueDate) }) : x.bankOnTerms,
                     },
-                    { label: x.murabaha, value: po.creditDraw ? i.fill(x.markup, { markup: i.f.money(po.creditDraw.markup), apr: i.f.percent(po.creditDraw.apr, 1) }) : x.notUsed },
+                    { label: x.murabaha, value: po.creditDraw ? i.fill(x.markup, { markup: i.f.money(po.creditDraw.markup), apr: i.f.percent(po.creditDraw.apr, 1) }) : wantedCredit ? x.notUsedWhy : x.notUsed },
                   ]}
                 />
                 <span className="sr-only" data-testid="po-status" data-status={po.status}>

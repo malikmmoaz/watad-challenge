@@ -49,16 +49,18 @@ export function quoteOrder(rfq: Rfq, offer: Offer, rfqLineIds?: string[]): PoQuo
 /** What is left of the credit cap (cap minus drawn); lives with the credit domain. */
 export { availableCredit };
 
-export type CreditEligibility = { ok: true; tenorDays: CreditFacility["maxTenorDays"] } | { ok: false; reason: string };
+/** Why credit cannot pay this order: decides which alternatives are worth offering. */
+export type CreditBlock = "no_cap" | "supplier_refuses" | "over_cap";
+export type CreditEligibility = { ok: true; tenorDays: CreditFacility["maxTenorDays"] } | { ok: false; kind: CreditBlock; reason: string };
 
 /** Whether these orders can be paid from the credit cap, and if not, why. */
 export function creditEligibility(total: Halalas, facility: CreditFacility | null, suppliers: Supplier[]): CreditEligibility {
-  if (!facility) return { ok: false, reason: "You have no approved credit cap yet." };
+  if (!facility) return { ok: false, kind: "no_cap", reason: "You have no approved credit cap yet." };
   const refusing = suppliers.filter((s) => !s.acceptsPlatformCredit);
-  if (refusing.length > 0) return { ok: false, reason: `${refusing.map((s) => s.name).join(", ")} does not accept platform credit.` };
+  if (refusing.length > 0) return { ok: false, kind: "supplier_refuses", reason: `${refusing.map((s) => s.name).join(", ")} does not accept platform credit.` };
   const available = availableCredit(facility);
   if (total > available) {
-    return { ok: false, reason: `This order is ${formatSar(halalas(total - available))} above what is left of your credit cap (${formatSar(available)} of ${formatSar(facility.cap)}).` };
+    return { ok: false, kind: "over_cap", reason: `This order is ${formatSar(halalas(total - available))} above what is left of your credit cap (${formatSar(available)} of ${formatSar(facility.cap)}).` };
   }
   return { ok: true, tenorDays: facility.maxTenorDays };
 }

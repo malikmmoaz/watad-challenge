@@ -261,7 +261,10 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
           ) : (
             <p className="text-sm text-ink-muted">{m.rfqPage.noCap}</p>
           )}
-          <p className="mt-3 border-t border-line pt-3 text-sm text-ink">{rfq.wantsCredit ? m.rfqPage.planCredit : m.rfqPage.planDirect}</p>
+          <p className="mt-3 border-t border-line pt-3 text-sm text-ink" data-testid="credit-plan">
+            {/* Do not say "you plan to pay from your cap" right under "this RFQ is above it". */}
+            {!rfq.wantsCredit ? m.rfqPage.planDirect : facility && estimate > availableCredit(facility) ? m.rfqPage.planCreditOver : m.rfqPage.planCredit}
+          </p>
           </div>
         </Panel>
       </div>
