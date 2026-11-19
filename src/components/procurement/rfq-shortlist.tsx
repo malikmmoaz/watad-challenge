@@ -155,6 +155,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
 
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [blind, setBlind] = useState<boolean | null>(null);
+  const [showInvited, setShowInvited] = useState(false);
 
   if (!rfq || !shortlist) {
     return (
@@ -267,6 +268,19 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
       {!isDraft && <OfferComparison rfq={rfq} />}
 
       <Panel title={isDraft ? m.rfqPage.chooseWho : m.rfqPage.invited}>
+        {/* Phones, once sent: the offers above are the task, so the invited list (with every reason) folds away. */}
+        {!isDraft ? (
+          <button
+            type="button"
+            data-testid="shortlist-invited-toggle"
+            aria-expanded={showInvited}
+            onClick={() => setShowInvited((v) => !v)}
+            className="text-sm text-stamp underline decoration-stamp/35 underline-offset-[3px] hover:decoration-stamp sm:hidden"
+          >
+            {showInvited ? m.rfqPage.hideInvited : fill(m.rfqPage.showInvited, { n: shown.length })}
+          </button>
+        ) : null}
+        <div className={!isDraft && !showInvited ? "hidden sm:block" : ""}>
         <p className="mb-2 max-w-3xl text-sm text-ink-muted">
           {fill(m.rfqPage.rankedOn, { city: city(rfq.deliveryCity) })}
         </p>
@@ -285,6 +299,7 @@ export function RfqShortlist({ rfqId }: { rfqId: string }) {
             ))}
           </ul>
         </details>
+        </div>
         {isDraft ? (
           <div className="mt-4 border-t border-line pt-4">
           <label className="flex items-center gap-2 text-sm text-ink">

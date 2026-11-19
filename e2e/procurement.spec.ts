@@ -1,3 +1,4 @@
+import { tour } from "@/content/tour";
 import { test, expect, tid, enterAs, switchTo, expectNoHorizontalScroll } from "./fixtures";
 
 // Procurement journey (#9, #10, #11): shortlist -> supplier offer -> comparison -> PO with
@@ -146,4 +147,26 @@ test("comparison reads consistently: whole-order badge, partial offers say what 
   // The reasons toggle counts what it will reveal.
   await expect(page.getByRole("button", { name: /^Show all \d+ reasons$/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Show (\d+ more reasons|1 more reason)$/ }).first()).toBeVisible();
+
+test("Arabic phone comparison: invited list folded, breakdown closed, Latin digits, a shorter page", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => window.localStorage.setItem("watad-locale", "ar"));
+  // Measured with the reviewer guide hidden, as the 4,758 px "before" was.
+  await page.addInitScript((key) => window.localStorage.setItem(key, "1"), tour.storageKey);
+  await enterAs(page, "contractor");
+  await page.goto("/contractor/rfq/rfq_1042");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(tid(page, "offer-row").first()).toBeVisible();
+  // The invited suppliers fold away below the offers until asked for.
+  await expect(tid(page, "shortlist-row")).toHaveCount(0);
+  const toggle = tid(page, "shortlist-invited-toggle");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  // No score breakdown is open by default on a phone.
+  expect(await page.locator("details.group[open]").filter({ visible: true }).count()).toBe(0);
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  expect(height, "page height at 390 px (was 4,758)").toBeLessThan(3400);
+  // Latin digits everywhere (ADR 0005), material names included.
+  expect(await page.evaluate(() => /[٠-٩۰-۹]/.test(document.body.innerText))).toBe(false);
+  await toggle.click();
+  await expect(tid(page, "shortlist-row").first()).toBeVisible();
 });
