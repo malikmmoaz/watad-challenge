@@ -1,6 +1,6 @@
 # Hana (credit) handoff
 
-Updated 2026-11-18 20:55 UTC. Design and rules: [ADR 0003](../adr/0003-credit-assessment.md). Nothing open on my side.
+Updated 2026-11-19 03:10 UTC. Design and rules: [ADR 0003](../adr/0003-credit-assessment.md). Open: #144 what-if (awaiting Layla), the cash-flow chart PR (awaiting Layla).
 
 ## Shipped (merged)
 
@@ -9,6 +9,13 @@ Updated 2026-11-18 20:55 UTC. Design and rules: [ADR 0003](../adr/0003-credit-as
 - #35 credit manager workspace: `/credit` queue, `/credit/cases/[id]` case file, `runChecks` / `decide`, factor impact.
 - #42 draws carry over when a new cap is approved. #45 draw ledger, repayment, utilisation. #53 loading, empty and success states, "Preparing the file" step-through. #63 available credit derived as cap − drawn; `CreditFacility.available` removed.
 - #70 ADR 0003. #79 credit screens on the new design language: score count-up through the bands (once, reduced motion respected), decision stamp moment, queue `StatStrip`. #88 credit analytics: all credit events wired plus `credit_checks_run`, `credit_info_provided`, `draw_repaid`. #96 / #97 contractor Credit page opens on its figures; roomier draws table.
+
+- #123 credit in Arabic and RTL (engine findings re-rendered via `CreditLang`), #135 seed credit text in Arabic.
+
+## Open
+
+- #144 what-if panel: `src/domain/credit/what-if.ts` (pure, tested), `manager/what-if-panel.tsx`. Merge once Layla approves.
+- Cash-flow chart: `src/domain/credit/cashflow.ts` (seeded by case id, reproduces the extracted annual figures exactly; annotation rules in `annotate`), `manager/cashflow-chart.tsx` (small SVG, LTR axis in both languages), `e2e/credit-cashflow.spec.ts`.
 
 ## Where things are
 
