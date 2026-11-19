@@ -5,8 +5,9 @@ import { T } from "@/components/i18n/t";
 import { common } from "@/i18n/common";
 import { msg } from "@/i18n/core";
 import { RfqShortlist } from "@/components/procurement/rfq-shortlist";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "RFQ" };
+export const metadata: Metadata = pageMetadata("rfq");
 
 // The RFQ lives in the browser's demo store, so the id is only read here and passed down.
 async function Content({ params }: { params: PageProps<"/contractor/rfq/[id]">["params"] }) {

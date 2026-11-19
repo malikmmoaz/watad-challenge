@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Noto+Sans+Arabic:wght@400;600&family=Noto+Naskh+Arabic:wght@700&family=Geist+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+:root{--pine-deep:oklch(0.2 0.04 164);--pine:oklch(0.255 0.05 163);--raised:oklch(0.345 0.055 162);--on:oklch(0.955 0.02 155);--muted:oklch(0.8 0.03 158);--glow:oklch(0.86 0.11 158);--warm:oklch(0.93 0.06 95)}
+*{margin:0;box-sizing:border-box}
+body{width:1200px;height:630px;overflow:hidden;font-family:"Public Sans";color:var(--on);background:var(--pine-deep);position:relative}
+.g1{position:absolute;width:900px;height:520px;left:-180px;top:-260px;border-radius:50%;background:var(--glow);opacity:.20;filter:blur(110px)}
+.g2{position:absolute;width:560px;height:380px;right:-160px;bottom:-200px;border-radius:50%;background:var(--warm);opacity:.12;filter:blur(110px)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.035) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at 30% 20%,#000 30%,transparent 75%)}
+.wrap{position:relative;height:100%;padding:56px 72px 52px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:14px;font-weight:600;font-size:24px;letter-spacing:-.01em}
+.mark{width:44px;height:44px;border-radius:12px;background:var(--on);display:grid;place-items:center}
+.mark svg{transform:rotate(-45deg)}
+.pill{margin-left:auto;font-size:16px;color:var(--muted);border:1.5px dashed rgba(255,255,255,.28);border-radius:999px;padding:6px 14px}
+h1{margin-top:52px;font-weight:600;font-size:76px;line-height:1.02;letter-spacing:-.045em}
+h1 em{display:block;font-family:"Instrument Serif";font-style:italic;font-weight:400;font-size:86px;letter-spacing:-.02em;color:var(--glow);line-height:1.02}
+.ar{margin-top:22px;font-family:"Noto Sans Arabic";font-size:27px;color:var(--muted);direction:rtl;text-align:left;unicode-bidi:plaintext}
+.ar b{font-family:"Noto Naskh Arabic";font-weight:700;color:var(--glow)}
+.roles{margin-top:auto;display:flex;gap:14px;align-items:center}
+.role{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 18px;font-size:20px;font-weight:600}
+.role span{font-family:"Noto Sans Arabic";font-weight:400;font-size:17px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--glow)}
+.url{margin-left:auto;font-family:"Geist Mono";font-size:17px;color:var(--muted)}
+</style></head><body>
+<div class="g1"></div><div class="g2"></div><div class="grid"></div>
+<div class="wrap">
+ <div class="brand"><span class="mark"><svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="oklch(0.2 0.04 164)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span>Watad challenge demo<span class="pill">Sample data · simulated AI</span></div>
+ <h1>From RFQ to paid PO,<em>with credit you can trace.</em></h1>
+ <p class="ar">من طلب عروض الأسعار إلى أمر شراء مدفوع، <b>بائتمانٍ تعرف مصدره.</b></p>
+ <div class="roles">
+  <div class="role"><i class="dot"></i>Contractor <span>المقاول</span></div>
+  <div class="role"><i class="dot"></i>Supplier <span>المورّد</span></div>
+  <div class="role"><i class="dot"></i>Credit manager <span>مدير الائتمان</span></div>
+  <div class="url">watad-challenge.vercel.app</div>
+ </div>
+</div></body></html>
