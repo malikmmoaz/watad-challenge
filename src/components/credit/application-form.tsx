@@ -141,6 +141,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
               value={d.purpose}
               onChange={(e) => set({ purpose: e.target.value })}
               placeholder={m.purposePlaceholder}
+              dir="auto"
               data-testid="credit-apply-purpose"
               error={errors.purpose}
             />

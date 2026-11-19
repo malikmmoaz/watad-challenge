@@ -168,7 +168,7 @@ function MoreInfoForm({ c }: { c: CreditCase }) {
         {m.attachFiles}
         <input type="file" multiple className="mt-1 block text-sm font-normal" onChange={(e) => setFiles(Array.from(e.target.files ?? []).map((x) => x.name))} />
       </label>
-      <Textarea label={m.noteLabel} optional rows={2} value={note} onChange={(e) => setNote(e.target.value)} error={error ?? undefined} />
+      <Textarea dir="auto" label={m.noteLabel} optional rows={2} value={note} onChange={(e) => setNote(e.target.value)} error={error ?? undefined} />
       <Button variant="primary" onClick={send} data-testid="credit-more-info-send">
         {m.send}
       </Button>

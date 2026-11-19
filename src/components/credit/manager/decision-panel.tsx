@@ -131,19 +131,19 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
               data-testid="credit-decision-cap"
             />
             {currentCap !== undefined && Number.isFinite(cap) && (
-              <p className={`-mt-2 text-sm ${cap * 100 < currentCap ? "text-caution" : "text-ink-muted"}`} data-testid="credit-decision-current-cap">
+              <p className={`-mt-2 text-sm font-medium ${cap * 100 < currentCap ? "text-caution" : "text-ink"}`} data-testid="credit-decision-current-cap">
                 {cap * 100 < currentCap
                   ? fill(m.belowCurrent, { current: f.money(currentCap) })
                   : fill(m.currentToProposed, { current: f.money(currentCap), proposed: f.money((cap * 100) as never) })}
               </p>
             )}
-            <Textarea label={m.conditionsLabel} optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
+            <Textarea dir="auto" label={m.conditionsLabel} optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
           </>
         )}
         {outcome === "request_info" && (
-          <Textarea label={m.itemsLabel} value={items} onChange={(e) => setItems(e.target.value)} data-testid="credit-decision-items" />
+          <Textarea dir="auto" label={m.itemsLabel} value={items} onChange={(e) => setItems(e.target.value)} data-testid="credit-decision-items" />
         )}
-        <Textarea
+        <Textarea dir="auto"
           label={m.reasonLabel}
           hint={m.reasonHint}
           value={reason}
@@ -151,7 +151,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
           data-testid="credit-decision-reason"
         />
         {overriding && (
-          <Textarea label={m.overrideLabel} value={override} onChange={(e) => setOverride(e.target.value)} data-testid="credit-decision-override" />
+          <Textarea dir="auto" label={m.overrideLabel} value={override} onChange={(e) => setOverride(e.target.value)} data-testid="credit-decision-override" />
         )}
         {errors.length > 0 && (
           <Alert tone="negative" title={m.notRecorded}>
