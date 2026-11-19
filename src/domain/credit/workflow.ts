@@ -79,9 +79,26 @@ export function validateDecision(c: CreditCase, d: DecisionInput): string[] {
 
 const addDays = (iso: string, days: number) => new Date(Date.parse(iso) + days * 86_400_000).toISOString().slice(0, 10);
 
+export type CapChange = { kind: "opened"; to: Halalas } | { kind: "raised"; from: Halalas; to: Halalas } | { kind: "kept"; at: Halalas };
+
+/** How an approved case changed the contractor's cap, read from its decision log (null when not approved). */
+export function capChange(c: Pick<CreditCase, "log">): CapChange | null {
+  const h = (s: string) => sar(Number(s.replace(/,/g, "")));
+  for (const l of [...c.log].reverse()) {
+    if (l.action !== "Approved" || !l.detail) continue;
+    let r: RegExpMatchArray | null;
+    if ((r = l.detail.match(/^Credit cap raised from ([\d,]+) to ([\d,]+) SAR/))) return { kind: "raised", from: h(r[1]!), to: h(r[2]!) };
+    if ((r = l.detail.match(/^Credit cap kept at ([\d,]+) SAR/))) return { kind: "kept", at: h(r[1]!) };
+    if ((r = l.detail.match(/^Credit cap ([\d,]+) SAR/))) return { kind: "opened", to: h(r[1]!) };
+  }
+  return null;
+}
+
 /**
  * Records the human decision; an approval opens the credit facility, or replaces
- * the contractor's current one. Draws still outstanding on it carry over.
+ * the contractor's current one. Draws still outstanding on it carry over. A new
+ * approval never lowers an existing cap: approving less than the current cap
+ * keeps the cap and applies the new terms (band, Murabaha rate, conditions).
  */
 export function decide(c: CreditCase, d: DecisionInput, now: string, current?: CreditFacility): { case: CreditCase; facility?: CreditFacility } {
   const errors = validateDecision(c, d);
@@ -101,11 +118,21 @@ export function decide(c: CreditCase, d: DecisionInput, now: string, current?: C
   };
   const status = d.outcome === "approve" ? "approved" : d.outcome === "decline" ? "declined" : "more_info_requested";
   const action = d.outcome === "approve" ? "Approved" : d.outcome === "decline" ? "Declined" : "More information requested";
+  const sarText = (h: number) => (h / 100).toLocaleString("en-US");
+  const effectiveCap = approvedCap !== undefined && current && current.cap >= approvedCap ? current.cap : approvedCap;
+  const capDetail =
+    approvedCap === undefined
+      ? decision.reasonText
+      : !current
+        ? `Credit cap ${sarText(approvedCap)} SAR, ${c.requestedTenorDays} days`
+        : effectiveCap! > current.cap
+          ? `Credit cap raised from ${sarText(current.cap)} to ${sarText(effectiveCap!)} SAR, ${c.requestedTenorDays} days`
+          : `Credit cap kept at ${sarText(current.cap)} SAR, ${c.requestedTenorDays} days`;
   const next: CreditCase = {
     ...c,
     status,
     decision,
-    log: [...c.log, { at: now, actor: "credit_manager", action, detail: approvedCap ? `Credit cap ${(approvedCap / 100).toLocaleString("en-US")} SAR, ${c.requestedTenorDays} days` : decision.reasonText }],
+    log: [...c.log, { at: now, actor: "credit_manager", action, detail: capDetail }],
     updatedAt: now,
   };
   if (!approvedCap) return { case: next };
@@ -116,7 +143,7 @@ export function decide(c: CreditCase, d: DecisionInput, now: string, current?: C
     facility: {
       creditCaseId: c.id,
       contractorId: c.contractorId,
-      cap: approvedCap,
+      cap: effectiveCap as Halalas,
       drawn: (current?.drawn ?? 0) as Halalas,
       band,
       maxTenorDays: c.requestedTenorDays,

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { provideMoreInfo, trackerSteps } from "@/domain/credit-application";
+import { capChange } from "@/domain/credit/workflow";
 import { CREDIT_CASE_STATUS } from "@/lib/status";
 import { murabaha } from "@/domain/money";
 import type { CreditCase, CreditFacility, GateResult } from "@/domain/types";
@@ -110,7 +111,7 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
       <div className="overflow-x-clip py-1">
         <DecisionStamp decision={d.outcome} by={personName(d.decidedBy, credit.en as never, all)} at={f.date(d.decidedAt)} />
       </div>
-      {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">{fill(m.capApproved, { cap: f.money(d.approvedCap) })}</p>}
+      {approved && d.approvedCap !== undefined && <CapLine c={c} approved={d.approvedCap} />}
       <p className="text-sm text-ink">{seedText(d.reasonText, credit.en as never, all)}</p>
       {d.conditions && d.conditions.length > 0 && (
         <div className="text-sm">
@@ -173,5 +174,24 @@ function MoreInfoForm({ c }: { c: CreditCase }) {
       </Button>
       <p className="text-xs text-ink-muted">{all.apply.filesStay}</p>
     </div>
+  );
+}
+
+/** The approved cap, and how it changed the contractor's cap: opened, raised from X to Y, or kept. */
+function CapLine({ c, approved }: { c: CreditCase; approved: NonNullable<NonNullable<CreditCase["decision"]>["approvedCap"]> }) {
+  const all = useMessages(credit);
+  const m = all.tracker;
+  const f = useFormat();
+  const change = capChange(c);
+  const text =
+    change?.kind === "raised"
+      ? fill(m.capRaised, { from: f.money(change.from), to: f.money(change.to) })
+      : change?.kind === "kept"
+        ? fill(m.capKept, { cap: f.money(change.at) })
+        : fill(m.capApproved, { cap: f.money(approved) });
+  return (
+    <p className="text-sm font-medium text-ink" data-testid="credit-cap-change" data-kind={change?.kind ?? "opened"}>
+      {text}
+    </p>
   );
 }

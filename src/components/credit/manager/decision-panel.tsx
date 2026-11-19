@@ -5,7 +5,7 @@ import { demoPersona } from "@/data";
 import { decide, validateDecision, type DecisionInput } from "@/domain/credit/workflow";
 import type { CreditCase, CreditDecisionOutcome } from "@/domain/types";
 import { track } from "@/lib/analytics";
-import { getState, update } from "@/store";
+import { getState, update, useDemo } from "@/store";
 import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/components/ui";
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
@@ -30,6 +30,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
   const proposedCap = ai?.proposedCap ?? c.scorecard?.proposedCap;
   // Prefilled with the proposed cap; empty (never 0) when there is no proposal yet.
   const [cap, setCap] = useState<number>(proposedCap ? proposedCap / 100 : Number.NaN);
+  const currentCap = useDemo((s) => s.creditFacilities.find((x) => x.contractorId === c.contractorId)?.cap);
   const [reason, setReason] = useState("");
   const [conditions, setConditions] = useState("");
   const [items, setItems] = useState("");
@@ -129,6 +130,13 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
               hint={proposedCap ? fill(m.capHintProposed, { cap: f.money(proposedCap), requested: f.money(c.requestedCap) }) : fill(m.capHintNone, { requested: f.money(c.requestedCap) })}
               data-testid="credit-decision-cap"
             />
+            {currentCap !== undefined && Number.isFinite(cap) && (
+              <p className={`-mt-2 text-sm ${cap * 100 < currentCap ? "text-caution" : "text-ink-muted"}`} data-testid="credit-decision-current-cap">
+                {cap * 100 < currentCap
+                  ? fill(m.belowCurrent, { current: f.money(currentCap) })
+                  : fill(m.currentToProposed, { current: f.money(currentCap), proposed: f.money((cap * 100) as never) })}
+              </p>
+            )}
             <Textarea label={m.conditionsLabel} optional value={conditions} onChange={(e) => setConditions(e.target.value)} />
           </>
         )}

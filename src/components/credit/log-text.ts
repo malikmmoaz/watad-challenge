@@ -40,5 +40,7 @@ export function logDetail(detail: string, m: M): string {
     return fill(m.log.proposes, { outcome: m.decision.outcomes[o] });
   }
   if ((r = detail.match(/^Credit cap ([\d,]+) SAR, (\d+) days$/))) return fill(m.log.capFor, { amount: r[1]!, days: r[2]! });
+  if ((r = detail.match(/^Credit cap raised from ([\d,]+) to ([\d,]+) SAR, (\d+) days$/))) return fill(m.log.capRaised, { from: r[1]!, to: r[2]!, days: r[3]! });
+  if ((r = detail.match(/^Credit cap kept at ([\d,]+) SAR, (\d+) days$/))) return fill(m.log.capKept, { amount: r[1]!, days: r[2]! });
   return seedText(detail, credit.en as never, m);
 }

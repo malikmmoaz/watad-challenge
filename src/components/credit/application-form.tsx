@@ -22,7 +22,7 @@ import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { cityName, isolateLtr, projectText } from "./data-text";
 import type { Contractor, CreditDocumentType } from "@/domain/types";
 import { track } from "@/lib/analytics";
-import { getState, update } from "@/store";
+import { getState, update, useDemo } from "@/store";
 import { Badge, Button, buttonClass, Checkbox, Input, PageHeader, Panel, SampleDataLabel, Table, Td, Th, THead, Tr } from "@/components/ui";
 
 /** Sample file names so a reviewer can submit without real documents. */
@@ -43,7 +43,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
   const f = useFormat();
   const locale = useLocale();
   const router = useRouter();
-  const [d, setD] = useState<ApplicationDraft>({
+  const [draft, setD] = useState<ApplicationDraft>({
     requestedCapSar: 500_000,
     tenorDays: 60,
     purpose: "",
@@ -51,12 +51,17 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
     simahConsent: false,
     declarationAccepted: false,
   });
+  // Applying with a cap already open is a request for a higher one: start at the current cap and ask for more.
+  const currentCap = useDemo((s) => s.creditFacilities.find((x) => x.contractorId === contractor.id)?.cap);
+  const [capTouched, setCapTouched] = useState(false);
+  const d: ApplicationDraft = currentCap !== undefined && !capTouched ? { ...draft, requestedCapSar: currentCap / 100 } : draft;
   // Errors appear after the first submit attempt, then update live as fields are fixed.
   const [attempted, setAttempted] = useState(false);
-  const raw: DraftErrors = attempted ? validateDraft(d) : {};
+  const raw: DraftErrors = attempted ? validateDraft(d, currentCap) : {};
+  const capTooLow = currentCap !== undefined && Number.isFinite(d.requestedCapSar) && sar(d.requestedCapSar) <= currentCap;
   // validateDraft() says what is wrong; the words come from the messages.
   const errors: DraftErrors = {
-    requestedCap: raw.requestedCap && m.errors.cap,
+    requestedCap: raw.requestedCap && (capTooLow ? fill(m.errors.capAboveCurrent, { cap: f.money(currentCap!) }) : m.errors.cap),
     purpose: raw.purpose && m.errors.purpose,
     documents: raw.documents && fill(m.errors.documents, { list: missingRequiredDocuments(d.files).map((r) => all.documents[r.type].label).join(locale === "ar" ? "، " : ", ") }),
     simahConsent: raw.simahConsent && m.errors.simah,
@@ -78,7 +83,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setAttempted(true);
-    if (Object.keys(validateDraft(d)).length > 0) return;
+    if (Object.keys(validateDraft(d, currentCap)).length > 0) return;
     const s = getState();
     const pos = s.purchaseOrders.filter((p) => p.contractorId === contractor.id);
     const c = buildSubmittedCase(d, {
@@ -107,9 +112,12 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             max={CAP_LIMITS.max / 100}
             step={10_000}
             value={Number.isNaN(d.requestedCapSar) ? "" : d.requestedCapSar}
-            onChange={(e) => set({ requestedCapSar: e.target.valueAsNumber })}
+            onChange={(e) => {
+              setCapTouched(true);
+              set({ requestedCapSar: e.target.valueAsNumber });
+            }}
             data-testid="credit-apply-cap"
-            hint={fill(m.capHint, { min: f.money(CAP_LIMITS.min), max: f.money(CAP_LIMITS.max) })}
+            hint={currentCap !== undefined ? fill(m.capHintCurrent, { cap: f.money(currentCap) }) : fill(m.capHint, { min: f.money(CAP_LIMITS.min), max: f.money(CAP_LIMITS.max) })}
             error={errors.requestedCap}
           />
           <fieldset className="flex flex-col gap-1.5">

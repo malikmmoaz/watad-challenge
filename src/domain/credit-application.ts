@@ -12,6 +12,7 @@ import type {
   CreditDocumentType,
   DocumentId,
   GatedCheck,
+  Halalas,
   IsoDate,
   OrgId,
 } from "./types";
@@ -60,11 +61,14 @@ export function missingRequiredDocuments(files: ApplicationDraft["files"]): Docu
   return DOCUMENT_REQUIREMENTS.filter((r) => r.required && !files[r.type]);
 }
 
-export function validateDraft(d: ApplicationDraft): DraftErrors {
+/** With a current cap, the application is for a higher one: it must ask for more. */
+export function validateDraft(d: ApplicationDraft, currentCap?: Halalas): DraftErrors {
   const e: DraftErrors = {};
   const cap = sar(d.requestedCapSar);
   if (!Number.isFinite(d.requestedCapSar) || cap < CAP_LIMITS.min || cap > CAP_LIMITS.max) {
     e.requestedCap = "Enter a cap between SAR 50,000 and SAR 10,000,000.";
+  } else if (currentCap !== undefined && cap <= currentCap) {
+    e.requestedCap = "Ask for more than your current cap.";
   }
   if (d.purpose.trim().length < 10) e.purpose = "Tell us what the materials are for (at least 10 characters).";
   const missing = missingRequiredDocuments(d.files);

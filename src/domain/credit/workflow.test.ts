@@ -5,7 +5,7 @@ import { assessCase } from "./engine";
 import { reasonCodes } from "./to-case";
 import type { CreditProfile } from "./types";
 import { availableCredit } from "./facility";
-import { decide, runChecks, validateDecision, type DecisionInput } from "./workflow";
+import { capChange, decide, runChecks, validateDecision, type DecisionInput } from "./workflow";
 
 const now = "2026-11-18T12:00:00Z";
 const shell = (p: CreditProfile): CreditCase => ({
@@ -23,6 +23,8 @@ const shell = (p: CreditProfile): CreditCase => ({
   platformHistory: { posPlaced: 0, posPaidOnTime: 0, totalSpend: 0 as CreditCase["requestedCap"] },
 });
 const run = (p: CreditProfile) => runChecks(shell(p), p, now).case;
+/** A higher-cap application: SAR 3,000,000 requested. */
+const bigAsk = () => ({ ...run(rawasiNajd), requestedCap: 300_000_000 as CreditCase["requestedCap"] });
 
 describe("runChecks", () => {
   it("fills documents, gates, scorecard and an AI proposal, and moves to review", () => {
@@ -96,12 +98,25 @@ describe("decide", () => {
   it("carries outstanding draws into a replacement facility", () => {
     const current = decide(run(rawasiNajd), approve, now).facility!;
     const withDraws = { ...current, drawn: 30_000_000 as typeof current.drawn };
-    const higher = decide(run(rawasiNajd), { ...approve, approvedCapSar: 800_000 }, now, withDraws).facility!;
-    expect(higher).toMatchObject({ cap: 80_000_000, drawn: 30_000_000 });
-    expect(availableCredit(higher)).toBe(50_000_000);
-    const below = decide(run(rawasiNajd), { ...approve, approvedCapSar: 200_000 }, now, withDraws).facility!;
-    expect(below).toMatchObject({ drawn: 30_000_000 });
-    expect(availableCredit(below)).toBe(0);
+    const higher = decide(bigAsk(), { ...approve, approvedCapSar: 1_200_000 }, now, withDraws).facility!;
+    expect(higher).toMatchObject({ cap: 120_000_000, drawn: 30_000_000 });
+    expect(availableCredit(higher)).toBe(90_000_000);
+  });
+
+  it("never lowers an existing cap: approving less keeps the cap and applies the new terms", () => {
+    const current = { ...decide(bigAsk(), { ...approve, approvedCapSar: 1_500_000 }, now).facility!, drawn: 30_000_000 as never, profitRate: 0.03 };
+    const { case: c, facility } = decide(run(rawasiNajd), { ...approve, approvedCapSar: 750_000 }, now, current);
+    expect(facility).toMatchObject({ cap: 150_000_000, drawn: 30_000_000 });
+    expect(facility!.profitRate).not.toBe(0.03); // the new assessment's terms apply
+    expect(availableCredit(facility!)).toBe(120_000_000);
+    expect(c.log.at(-1)!.detail).toBe("Credit cap kept at 1,500,000 SAR, 60 days");
+    const raised = decide(bigAsk(), { ...approve, approvedCapSar: 2_000_000 }, now, current);
+    expect(raised.facility!.cap).toBe(200_000_000);
+    expect(raised.case.log.at(-1)!.detail).toBe("Credit cap raised from 1,500,000 to 2,000,000 SAR, 60 days");
+    expect(capChange(raised.case)).toEqual({ kind: "raised", from: 150_000_000, to: 200_000_000 });
+    expect(capChange(c)).toEqual({ kind: "kept", at: 150_000_000 });
+    expect(capChange(decide(bigAsk(), approve, now).case)).toEqual({ kind: "opened", to: 100_000_000 });
+    expect(capChange(run(rawasiNajd))).toBeNull();
   });
 
   it("requests more information with the items listed", () => {
