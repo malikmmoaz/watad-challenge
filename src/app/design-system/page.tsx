@@ -36,8 +36,9 @@ import { T } from "@/components/i18n/t";
 import { formatSar, sar } from "@/domain/money";
 import { OfferComparisonDemo } from "./offer-comparison-demo";
 import { RtlSpecimen } from "./rtl-specimen";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Design system" };
+export const metadata: Metadata = pageMetadata("designSystem");
 
 const swatches: { group: string; items: [name: string, cls: string][] }[] = [
   { group: "Grounds", items: [["paper", "bg-paper"], ["surface", "bg-surface"], ["panel", "bg-panel"], ["line", "bg-line"], ["line-strong", "bg-line-strong"]] },

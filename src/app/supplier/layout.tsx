@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { ReviewerGuide } from "@/components/reviewer-guide";
 import { RoleNav } from "@/components/role-nav";
+import { pageMetadata } from "@/i18n/meta";
 
-export const metadata: Metadata = { title: "Supplier portal" };
+export const metadata: Metadata = pageMetadata("supplier");
 
 export default function Layout({ children }: LayoutProps<"/supplier">) {
   return (
