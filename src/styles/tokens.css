@@ -189,6 +189,10 @@
   [lang="ar"] {
     --font-sans: var(--font-arabic);
     --font-serif: var(--font-arabic-accent);
+    /* Codes and IDs stay in Geist Mono; Arabic words set in a mono slot (eyebrows,
+       labels) fall back to Noto Sans Arabic, not a monospaced system font that
+       spaces every letter apart and breaks the joins. */
+    --font-mono: var(--font-geist-mono), var(--font-arabic), ui-monospace, monospace;
     --tracking-display: 0;
     --tracking-heading: 0;
     --tracking-eyebrow: 0;
