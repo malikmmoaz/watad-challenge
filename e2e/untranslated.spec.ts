@@ -31,9 +31,7 @@ function sampleDataNames(): Set<string> {
 /** Product and standard names that stay in Latin script in Arabic text. */
 const PROPER = new Set(
   ["Watad", "Abwab", "Next.js", "React", "TypeScript", "Tailwind", "Vercel", "GitHub", "PostHog", "Playwright", "Vitest", "ESLint",
-    "Lighthouse", "axe", "Better", "Stack", "Claude", "Anthropic", "Nuphos", "WCAG", "pnpm", "ffmpeg", "Noto", "Sans", "Arabic", "Naskh",
-    // Browser names, as Saudi tech writing keeps them (How we built: tests in Chrome, Firefox and Safari).
-    "Chrome", "Firefox", "Safari"].map((w) => w.toLowerCase()),
+    "Lighthouse", "axe", "Better", "Stack", "Claude", "Anthropic", "Nuphos", "WCAG", "pnpm", "ffmpeg", "Noto", "Sans", "Arabic", "Naskh"].map((w) => w.toLowerCase()),
 );
 const UNITS = new Set(["mm", "cm", "m", "kg", "t", "km", "x"]);
 /** Product names made of ordinary words: allowed only as the whole phrase. */
