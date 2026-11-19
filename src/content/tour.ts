@@ -45,8 +45,8 @@ export interface Tour {
 }
 
 export const tour: Tour = {
-  version: 1,
-  storageKey: "watad-tour-dismissed-v1",
+  version: 2,
+  storageKey: "watad-tour-dismissed-v2",
   restartLabel: "Restart tour",
   dismissLabel: "Hide guide",
   footer: "About 3 minutes per role. Your actions are saved in this browser and show up in the other roles; **Reset demo data** restores the samples.",
@@ -64,15 +64,15 @@ export const tour: Tour = {
         },
         {
           title: "Compare offers, pay with credit",
-          text: "Compare 3 offers on landed cost incl. 15% VAT, lead time, terms, reliability and credit fit. **Choose offer** → **Pay with credit**: the supplier is paid directly; see the Murabaha markup and APR.",
+          text: "Compare 3 offers on landed cost incl. 15% VAT, terms and credit fit. **Choose offer** → **Pay with credit**: Murabaha markup and APR shown. ★ On Block C walls, **Use this split** saves SAR 7,705.",
           href: "/contractor/rfq/rfq_1042",
           linkLabel: "Structure package — Block C",
         },
         {
-          title: "Split the basket, then repay",
-          text: "**Use this split** awards each line to the cheaper supplier and saves SAR 7,705. Then open your credit cap: each draw, **Repay**, and **Apply for a higher cap**.",
-          href: "/contractor/rfq/rfq_1045",
-          linkLabel: "Block C walls",
+          title: "★ Print a PO and its tax invoice",
+          text: "Open PO 3007: **Print / Save as PDF** gives an A4 PO with the VAT breakdown; **View tax invoice** shows INV-2026-0412 with its ZATCA Phase 1 QR code (a sample, not submitted to ZATCA).",
+          href: "/contractor/po/po_3007",
+          linkLabel: "PO 3007",
         },
       ],
       next: { label: "Next: the supplier who receives your RFQ", href: "/supplier" },
@@ -83,8 +83,8 @@ export const tour: Tour = {
       intro: "You are Rawasi Building Materials Trading, a Riyadh distributor of rebar and cement.",
       steps: [
         {
-          title: "See only matched requests",
-          text: "The inbox lists the requests you were invited to, and says why: what you stock and where you deliver. Every invited supplier sees the same request.",
+          title: "★ Follow the activity bell",
+          text: "The **Activity** bell in the top bar lists what the other roles just did, with an unread count and a link to each. Your inbox shows only requests you were matched to, and why.",
         },
         {
           title: "Send an offer (bid)",

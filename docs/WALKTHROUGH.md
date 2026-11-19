@@ -19,6 +19,7 @@ You are **Najd Horizon Contracting Co.**, building schools and villas in Riyadh.
 5. **Choose offer** → **Pay with credit**. The draft shows the cap, what is already drawn, this PO, what is left, the Murabaha markup (3.0% for 60 days, 18.3% APR) and what you repay when. → **Place purchase order**. The confirmation gives the PO number, supplier, total incl. VAT, payment and what happens next.
 6. ★ Open **Block C walls: rebar and blockwork** (`rfq_1045`): **Use this split** awards each line to the cheaper supplier and saves SAR 7,705.
 7. **Credit cap, applications and progress**: the cap, each draw with its due date, **Repay** (the cap comes back), and **Apply for a higher cap**.
+8. ★ Paperwork, Saudi style: open **PO 3007** (`/contractor/po/po_3007`, delivered and invoiced) → **Print / Save as PDF** gives an A4 purchase order with both parties' VAT numbers and the VAT breakdown; only the document prints. → **View tax invoice**: a simplified tax invoice `INV-2026-0412`, bilingual title, line items, VAT 15% and the **ZATCA Phase 1 QR code** (seller, VAT number, time, total and VAT, encoded as TLV and generated in the browser). It is clearly a sample: fictional VAT numbers, *not submitted to ZATCA*. Switch to Arabic (**ع**) and print again: the same invoice, right to left.
 
 ## 2. Supplier: inbox → offer → paid (2 min)
 
@@ -27,6 +28,7 @@ You are **Rawasi Building Materials Trading**, a Riyadh distributor of rebar and
 1. The inbox lists only requests you were matched to, and says why: *You stock rebar & steel and cement · You deliver to Riyadh*. A request you were not invited to cannot be opened.
 2. Open **Villas 13 to 24: ground floor slabs** (`rfq_1044`, *Offer not sent*), or the request you sent in step 1.3 → **Your offer (bid)**: unit price per line against the 90-day benchmark, quantity you can supply, availability, brand, delivery fee, lead time, payment terms, validity and ★ *Made in Saudi*. The summary adds goods, delivery and 15% VAT and tells you where you stand against the benchmark. → **Submit offer**; it appears on the contractor's comparison at once.
 3. The PO you placed in step 1.5 is under **Purchase orders** on the supplier home, marked *needs you* with its next step. Open it → **Accept purchase order** → **Mark as dispatched**. Switch to the contractor to **Confirm delivery on site**, back to the supplier for **Issue invoice** (ZATCA e-invoice reference). ★ On a credit PO the status moves to **Paid: supplier paid directly** by the financier; the contractor repays later.
+4. ★ The **Activity** bell (top bar, next to **ع**) shows what the other roles did since you last looked, with an unread count. Submit an offer here, switch to the contractor: their bell shows *Rawasi Building Materials Trading sent an offer on …* with a link straight to the comparison. Each role has its own **Mark all as read**. After **Issue invoice**, **View tax invoice** opens your invoice with its ZATCA QR code.
 
 ## 3. Independent credit manager: application → decision (3 min)
 

@@ -1,9 +1,11 @@
 import { test as base, type Locator, type Page } from "@playwright/test";
+import { tour } from "@/content/tour";
 
 /** Demo fixture: hides the reviewer guide panel so the journey fills the frame. */
 export const test = base.extend({
   page: async ({ page }, provide) => {
-    await page.addInitScript(() => window.localStorage.setItem("watad-tour-dismissed-v1", "1"));
+    // Follows the guide version, so a new tour version still records without the panel.
+    await page.addInitScript((key) => window.localStorage.setItem(key, "1"), tour.storageKey);
     await provide(page);
   },
 });
