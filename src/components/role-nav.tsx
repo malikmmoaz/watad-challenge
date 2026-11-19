@@ -61,7 +61,12 @@ export function RoleNav({ current }: { current: Role }) {
           <Link href="/how-we-built" data-testid="nav-how-we-built" className="hidden whitespace-nowrap text-ink-muted transition-colors duration-150 hover:text-ink xl:inline">
             {m.appBar.howWeBuilt}
           </Link>
-          <span className="whitespace-nowrap rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs text-ink-muted">{m.sampleData}</span>
+          {/* "Simulated AI" always shows (the brief asks for it to be labelled); the "Sample data" prefix only from sm,
+              since every page header already has a Sample data label and the full Arabic pill wrapped the bar on phones. */}
+          <span className="whitespace-nowrap rounded-full border border-dashed border-line-control px-2.5 py-0.5 text-xs text-ink-muted">
+            <span className="hidden sm:inline">{m.ui.sampleDataShort} · </span>
+            {m.ui.simulatedAi}
+          </span>
           <ActivityBell role={current} />
           <LocaleToggle />
           <ResetDemoButton />

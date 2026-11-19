@@ -150,7 +150,7 @@ export function ActivityBell({ role }: { role: Role }) {
           id={panelId}
           aria-labelledby={titleId}
           data-testid="activity-panel"
-          className="absolute inset-x-4 top-full z-30 mt-2 flex max-h-[min(32rem,75vh)] flex-col sm:inset-x-auto sm:end-0 sm:w-[24rem] overflow-hidden rounded-xl border border-line bg-surface text-start shadow-card motion-safe:animate-rise"
+          className="absolute inset-x-4 top-full z-30 mt-2 flex max-h-[min(32rem,75vh)] flex-col sm:inset-x-auto sm:end-0 sm:w-[24rem] overflow-hidden rounded-xl border border-line bg-surface text-start shadow-float motion-safe:animate-rise"
         >
           <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
             <div>
@@ -185,9 +185,9 @@ export function ActivityBell({ role }: { role: Role }) {
                       data-testid="activity-item"
                       data-unread={isNew ? "true" : undefined}
                       onClick={() => setOpen(false)}
-                      className="flex gap-3 px-4 py-3 text-sm transition-colors duration-150 hover:bg-paper focus-visible:bg-paper"
+                      className="flex gap-3 px-4 py-2.5 text-sm leading-5 transition-colors duration-150 hover:bg-paper focus-visible:bg-paper"
                     >
-                      <span aria-hidden="true" className={`mt-1.5 size-2 shrink-0 rounded-full ${isNew ? "bg-pine-deep" : "bg-transparent"}`} />
+                      <span aria-hidden="true" className={`mt-1.5 size-2 shrink-0 rounded-full ${isNew ? "bg-stamp" : "bg-transparent"}`} />
                       <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="text-ink">
                           {isNew ? <span className="sr-only">{a.newBadge}: </span> : null}

@@ -94,3 +94,18 @@ test("on a 390 px phone the panel stays inside the screen, English and Arabic", 
     await page.keyboard.press("Escape");
   }
 });
+
+test("Arabic phones: the bell does not push the app bar to more rows (390: one row; 320: bell beside EN, no sideways scroll)", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("watad-locale", "ar"));
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await enterAs(page, "contractor");
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    const header = page.locator("header").filter({ has: page.getByTestId("activity-bell") }).filter({ visible: true });
+    const top = async (name: RegExp | string) => (await header.getByRole("button", { name }).first().boundingBox())!.y;
+    const bell = (await tid(page, "activity-bell").boundingBox())!.y;
+    if (width === 390) expect(Math.abs((await top("إعادة")) - bell), `${width}px`).toBeLessThan(4);
+    expect(Math.abs((await tid(page, "locale-toggle").boundingBox())!.y - bell), `${width}px`).toBeLessThan(4);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), `${width}px`).toBeLessThanOrEqual(0);
+  }
+});
