@@ -223,7 +223,7 @@ export function draftMemo(p: CreditProfile, a: Assessment, L: CreditLang = EN): 
   const lines = [
     `**${withCap ? fill(m.memo.recommendationCap, { ...rec, cap: money(a.limit.approvedCapSar) }) : fill(m.memo.recommendation, rec)}**`,
     "",
-    fill(m.memo.applicant, { name: p.applicant.name, city: p.applicant.city, years: p.applicant.yearsTrading, cap: money(p.request.capSar) }),
+    fill(m.memo.applicant, { name: p.applicant.name, city: (m.data.cities as Record<string, string>)[p.applicant.city] ?? p.applicant.city, years: p.applicant.yearsTrading, cap: money(p.request.capSar) }),
     "",
     fill(m.memo.strengths, { list: factorList(top.slice(0, 2)) }),
     fill(m.memo.weaknesses, { list: factorList(top.filter((f) => f.assessed).slice(-2)) }),
