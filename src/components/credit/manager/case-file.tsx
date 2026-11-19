@@ -4,11 +4,14 @@ import Link from "next/link";
 import { applicantName, creditProfiles, reference } from "@/data";
 import { checkConsistency } from "@/domain/credit/checks";
 import type { FactorImpact, Outcome } from "@/domain/credit/impact";
-import { formatSar, sar } from "@/domain/money";
-import { DOCUMENT_REQUIREMENTS } from "@/domain/credit-application";
+import { sar } from "@/domain/money";
 import type { CreditCase, CreditDocument, EvidenceRef } from "@/domain/types";
 import { factorImpacts } from "@/domain/credit/impact";
-import { runChecks } from "@/domain/credit/workflow";
+import { localizedAssessment, runChecks } from "@/domain/credit/workflow";
+import { langFor } from "@/domain/credit/lang";
+import { fill } from "@/i18n/core";
+import { credit } from "@/i18n/credit";
+import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { update, useDemo } from "@/store";
@@ -16,36 +19,23 @@ import { useHydrated, useReducedMotion } from "../client-state";
 import { AiLabel, Alert, Badge, Button, EmptyState, EvidenceSeal, Facts, FactorBar, Icon, LoadingRows, PageHeader, Panel, SampleDataLabel, type Tone } from "@/components/ui";
 import { DecisionPanel } from "./decision-panel";
 import { UtilisationPanel } from "./utilisation-panel";
-import { formatDate, formatDateTime } from "@/lib/format";
 import { GATE_RESULT } from "@/lib/status";
 import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
+import { logAction, logDetail } from "../log-text";
+import { fieldLabel, fieldValue } from "../field-text";
+import { purposeText } from "../data-text";
 
-/** Document names for files not uploaded yet, as the application form names them. */
-const DOC_NAME = Object.fromEntries(DOCUMENT_REQUIREMENTS.map((r) => [r.type, r.label])) as Record<CreditDocument["type"], string>;
-const DOC_STATUS: Record<CreditDocument["status"], string> = {
-  missing: "Missing",
-  uploaded: "Uploaded",
-  parsed: "Parsed",
-  verified: "Verified",
-  flagged: "Flagged",
-  rejected: "Rejected",
-};
-const ACTOR: Record<CreditCase["log"][number]["actor"], string> = {
-  contractor: "Contractor",
-  credit_manager: "Credit manager",
-  ai_agent: "AI agent (simulated)",
-  platform: "Platform",
-};
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
 const justScored = new Set<string>();
 
 const POLICY: Record<"pass" | "refer" | "fail", Tone> = { pass: "positive", refer: "caution", fail: "negative" };
-const pct = (n: number | null) => (n === null ? "n/a" : `${(n * 100).toFixed(1)}%`);
 
 function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[]; docs: CreditDocument[] }) {
-  if (refs.length === 0) return <span className="text-xs text-caution">No document on file</span>;
+  const m = useMessages(credit);
+  const ar = useLocale() === "ar";
+  if (refs.length === 0) return <span className="text-xs text-caution">{m.caseFile.noDocument}</span>;
   return (
     <span className="flex flex-wrap gap-x-3 gap-y-1">
       {refs.map((r) => {
@@ -54,7 +44,7 @@ function Evidence({ caseId, refs, docs }: { caseId: string; refs: EvidenceRef[];
         // The seal is a link to the field; its click bubbles here so opening evidence is counted.
         return (
           <span key={`${r.documentId}-${r.fieldKey}`} onClick={() => d && track("credit_evidence_opened", { case_id: caseId, document_type: d.type })}>
-            <EvidenceSeal source={`${d?.fileName || d?.type || "document"}${f ? `, ${f.label}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
+            <EvidenceSeal source={`${d?.fileName || (d ? m.documents[d.type].label : "")}${f ? `, ${fieldLabel(f, m, ar)}` : ""}`} href={`#${r.documentId}-${r.fieldKey}`} />
           </span>
         );
       })}
@@ -71,7 +61,7 @@ function Memo({ text }: { text: string }) {
         const html = line.replace(/^- /, "").split(/\*\*(.+?)\*\*|_(.+?)_/g);
         const parts = html.map((p, j) => (p === undefined ? null : j % 3 === 1 ? <strong key={j}>{p}</strong> : j % 3 === 2 ? <em key={j}>{p}</em> : p));
         return line.startsWith("- ") ? (
-          <p key={i} className="pl-4 before:-ml-3 before:mr-1.5 before:content-['•']">
+          <p key={i} className="ps-4 before:-ms-3 before:me-1.5 before:content-['•']">
             {parts}
           </p>
         ) : (
@@ -82,56 +72,57 @@ function Memo({ text }: { text: string }) {
   );
 }
 
-const outcomeText = (o: Outcome) => `score ${o.score}, band ${o.band}, limit ${formatSar(o.limit)}`;
-
 /** Effect on score, band and limit: what full marks or zero on this factor would change. */
 function ImpactLine({ impact, weight, points }: { impact?: FactorImpact; weight: number; points: number }) {
+  const m = useMessages(credit).caseFile;
+  const f = useFormat();
   if (!impact) return null;
+  const outcomeText = (o: Outcome) => fill(m.outcome, { score: o.score, band: o.band, limit: f.money(o.limit) });
   const same = (a: Outcome, b: Outcome) => a.band === b.band && a.limit === b.limit;
   return (
     <p className="text-xs text-ink-muted" data-testid="credit-factor-impact">
-      <span className="font-medium text-ink">Effect:</span> adds {points.toFixed(1)} of {weight} points.{" "}
-      {points < weight ? `At full marks: ${outcomeText(impact.atFull)}${same(impact.atFull, impact.current) ? " (band and limit unchanged)" : ""}. ` : "Already at full marks. "}
-      Without it: {outcomeText(impact.atZero)}
-      {same(impact.atZero, impact.current) ? " (band and limit unchanged)." : "."}
+      <span className="font-medium text-ink">{m.effectLabel}</span> {fill(m.effectAdds, { points: points.toFixed(1), weight })}{" "}
+      {points < weight ? `${fill(m.atFull, { outcome: outcomeText(impact.atFull) })}${same(impact.atFull, impact.current) ? m.unchanged : ""}. ` : `${m.alreadyFull} `}
+      {fill(m.without, { outcome: outcomeText(impact.atZero) })}
+      {same(impact.atZero, impact.current) ? `${m.unchanged}.` : "."}
     </p>
   );
 }
 
 /** What the simulated AI does when the manager runs the checks, shown step by step. */
-const PREP_STEPS = [
-  "Reading the documents and extracting fields",
-  "1. Commercial Registration",
-  "2. ZATCA VAT returns",
-  "3. Bank statements against VAT",
-  "4. Audited financials (Qawaem)",
-  "5. SIMAH commercial report, last",
-  "Scoring the 10 factors and the limit",
-  "Drafting the credit memo",
-];
+const PREP_STEPS = ["read", "cr", "vat", "bank", "financials", "simah", "score", "memo"] as const;
 const STEP_MS = 260;
 
 function Preparing({ step }: { step: number }) {
+  const m = useMessages(credit).caseFile;
   return (
     <div data-testid="credit-preparing" role="status" aria-live="polite">
-      <Panel title="Preparing the file" aside={<AiLabel agent="Credit analyst" />}>
+      <Panel title={m.preparing} aside={<AiLabel agent={m.analyst} />}>
         <ol className="space-y-2 text-sm">
-          {PREP_STEPS.map((label, i) => (
-            <li key={label} className={`flex items-center gap-2 transition-opacity duration-200 ${i > step ? "opacity-40" : ""}`}>
+          {PREP_STEPS.map((key, i) => (
+            <li key={key} className={`flex items-center gap-2 transition-opacity duration-200 ${i > step ? "opacity-40" : ""}`}>
               <span className={`flex size-4 items-center justify-center rounded-full border ${i < step ? "border-positive bg-positive text-on-action" : i === step ? "border-ink" : "border-line-strong"}`}>
                 {i < step ? <Icon name="check" size={10} strokeWidth={2.5} /> : i === step ? <span className="size-1.5 animate-pulse rounded-full bg-ink" /> : null}
               </span>
-              <span className={i <= step ? "text-ink" : "text-ink-subtle"}>{label}</span>
+              <span className={i <= step ? "text-ink" : "text-ink-subtle"}>{m.prepSteps[key]}</span>
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-xs text-ink-muted">Simulated: no document leaves your browser and no external service is called.</p>
+        <p className="mt-3 text-xs text-ink-muted">{m.prepNote}</p>
       </Panel>
     </div>
   );
 }
 
+/** Scorecard factor ids as the engine names them, for the factor messages. */
+const FACTOR_KEY = { bank_cashflow: "bank_behaviour", compliance: "compliance_disputes" } as const;
+const factorKey = (id: string) => (FACTOR_KEY[id as keyof typeof FACTOR_KEY] ?? id) as keyof typeof credit.en.factors;
+
 export function CaseFile({ id }: { id: string }) {
+  const all = useMessages(credit);
+  const m = all.caseFile;
+  const f = useFormat();
+  const locale = useLocale();
   const c = useDemo((s) => s.creditCases.find((x) => x.id === id));
   const hydrated = useHydrated();
   const reduced = useReducedMotion();
@@ -145,11 +136,11 @@ export function CaseFile({ id }: { id: string }) {
   useEffect(() => {
     if (hydrated && caseId && hasMemo) track("credit_memo_viewed", { case_id: caseId, simulated_ai: true });
   }, [hydrated, caseId, hasMemo]);
-  if (!hydrated) return <LoadingRows rows={8} label="Loading the credit file" />;
+  if (!hydrated) return <LoadingRows rows={8} label={m.loading} />;
   if (!c) {
     return (
-      <EmptyState title="Application not found" action={<Link href="/credit">Back to the queue</Link>}>
-        No credit application {id} in the demo data. Reset the demo data if you removed it.
+      <EmptyState title={m.notFoundTitle} action={<Link href="/credit">{m.backToQueue}</Link>}>
+        {fill(m.notFound, { id })}
       </EmptyState>
     );
   }
@@ -181,38 +172,46 @@ export function CaseFile({ id }: { id: string }) {
     setTimeout(commit, STEP_MS * (PREP_STEPS.length + 1));
   };
   const consistency = profile && c.scorecard ? checkConsistency(profile) : null;
-  const card = c.scorecard;
+  // Stored text is English; in Arabic re-render the engine's text from the same inputs.
+  const view = locale === "ar" ? localizedAssessment(c, profile, langFor("ar")) : null;
+  const card = view && c.scorecard ? { ...c.scorecard, factors: view.scorecard.factors.map((vf) => ({ ...vf, evidence: c.scorecard!.factors.find((x) => x.id === vf.id)?.evidence ?? vf.evidence })), policyChecks: view.scorecard.policyChecks, capBasis: view.scorecard.capBasis } : c.scorecard;
+  const memo = view?.memo ?? c.aiProposal?.memo;
+  const gateDetail = (g: CreditCase["gates"][number]) =>
+    view?.gates.find((x) => x.id === g.id)?.detail ?? (g.detail === "Queued." ? all.checks.queued : g.detail === "Runs last." ? all.checks.runsLast : g.detail);
+  const contractor = reference.contractors.find((x) => x.id === c.contractorId);
+  const title = (locale === "ar" ? contractor?.nameAr : undefined) ?? applicantName(c.contractorId, reference.contractors);
+  const pct = (n: number | null) => (n === null ? m.notAvailable : f.percent(n, 1));
   const impacts = card ? factorImpacts(card, c.requestedCap) : [];
 
   return (
     <div className="space-y-6" data-testid="credit-case-file">
       <Link href="/credit" className="text-sm text-stamp underline underline-offset-[3px]">
-        Back to the queue
+        {m.backToQueue}
       </Link>
       <PageHeader
-        eyebrow="Credit file"
-        title={applicantName(c.contractorId, reference.contractors)}
+        eyebrow={m.eyebrow}
+        title={title}
         serial={c.id}
         status={<CaseStatus status={c.status} />}
-        meta={`Requests ${formatSar(c.requestedCap)} for ${c.requestedTenorDays} days · ${c.purpose} · submitted ${c.submittedAt ? formatDate(c.submittedAt) : "not yet"}`}
+        meta={fill(m.meta, { cap: f.money(c.requestedCap), days: c.requestedTenorDays, purpose: purposeText(c.purpose, credit.en as never, all), date: c.submittedAt ? f.date(c.submittedAt) : m.notYet })}
         actions={
           canRun ? (
             <Button variant="primary" onClick={run} disabled={!profile} loading={step !== null} data-testid="credit-run-checks">
-              Run checks (simulated AI)
+              {m.runChecks}
             </Button>
           ) : undefined
         }
       />
       {step !== null && <Preparing step={step} />}
       {canRun && step === null && (
-        <Alert tone="info" title="Checks have not run yet">
-          Running them reads the documents and runs the gated checks cheapest first (CR, VAT, bank, financials, SIMAH last), then scores the file and drafts a memo. All simulated.
+        <Alert tone="info" title={m.notRunTitle}>
+          {m.notRun}
         </Alert>
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-4">
-          <Panel title="Gated checks, cheapest first" aside={<SampleDataLabel />}>
+          <Panel title={m.gatesTitle} aside={<SampleDataLabel />}>
             <ol className="space-y-3" data-testid="credit-gates">
               {[...c.gates]
                 .sort((a, b) => a.order - b.order)
@@ -220,11 +219,11 @@ export function CaseFile({ id }: { id: string }) {
                   <li key={g.id} className="space-y-1">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="font-medium text-ink">
-                        {g.order}. {g.label}
+                        {g.order}. {all.checks.label[g.id]}
                       </span>
-                      <Badge tone={GATE_RESULT[g.result].tone}>{g.result === "pending" && card ? "Not run" : GATE_RESULT[g.result].label}</Badge>
+                      <Badge tone={GATE_RESULT[g.result].tone}>{g.result === "pending" && card ? m.notRunYet : all.caseFile.gateResult[g.result]}</Badge>
                     </div>
-                    <p className="text-sm text-ink-muted">{g.detail}</p>
+                    <p className="text-sm text-ink-muted">{gateDetail(g)}</p>
                     {g.evidence.length > 0 && <Evidence caseId={c.id} refs={g.evidence} docs={c.documents} />}
                   </li>
                 ))}
@@ -232,18 +231,18 @@ export function CaseFile({ id }: { id: string }) {
           </Panel>
 
           {card && (
-            <Panel title="Scorecard" aside={<span className="text-sm text-ink-muted">10 factors, weights sum to 100</span>}>
+            <Panel title={m.scorecard} aside={<span className="text-sm text-ink-muted">{m.scorecardAside}</span>}>
               <div className="space-y-6">
                 <ScoreReveal score={card.total} animate={justScored.has(c.id)} />
                 <ul className="space-y-5" data-testid="credit-factors">
-                  {card.factors.map((f) => (
-                    <li key={f.id} className="space-y-1.5">
-                      <FactorBar label={f.label} points={f.points} weight={f.weight} note={f.rationale} />
+                  {card.factors.map((fa) => (
+                    <li key={fa.id} className="space-y-1.5">
+                      <FactorBar label={all.factors[factorKey(fa.id)].label} points={fa.points} weight={fa.weight} note={fa.rationale} />
                       <p className="text-xs text-ink-muted">
-                        <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters}
+                        <span className="font-medium text-ink">{m.whyLabel}</span> {all.factors[factorKey(fa.id)].why}
                       </p>
-                      <ImpactLine impact={impacts.find((i) => i.factorId === f.id)} weight={f.weight} points={f.points} />
-                      <Evidence caseId={c.id} refs={f.evidence} docs={c.documents} />
+                      <ImpactLine impact={impacts.find((i) => i.factorId === fa.id)} weight={fa.weight} points={fa.points} />
+                      <Evidence caseId={c.id} refs={fa.evidence} docs={c.documents} />
                     </li>
                   ))}
                 </ul>
@@ -252,7 +251,7 @@ export function CaseFile({ id }: { id: string }) {
           )}
 
           {card && (
-            <Panel title="Policy rules">
+            <Panel title={m.policyTitle}>
               <ul className="space-y-2 text-sm">
                 {card.policyChecks.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
@@ -260,28 +259,28 @@ export function CaseFile({ id }: { id: string }) {
                       <span className="font-medium text-ink">{p.rule}</span>
                       <span className="block text-ink-muted">{p.observed}</span>
                     </span>
-                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? "Met" : p.result === "fail" ? "Breached · declines" : "Breached · review"}</Badge>
+                    <Badge tone={POLICY[p.result]}>{p.result === "pass" ? m.policyMet : p.result === "fail" ? m.policyDeclines : m.policyReview}</Badge>
                   </li>
                 ))}
               </ul>
             </Panel>
           )}
 
-          <Panel title="Documents and extracted fields" aside={<AiLabel agent="Document reader" />}>
+          <Panel title={m.documentsTitle} aside={<AiLabel agent={m.documentReader} />}>
             <ul className="divide-y divide-line">
               {c.documents.map((d) => (
                 <li key={d.id} className="space-y-2 py-3 first:pt-0">
                   <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-ink">{d.fileName || DOC_NAME[d.type]}</span>
-                    <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{DOC_STATUS[d.status]}</Badge>
+                    <span className="font-medium text-ink">{d.fileName || all.documents[d.type].label}</span>
+                    <Badge tone={d.status === "flagged" ? "negative" : d.status === "missing" ? "caution" : d.status === "verified" ? "positive" : "neutral"}>{all.documentStatus[d.status]}</Badge>
                   </div>
                   {d.extracted.length > 0 && (
                     <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
-                      {d.extracted.map((f) => (
-                        <div key={f.key} id={`${d.id}-${f.key}`} className="flex justify-between gap-2 scroll-mt-24 target:bg-stamp-soft">
-                          <dt className="text-ink-muted">{f.label}</dt>
+                      {d.extracted.map((x) => (
+                        <div key={x.key} id={`${d.id}-${x.key}`} className="flex justify-between gap-2 scroll-mt-24 target:bg-stamp-soft">
+                          <dt className="text-ink-muted">{fieldLabel(x, all, locale === "ar")}</dt>
                           <dd className="text-end tabular-nums text-ink">
-                            {f.value} <span className={f.confidence < 0.8 ? "text-caution" : "text-ink-subtle"}>({Math.round(f.confidence * 100)}%)</span>
+                            {fieldValue(x.value, all, f, locale === "ar")} <span className={x.confidence < 0.8 ? "text-caution" : "text-ink-subtle"}>({f.percent(x.confidence)})</span>
                           </dd>
                         </div>
                       ))}
@@ -289,7 +288,7 @@ export function CaseFile({ id }: { id: string }) {
                   )}
                   {d.findings.map((x, i) => (
                     <p key={i} className={`text-xs ${x.severity === "critical" ? "text-negative" : x.severity === "warning" ? "text-caution" : "text-ink-muted"}`}>
-                      {x.kind === "tamper_signal" ? "Tamper signal: " : ""}
+                      {x.kind === "tamper_signal" ? `${m.tamperSignal} ` : ""}
                       {x.text}
                     </p>
                   ))}
@@ -301,27 +300,27 @@ export function CaseFile({ id }: { id: string }) {
 
         <div className="min-w-0 space-y-4">
           {card && (
-            <Panel title="Proposed limit">
+            <Panel title={m.limitTitle}>
               <div className="space-y-3">
-                <Facts columns={1} items={card.capBasis.map((b) => ({ label: b.method, value: formatSar(b.amount) }))} />
-                <p className="text-sm font-medium text-ink">Proposed credit cap {formatSar(card.proposedCap)}</p>
-                <p className="text-xs text-ink-muted">Never above the {formatSar(c.requestedCap)} requested.</p>
+                <Facts columns={1} items={card.capBasis.map((b) => ({ label: b.method, value: f.money(b.amount) }))} />
+                <p className="text-sm font-medium text-ink">{fill(m.proposedCap, { cap: f.money(card.proposedCap) })}</p>
+                <p className="text-xs text-ink-muted">{fill(m.neverAbove, { cap: f.money(c.requestedCap) })}</p>
               </div>
             </Panel>
           )}
 
           {(c.aiProposal || consistency) && (
-            <Panel title="AI assist" aside={<AiLabel agent={c.aiProposal?.ai.agent ?? "Credit analyst"} confidence={c.aiProposal?.ai.confidence} />}>
+            <Panel title={m.aiTitle} aside={<AiLabel agent={c.aiProposal ? m.memoDrafter : m.analyst} confidence={c.aiProposal?.ai.confidence} />}>
               <div className="space-y-5" data-testid="credit-ai-panel">
                 {consistency && (
                   <section className="space-y-2">
-                    <h3 className="text-sm font-medium text-ink">Revenue consistency: {consistency.status.replace("_", " ")}</h3>
+                    <h3 className="text-sm font-medium text-ink">{fill(m.consistency, { status: m.consistencyStatus[consistency.status] })}</h3>
                     <Facts
                       columns={1}
                       items={[
-                        { label: "VAT-declared revenue", value: consistency.vatRevenueSar === null ? "n/a" : formatSar(sar(consistency.vatRevenueSar)) },
-                        { label: `Bank inflows net of VAT (gap ${pct(consistency.bankVsVatDeviation)})`, value: consistency.bankInflowsExVatSar === null ? "n/a" : formatSar(sar(consistency.bankInflowsExVatSar)) },
-                        { label: `Financial statements (gap ${pct(consistency.financialsVsVatDeviation)})`, value: consistency.financialsRevenueSar === null ? "n/a" : formatSar(sar(consistency.financialsRevenueSar)) },
+                        { label: m.vatRevenue, value: consistency.vatRevenueSar === null ? m.notAvailable : f.money(sar(consistency.vatRevenueSar)) },
+                        { label: fill(m.bankNet, { gap: pct(consistency.bankVsVatDeviation) }), value: consistency.bankInflowsExVatSar === null ? m.notAvailable : f.money(sar(consistency.bankInflowsExVatSar)) },
+                        { label: fill(m.financialsRevenue, { gap: pct(consistency.financialsVsVatDeviation) }), value: consistency.financialsRevenueSar === null ? m.notAvailable : f.money(sar(consistency.financialsRevenueSar)) },
                       ]}
                     />
                   </section>
@@ -330,11 +329,11 @@ export function CaseFile({ id }: { id: string }) {
                   <section className="space-y-2">
                     <div className="rounded-xl border border-dashed border-ai-line bg-ai-soft p-4" data-testid="credit-ai-memo">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-sm font-semibold text-ink">Drafted credit memo</h3>
-                        <AiLabel agent="Credit memo drafter" confidence={c.aiProposal.ai.confidence} />
+                        <h3 className="text-sm font-semibold text-ink">{m.memoTitle}</h3>
+                        <AiLabel agent={m.memoDrafter} confidence={c.aiProposal.ai.confidence} />
                       </div>
-                      <Memo text={c.aiProposal.memo} />
-                      <p className="mt-3 border-t border-ai-line pt-2 text-xs text-ai">A proposal, not a decision. The credit manager decides below.</p>
+                      <Memo text={memo ?? c.aiProposal.memo} />
+                      <p className="mt-3 border-t border-ai-line pt-2 text-xs text-ai">{m.memoNotDecision}</p>
                     </div>
                   </section>
                 )}
@@ -347,13 +346,13 @@ export function CaseFile({ id }: { id: string }) {
 
           {c.status === "approved" && <UtilisationPanel caseId={c.id} />}
 
-          <Panel title="Decision log">
+          <Panel title={m.logTitle}>
             <ol className="space-y-2 text-sm" data-testid="credit-decision-log">
               {[...c.log].reverse().map((l, i) => (
                 <li key={i}>
-                  <span className="text-xs tabular-nums text-ink-muted">{formatDateTime(l.at)}</span>{" "}
-                  <span className="text-ink-muted">{ACTOR[l.actor]}</span> · <span className="text-ink">{l.action}</span>
-                  {l.detail ? <span className="block text-xs text-ink-muted">{l.detail}</span> : null}
+                  <span className="text-xs tabular-nums text-ink-muted">{f.dateTime(l.at)}</span>{" "}
+                  <span className="text-ink-muted">{m.actor[l.actor]}</span> · <span className="text-ink">{logAction(l.action, all)}</span>
+                  {l.detail ? <span className="block text-xs text-ink-muted">{logDetail(l.detail, all)}</span> : null}
                 </li>
               ))}
             </ol>

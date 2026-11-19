@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   CAP_LIMITS,
   DOCUMENT_REQUIREMENTS,
   TENORS,
+  missingRequiredDocuments,
   buildSubmittedCase,
   nextCaseId,
   validateDraft,
@@ -13,22 +15,15 @@ import {
   type DraftErrors,
   type Tenor,
 } from "@/domain/credit-application";
-import { formatSar, sar } from "@/domain/money";
-import type { Contractor, CreditDocumentType, PayerType } from "@/domain/types";
+import { sar } from "@/domain/money";
+import { fill } from "@/i18n/core";
+import { credit } from "@/i18n/credit";
+import { useFormat, useLocale, useMessages } from "@/i18n/locale";
+import { cityName } from "./data-text";
+import type { Contractor, CreditDocumentType } from "@/domain/types";
 import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
-import { Badge, Button, buttonClass, Checkbox, Input, Panel, Table, Td, Th, THead, Tr } from "@/components/ui";
-
-const PAYER_LABEL: Record<PayerType, string> = {
-  government: "Government",
-  semi_government: "Semi-government",
-  giga_project: "Giga-project",
-  main_contractor: "Main contractor",
-  listed: "Listed company",
-  large_private: "Large private",
-  sme: "SME",
-  individual: "Individual",
-};
+import { Badge, Button, buttonClass, Checkbox, Input, PageHeader, Panel, SampleDataLabel, Table, Td, Th, THead, Tr } from "@/components/ui";
 
 /** Sample file names so a reviewer can submit without real documents. */
 const SAMPLE_FILES: Partial<Record<CreditDocumentType, string>> = {
@@ -43,6 +38,10 @@ const SAMPLE_FILES: Partial<Record<CreditDocumentType, string>> = {
 };
 
 export function ApplicationForm({ contractor }: { contractor: Contractor }) {
+  const all = useMessages(credit);
+  const m = all.apply;
+  const f = useFormat();
+  const locale = useLocale();
   const router = useRouter();
   const [d, setD] = useState<ApplicationDraft>({
     requestedCapSar: 500_000,
@@ -54,7 +53,15 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
   });
   // Errors appear after the first submit attempt, then update live as fields are fixed.
   const [attempted, setAttempted] = useState(false);
-  const errors: DraftErrors = attempted ? validateDraft(d) : {};
+  const raw: DraftErrors = attempted ? validateDraft(d) : {};
+  // validateDraft() says what is wrong; the words come from the messages.
+  const errors: DraftErrors = {
+    requestedCap: raw.requestedCap && m.errors.cap,
+    purpose: raw.purpose && m.errors.purpose,
+    documents: raw.documents && fill(m.errors.documents, { list: missingRequiredDocuments(d.files).map((r) => all.documents[r.type].label).join(locale === "ar" ? "، " : ", ") }),
+    simahConsent: raw.simahConsent && m.errors.simah,
+    declaration: raw.declaration && m.errors.declaration,
+  };
   const set = (patch: Partial<ApplicationDraft>) => setD((prev) => ({ ...prev, ...patch }));
   useEffect(() => track("credit_application_started", {}), []);
   // One event per document type newly attached (not on replace or remove).
@@ -89,11 +96,11 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6" data-testid="credit-apply-form">
-      <Panel title="1. What you need">
+      <Panel title={m.step1}>
         <div className="grid gap-5 sm:grid-cols-2">
           <Input
-            label="Requested credit cap"
-            suffix="SAR"
+            label={m.capLabel}
+            suffix={m.capSuffix}
             type="number"
             inputMode="numeric"
             min={CAP_LIMITS.min / 100}
@@ -102,11 +109,11 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             value={Number.isNaN(d.requestedCapSar) ? "" : d.requestedCapSar}
             onChange={(e) => set({ requestedCapSar: e.target.valueAsNumber })}
             data-testid="credit-apply-cap"
-            hint={`Covers order totals including 15% VAT, drawn per purchase order; each supplier is paid directly. ${formatSar(CAP_LIMITS.min)} to ${formatSar(CAP_LIMITS.max)}.`}
+            hint={fill(m.capHint, { min: f.money(CAP_LIMITS.min), max: f.money(CAP_LIMITS.max) })}
             error={errors.requestedCap}
           />
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-sm font-medium text-ink">Repayment term per purchase order</legend>
+            <legend className="text-sm font-medium text-ink">{m.tenorLegend}</legend>
             <div className="mt-1.5 flex gap-2">
               {TENORS.map((t) => (
                 <label
@@ -114,18 +121,18 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
                   className={`flex h-10 cursor-pointer items-center rounded-md border px-4 text-sm ${d.tenorDays === t ? "border-pine bg-pine text-on-pine" : "border-line-control bg-surface text-ink"}`}
                 >
                   <input type="radio" name="tenor" value={t} checked={d.tenorDays === t} onChange={() => set({ tenorDays: t as Tenor })} className="sr-only" />
-                  {t} days
+                  {fill(m.tenorOption, { days: t })}
                 </label>
               ))}
             </div>
-            <p className="text-xs text-ink-muted">A fixed Murabaha markup is agreed per order and shown with its APR before you confirm.</p>
+            <p className="text-xs text-ink-muted">{m.tenorHint}</p>
           </fieldset>
           <div className="sm:col-span-2">
             <Input
-              label="What the materials are for"
+              label={m.purposeLabel}
               value={d.purpose}
               onChange={(e) => set({ purpose: e.target.value })}
-              placeholder="e.g. Rebar and ready-mix for Al Narjis Schools, phase 2"
+              placeholder={m.purposePlaceholder}
               data-testid="credit-apply-purpose"
               error={errors.purpose}
             />
@@ -133,20 +140,25 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
         </div>
       </Panel>
 
-      <Panel title="2. Company and contracts in hand">
+      <Panel title={m.step2}>
         <div className="space-y-4">
           <p className="text-sm text-ink">
-            {contractor.name} · CR <span className="font-mono text-xs">{contractor.crNumber}</span> · {contractor.city} · classification grade {contractor.classificationGrade} ·{" "}
-            {contractor.yearsOperating} years operating
+            {fill(m.company, {
+              name: (locale === "ar" ? contractor.nameAr : undefined) ?? contractor.name,
+              cr: contractor.crNumber,
+              city: cityName(contractor.city, all),
+              grade: contractor.classificationGrade,
+              years: contractor.yearsOperating,
+            })}
           </p>
-          <Table caption="Contracts in hand" minWidth={560}>
+          <Table caption={m.contracts} minWidth={560}>
             <THead>
               <tr>
-                <Th>Project</Th>
-                <Th>Payer</Th>
-                <Th>Payer type</Th>
-                <Th align="end">Contract value (excl. VAT)</Th>
-                <Th align="end">Complete</Th>
+                <Th>{m.colProject}</Th>
+                <Th>{m.colPayer}</Th>
+                <Th>{m.colPayerType}</Th>
+                <Th align="end">{m.colValue}</Th>
+                <Th align="end">{m.colComplete}</Th>
               </tr>
             </THead>
             <tbody>
@@ -154,27 +166,27 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
                 <Tr key={p.id}>
                   <Td>{p.name}</Td>
                   <Td>{p.payer.name}</Td>
-                  <Td>{PAYER_LABEL[p.payer.type]}</Td>
-                  <Td align="end">{formatSar(p.contractValue)}</Td>
+                  <Td>{all.payerType[p.payer.type]}</Td>
+                  <Td align="end">{f.money(p.contractValue)}</Td>
                   <Td align="end">{p.percentComplete}%</Td>
                 </Tr>
               ))}
             </tbody>
           </Table>
           <p className="text-xs text-ink-muted">
-            Remaining backlog about {formatSar(sar(backlog / 100))}. Who pays you matters: government and listed payers lower the risk. Retention terms are read from the contracts you upload.
+            {fill(m.backlogNote, { amount: f.money(sar(backlog / 100)) })}
           </p>
         </div>
       </Panel>
 
       <Panel
-        title="3. Documents, and why we ask"
+        title={m.step3}
         aside={
           <Button size="sm" onClick={() => {
               attach(SAMPLE_FILES);
               set({ files: { ...d.files, ...SAMPLE_FILES } });
             }} data-testid="credit-apply-sample-docs">
-            Attach sample documents (demo)
+            {m.sampleDocs}
           </Button>
         }
       >
@@ -183,22 +195,22 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             <li key={r.type} className="grid gap-2 py-3 first:pt-0 sm:grid-cols-[1fr_auto] sm:items-center" data-testid={`credit-doc-${r.type}`}>
               <div>
                 <p className="text-sm font-medium text-ink">
-                  {r.label} {r.required ? null : <span className="font-normal text-ink-subtle">(optional)</span>}
+                  {all.documents[r.type].label} {r.required ? null : <span className="font-normal text-ink-subtle">{m.optional}</span>}
                 </p>
-                <p className="text-sm text-ink-muted">{r.whyItMatters}</p>
-                <p className="text-xs text-ink-subtle">{r.hint}</p>
+                <p className="text-sm text-ink-muted">{all.documents[r.type].why}</p>
+                <p className="text-xs text-ink-subtle">{all.documents[r.type].hint}</p>
               </div>
               <div className="flex items-center gap-2 text-sm sm:justify-end">
                 {d.files[r.type] ? (
                   <>
                     <Badge tone="positive">{d.files[r.type]}</Badge>
                     <Button size="sm" variant="quiet" onClick={() => setFile(r.type, undefined)}>
-                      Remove
+                      {m.remove}
                     </Button>
                   </>
                 ) : (
                   <label className={buttonClass("secondary", "sm", "cursor-pointer")}>
-                    Upload
+                    {m.upload}
                     <input type="file" className="sr-only" onChange={(e) => setFile(r.type, e.target.files?.[0]?.name)} />
                   </label>
                 )}
@@ -207,34 +219,47 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
           ))}
         </ul>
         {errors.documents && <p className="mt-3 text-sm text-negative">{errors.documents}</p>}
-        <p className="mt-3 text-xs text-ink-muted">Demo: files stay in your browser; only their names are recorded.</p>
+        <p className="mt-3 text-xs text-ink-muted">{m.filesStay}</p>
       </Panel>
 
-      <Panel title="4. Consent and submit">
+      <Panel title={m.step4}>
         <div className="space-y-4">
           <Checkbox
-            label="I consent to a SIMAH commercial credit report being pulled for this company."
-            hint="It is the last and most expensive check, run only if the earlier checks pass."
+            label={m.simahConsent}
+            hint={m.simahConsentHint}
             checked={d.simahConsent}
             onChange={(e) => set({ simahConsent: e.target.checked })}
             data-testid="credit-apply-simah-consent"
           />
           {errors.simahConsent && <p className="text-sm text-negative">{errors.simahConsent}</p>}
           <Checkbox
-            label="The documents are genuine, complete and current."
+            label={m.declaration}
             checked={d.declarationAccepted}
             onChange={(e) => set({ declarationAccepted: e.target.checked })}
             data-testid="credit-apply-declaration"
           />
           {errors.declaration && <p className="text-sm text-negative">{errors.declaration}</p>}
           <p className="text-sm text-ink-muted">
-            What happens next: documents are read and checked automatically (simulated AI), then an independent credit manager reviews the file and decides. You can follow every step on the Credit page.
+            {m.whatNext}
           </p>
           <Button type="submit" variant="primary" data-testid="credit-apply-submit">
-            Submit credit application
+            {m.submit}
           </Button>
         </div>
       </Panel>
     </form>
+  );
+}
+
+/** The apply page's header and back link, in the reader's language. */
+export function ApplyHeader() {
+  const m = useMessages(credit).apply;
+  return (
+    <>
+      <Link href="/contractor/credit" className="text-sm text-stamp underline underline-offset-[3px]">
+        {m.back}
+      </Link>
+      <PageHeader title={m.title} status={<SampleDataLabel />} meta={m.intro} />
+    </>
   );
 }

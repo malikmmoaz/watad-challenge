@@ -1,4 +1,5 @@
 import { checkConsistency, runGatedChecks } from './checks';
+import { EN, fill, type CreditLang } from './lang';
 import { bandFor, scoreFactors, topPayerShare, totalScore } from './scorecard';
 import type { Assessment, Band, CreditProfile, Decision, LimitResult, PolicyRuleResult, Reason } from './types';
 
@@ -31,9 +32,9 @@ export function computeLimit(c: CreditProfile, band: Band): LimitResult {
   };
 }
 
-const sar = (n: number): string => `SAR ${n.toLocaleString('en-US')}`;
 
-export function evaluatePolicy(c: CreditProfile, limit: LimitResult, asOf: string): PolicyRuleResult[] {
+export function evaluatePolicy(c: CreditProfile, limit: LimitResult, asOf: string, L: CreditLang = EN): PolicyRuleResult[] {
+  const { m, sarShort: sar } = L;
   const top = topPayerShare(c);
   const zakatOk = !!c.zakat && c.zakat.validUntil >= asOf;
   const gosiOk = !!c.gosi && c.gosi.validUntil >= asOf;
@@ -41,84 +42,84 @@ export function evaluatePolicy(c: CreditProfile, limit: LimitResult, asOf: strin
   return [
     {
       id: 'P1',
-      label: `At least ${POLICY.minYearsTrading} years trading`,
+      label: fill(m.policy.minYears, { n: POLICY.minYearsTrading }),
       effect: 'decline',
       breached: c.applicant.yearsTrading < POLICY.minYearsTrading,
-      detail: `${c.applicant.yearsTrading} years trading.`,
+      detail: fill(m.policy.yearsTrading, { n: c.applicant.yearsTrading }),
     },
     {
       id: 'P2',
-      label: 'No unsettled SIMAH default',
+      label: m.policy.noDefault,
       effect: 'decline',
       breached: defaultSar > 0,
-      detail: defaultSar > 0 ? `Unsettled default of ${sar(defaultSar)}.` : 'None reported.',
+      detail: defaultSar > 0 ? fill(m.policy.defaultOf, { amount: sar(defaultSar) }) : m.policy.noneReported,
     },
     {
       id: 'P3',
-      label: `Tenor up to ${POLICY.maxTenorDays} days`,
+      label: fill(m.policy.maxTenor, { n: POLICY.maxTenorDays }),
       effect: 'refer',
       breached: c.request.tenorDays > POLICY.maxTenorDays,
-      detail: `${c.request.tenorDays} days requested.`,
+      detail: fill(m.policy.tenorRequested, { n: c.request.tenorDays }),
     },
     {
       id: 'P4',
-      label: 'Zakat certificate in date',
+      label: m.policy.zakat,
       effect: 'refer',
       breached: !zakatOk,
-      detail: zakatOk ? `Valid until ${c.zakat?.validUntil}.` : 'Missing or expired.',
+      detail: zakatOk ? fill(m.policy.validUntil, { date: c.zakat?.validUntil ?? '' }) : m.policy.missingOrExpired,
     },
     {
       id: 'P5',
-      label: 'GOSI certificate in date',
+      label: m.policy.gosi,
       effect: 'refer',
       breached: !gosiOk,
-      detail: gosiOk ? `Valid until ${c.gosi?.validUntil}.` : 'Missing or expired.',
+      detail: gosiOk ? fill(m.policy.validUntil, { date: c.gosi?.validUntil ?? '' }) : m.policy.missingOrExpired,
     },
     {
       id: 'P6',
-      label: 'No document tamper flags',
+      label: m.policy.noTamper,
       effect: 'refer',
       breached: c.tamperFlags.length > 0,
-      detail: c.tamperFlags.length > 0 ? c.tamperFlags.map((t) => t.note).join(' ') : 'No flags raised.',
+      detail: c.tamperFlags.length > 0 ? c.tamperFlags.map((t) => t.note).join(' ') : m.policy.noFlags,
     },
     {
       id: 'P7',
-      label: `No single payer above ${POLICY.maxPayerShare * 100}% of backlog`,
+      label: fill(m.policy.maxPayer, { pct: POLICY.maxPayerShare * 100 }),
       effect: 'condition',
       breached: top > POLICY.maxPayerShare,
-      detail: `Largest payer is ${Math.round(top * 100)}% of backlog.`,
+      detail: fill(m.policy.largestPayer, { pct: Math.round(top * 100) }),
     },
     {
       id: 'P8',
-      label: 'Requested cap within computed limit',
+      label: m.policy.capWithinLimit,
       effect: 'condition',
       breached: c.request.capSar > limit.limitSar,
-      detail: `Requested ${sar(c.request.capSar)}; computed limit ${sar(limit.limitSar)}.`,
+      detail: fill(m.policy.requestedVsLimit, { requested: sar(c.request.capSar), limit: sar(limit.limitSar) }),
     },
     {
       id: 'P9',
-      label: 'Audited financial statements',
+      label: m.policy.audited,
       effect: 'condition',
       breached: c.financials !== null && !c.financials.audited,
-      detail: c.financials?.audited ? 'Audited.' : 'Not audited.',
+      detail: c.financials?.audited ? m.policy.auditedYes : m.policy.auditedNo,
     },
   ];
 }
 
-const CONDITION_TEXT: Record<string, (c: CreditProfile, l: LimitResult) => string> = {
-  P7: () => 'Assignment of proceeds from the largest payer contract to the repayment account.',
-  P8: (_c, l) => `Credit cap set at the computed limit of ${sar(l.limitSar)}, below the amount requested.`,
-  P9: () => 'Audited financial statements to be provided within 90 days.',
+const CONDITION_TEXT: Record<string, (l: LimitResult, L: CreditLang) => string> = {
+  P7: (_l, { m }) => m.conditionText.assignProceeds,
+  P8: (l, { m, sarShort }) => fill(m.conditionText.capAtLimit, { limit: sarShort(l.limitSar) }),
+  P9: (_l, { m }) => m.conditionText.auditWithin90,
 };
 
 /** Full, deterministic assessment of one case. `asOf` is passed in so the engine never reads the clock. */
-export function assessCase(c: CreditProfile, asOf: string): Assessment {
-  const checks = runGatedChecks(c, asOf);
-  const factors = scoreFactors(c, asOf);
+export function assessCase(c: CreditProfile, asOf: string, L: CreditLang = EN): Assessment {
+  const checks = runGatedChecks(c, asOf, L);
+  const factors = scoreFactors(c, asOf, L);
   const score = totalScore(factors);
   const band = bandFor(score);
   const limit = computeLimit(c, band);
-  const rules = evaluatePolicy(c, limit, asOf);
+  const rules = evaluatePolicy(c, limit, asOf, L);
   const provisional = factors.some((f) => !f.assessed) || checks.some((k) => k.status === 'skipped' || k.failKind === 'incomplete');
 
   const failed = checks.filter((k) => k.status === 'fail');
@@ -132,8 +133,8 @@ export function assessCase(c: CreditProfile, asOf: string): Assessment {
   ];
   const conditions: Reason[] = rules
     .filter((r) => r.breached && r.effect === 'condition')
-    .map((r) => ({ code: r.id, text: CONDITION_TEXT[r.id]?.(c, limit) ?? r.label }));
-  if (band === 'C') conditions.push({ code: 'BAND_C', text: 'Band C: cap reviewed after the first three repaid purchase orders.' });
+    .map((r) => ({ code: r.id, text: CONDITION_TEXT[r.id]?.(limit, L) ?? r.label }));
+  if (band === 'C') conditions.push({ code: 'BAND_C', text: L.m.conditionText.bandC });
 
   let proposedDecision: Decision;
   let reasons: Reason[];
@@ -145,10 +146,10 @@ export function assessCase(c: CreditProfile, asOf: string): Assessment {
     reasons = incomplete;
   } else if (band === 'D') {
     proposedDecision = 'decline';
-    reasons = [{ code: 'BAND_D', text: `Score ${score} is below the minimum of 50 for a credit cap.` }];
+    reasons = [{ code: 'BAND_D', text: fill(L.m.conditionText.bandD, { score }) }];
   } else if (limit.limitSar <= 0) {
     proposedDecision = 'decline';
-    reasons = [{ code: 'NO_CAPACITY', text: 'Net worth and working capital do not support a credit cap.' }];
+    reasons = [{ code: 'NO_CAPACITY', text: L.m.conditionText.noCapacity }];
   } else {
     proposedDecision = conditions.length > 0 ? 'approve_with_conditions' : 'approve';
     reasons = [...factors]

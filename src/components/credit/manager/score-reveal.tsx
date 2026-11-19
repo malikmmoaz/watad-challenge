@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { ScoreScale } from "@/components/ui";
 import { useReducedMotion } from "../client-state";
+import { common } from "@/i18n/common";
+import { useMessages } from "@/i18n/locale";
 
 const DURATION_MS = 1100;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
@@ -15,6 +17,7 @@ const easeOut = (t: number) => 1 - (1 - t) ** 3;
  */
 export function ScoreReveal({ score, animate }: { score: number; animate: boolean }) {
   const reduced = useReducedMotion();
+  const ui = useMessages(common).ui;
   const play = animate && !reduced;
   const [shown, setShown] = useState(play ? 0 : score);
 
@@ -37,7 +40,7 @@ export function ScoreReveal({ score, animate }: { score: number; animate: boolea
         <ScoreScale score={play ? shown : score} />
       </div>
       <p className="sr-only" aria-live="polite">
-        Credit score {Math.round(score)} of 100.
+        {ui.creditScore} {Math.round(score)} {ui.outOf100}.
       </p>
     </div>
   );

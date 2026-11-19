@@ -20,6 +20,7 @@ import type {
   Scorecard,
   SimulatedAi,
 } from "../types";
+import { EN, fill, type CreditLang } from "./lang";
 import type { Assessment, CreditProfile, Decision, DocKey, FactorId } from "./types";
 
 export const DOC_TYPE: Record<DocKey, CreditDocumentType> = {
@@ -140,14 +141,14 @@ export function toGates(a: Assessment): GatedCheck[] {
   }));
 }
 
-export function toScorecard(a: Assessment): Scorecard {
+export function toScorecard(a: Assessment, L: CreditLang = EN): Scorecard {
   const factors: ScoreFactor[] = a.factors.map((f) => ({
     id: FACTOR_ID[f.id],
     label: f.label,
     weight: f.weight,
     points: f.points,
     whyItMatters: f.whyItMatters,
-    rationale: f.assessed ? f.detail : `${f.detail} Scored 0 until provided.`,
+    rationale: f.assessed ? f.detail : `${f.detail} ${L.m.factorDetail.scoredZero}`,
     evidence: evidenceFor(a.caseId, f.evidence),
   }));
   const byRatio = [...a.factors].filter((f) => f.assessed).sort((x, y) => y.ratio - x.ratio);
@@ -169,10 +170,10 @@ export function toScorecard(a: Assessment): Scorecard {
     ],
     proposedCap: sar(a.limit.approvedCapSar),
     capBasis: [
-      { method: "10% of net worth", amount: sar(a.limit.tenPctNetWorthSar) },
-      { method: "10% of working capital", amount: sar(a.limit.tenPctWorkingCapitalSar) },
-      { method: "Monthly purchases x term / 30", amount: sar(a.limit.purchasesOverTermSar) },
-      { method: `Lowest, x band ${a.band} multiplier ${a.limit.bandMultiplier}`, amount: sar(a.limit.limitSar) },
+      { method: L.m.caseFile.capBasis.netWorth, amount: sar(a.limit.tenPctNetWorthSar) },
+      { method: L.m.caseFile.capBasis.workingCapital, amount: sar(a.limit.tenPctWorkingCapitalSar) },
+      { method: L.m.caseFile.capBasis.purchases, amount: sar(a.limit.purchasesOverTermSar) },
+      { method: fill(L.m.caseFile.capBasis.banded, { band: a.band, mult: a.limit.bandMultiplier }), amount: sar(a.limit.limitSar) },
     ],
   };
 }
@@ -206,40 +207,50 @@ export function reasonCodes(a: Assessment): ReasonCode[] {
   return [...out];
 }
 
-const DECISION_WORD: Record<Decision, string> = {
-  approve: "approve",
-  approve_with_conditions: "approve with conditions",
-  refer: "request more information",
-  decline: "decline",
-};
-
 /** Simulated AI credit memo, drafted from the assessment only. Markdown. */
-export function draftMemo(p: CreditProfile, a: Assessment): string {
+export function draftMemo(p: CreditProfile, a: Assessment, L: CreditLang = EN): string {
+  const { m, sarFull: money } = L;
   const top = [...a.factors].sort((x, y) => y.ratio - x.ratio);
+  const factorList = (fs: typeof top) => fs.map((f) => fill(m.memo.factorWithDetail, { label: f.label.toLowerCase(), detail: f.detail })).join("; ");
+  const withCap = a.limit.approvedCapSar > 0 && OUTCOME[a.proposedDecision] === "approve";
+  const rec = {
+    decision: m.memo.decision[a.proposedDecision],
+    days: p.request.tenorDays,
+    band: a.band,
+    score: a.score,
+    provisional: a.provisional ? m.memo.provisional : "",
+  };
   const lines = [
-    `**Recommendation: ${DECISION_WORD[a.proposedDecision]}${a.limit.approvedCapSar > 0 && OUTCOME[a.proposedDecision] === "approve" ? `, credit cap ${money(a.limit.approvedCapSar)}` : ""}, ${p.request.tenorDays} days, band ${a.band} (score ${a.score}${a.provisional ? ", provisional" : ""}).**`,
+    `**${withCap ? fill(m.memo.recommendationCap, { ...rec, cap: money(a.limit.approvedCapSar) }) : fill(m.memo.recommendation, rec)}**`,
     "",
-    `${p.applicant.name}, ${p.applicant.city}, ${p.applicant.yearsTrading} years trading, requests ${money(p.request.capSar)}.`,
+    fill(m.memo.applicant, { name: p.applicant.name, city: (m.data.cities as Record<string, string>)[p.applicant.city] ?? p.applicant.city, years: p.applicant.yearsTrading, cap: money(p.request.capSar) }),
     "",
-    `Strengths: ${top.slice(0, 2).map((f) => `${f.label.toLowerCase()} (${f.detail})`).join("; ")}.`,
-    `Weaknesses: ${top.filter((f) => f.assessed).slice(-2).map((f) => `${f.label.toLowerCase()} (${f.detail})`).join("; ")}.`,
+    fill(m.memo.strengths, { list: factorList(top.slice(0, 2)) }),
+    fill(m.memo.weaknesses, { list: factorList(top.filter((f) => f.assessed).slice(-2)) }),
     "",
-    `Revenue consistency: ${a.consistency.status.replace("_", " ")}.`,
-    `Limit: lowest of 10% net worth ${money(a.limit.tenPctNetWorthSar)}, 10% working capital ${money(a.limit.tenPctWorkingCapitalSar)} and purchases over the term ${money(a.limit.purchasesOverTermSar)}, times ${a.limit.bandMultiplier} for band ${a.band}: ${money(a.limit.limitSar)}.`,
+    fill(m.memo.consistency, { status: m.caseFile.consistencyStatus[a.consistency.status] }),
+    fill(m.memo.limit, {
+      nw: money(a.limit.tenPctNetWorthSar),
+      wc: money(a.limit.tenPctWorkingCapitalSar),
+      purchases: money(a.limit.purchasesOverTermSar),
+      mult: a.limit.bandMultiplier,
+      band: a.band,
+      limit: money(a.limit.limitSar),
+    }),
   ];
-  if (a.reasons.length > 0) lines.push("", "Reasons:", ...a.reasons.map((r) => `- ${r.text}`));
-  if (a.conditions.length > 0) lines.push("", "Conditions:", ...a.conditions.map((r) => `- ${r.text}`));
-  lines.push("", "_Drafted by simulated AI. A credit manager decides._");
+  if (a.reasons.length > 0) lines.push("", m.memo.reasons, ...a.reasons.map((r) => `- ${r.text}`));
+  if (a.conditions.length > 0) lines.push("", m.memo.conditions, ...a.conditions.map((r) => `- ${r.text}`));
+  lines.push("", `_${m.memo.footer}_`);
   return lines.join("\n");
 }
 
-export function toAiProposal(p: CreditProfile, a: Assessment): AiCreditProposal {
+export function toAiProposal(p: CreditProfile, a: Assessment, L: CreditLang = EN): AiCreditProposal {
   const outcome = OUTCOME[a.proposedDecision];
   return {
     outcome,
     proposedCap: outcome === "approve" ? sar(a.limit.approvedCapSar) : undefined,
     reasonCodes: reasonCodes(a),
-    memo: draftMemo(p, a),
+    memo: draftMemo(p, a, L),
     ai: ai("Credit memo drafter", a.provisional ? 0.7 : 0.88),
   };
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { reference, demoPersona } from "@/data";
 import { availableCredit } from "@/domain/credit/facility";
-import { formatSar, murabaha } from "@/domain/money";
+import { murabaha } from "@/domain/money";
 import type { Halalas, OrgId } from "@/domain/types";
 import { useDemo } from "@/store";
 import { Alert, buttonClass, CreditCapMeter, StatStrip, EmptyState, Facts, LoadingRows, PageHeader, Panel, SampleDataLabel, Select } from "@/components/ui";
@@ -13,12 +13,18 @@ import { ApplicationTracker } from "./application-tracker";
 import { DrawLedger } from "./draw-ledger";
 import { useToday } from "./use-today";
 import { utilisation } from "@/domain/credit/draws";
-import { formatDate } from "@/lib/format";
+import { fill } from "@/i18n/core";
+import { credit } from "@/i18n/credit";
+import { useFormat, useLocale, useMessages } from "@/i18n/locale";
 
-const fmt = (n: number) => formatSar(n as Halalas);
 
 /** Contractor credit home: facility summary, application trackers, and a way to apply. */
 export function ContractorCredit() {
+  const m = useMessages(credit).page;
+  const f = useFormat();
+  const locale = useLocale();
+  const fmt = (n: number) => f.money(n as Halalas);
+  const nameOf = (c?: (typeof reference.contractors)[number]) => (c ? ((locale === "ar" ? c.nameAr : undefined) ?? c.name) : "");
   const allCases = useDemo((s) => s.creditCases);
   const facilities = useDemo((s) => s.creditFacilities);
   const [contractorId, setContractorId] = useState<OrgId>(demoPersona.contractor as OrgId);
@@ -39,10 +45,10 @@ export function ContractorCredit() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Contractor"
-        title="Credit"
+        eyebrow={m.eyebrow}
+        title={m.title}
         status={<SampleDataLabel />}
-        meta="Buy materials now and pay in 30 to 90 days. The platform pays the supplier directly; you repay the order total plus a fixed Murabaha markup."
+        meta={m.intro}
         actions={
           isPersona ? (
             <Link
@@ -50,7 +56,7 @@ export function ContractorCredit() {
               data-testid="credit-apply-start"
               className={buttonClass("primary")}
             >
-              {facility ? "Apply for a higher cap" : "Apply for a credit cap"}
+              {facility ? m.applyHigher : m.applyFirst}
             </Link>
           ) : undefined
         }
@@ -58,52 +64,52 @@ export function ContractorCredit() {
 
 
       {!hydrated ? (
-        <LoadingRows rows={4} label="Loading your credit" />
+        <LoadingRows rows={4} label={m.loading} />
       ) : (
         <>
           {justSubmitted && (
             <div data-testid="credit-submitted">
-              <Alert tone="positive" title={`Application ${justSubmitted.id.replace("cc_", "#")} submitted`}>
-                Next, your documents are read and the checks run cheapest first, SIMAH last. An independent credit manager then decides. Every step shows below.
+              <Alert tone="positive" title={fill(m.submittedTitle, { n: justSubmitted.id.replace("cc_", "#") })}>
+                {m.submittedBody}
               </Alert>
             </div>
           )}
           {!facility && cases.length > 0 && (
-            <p className="text-sm text-ink-muted">No credit cap yet. Once an application is approved, your cap and every draw appear here.</p>
+            <p className="text-sm text-ink-muted">{m.noCapYet}</p>
           )}
           {facility && (
             <div data-testid="credit-figures">
               <StatStrip
                 items={[
-                  { label: "Credit cap left", value: formatSar(availableCredit(facility)), note: `of ${formatSar(facility.cap)}`, compact: true },
-                  { label: "Drawn on open orders", value: formatSar(facility.drawn), note: `${use.openDraws} open ${use.openDraws === 1 ? "order" : "orders"}`, compact: true },
+                  { label: m.capLeft, value: f.money(availableCredit(facility)), note: fill(m.ofCap, { cap: f.money(facility.cap) }), compact: true },
+                  { label: m.drawnOpen, value: f.money(facility.drawn), note: use.openDraws === 1 ? m.openOrdersOne : fill(m.openOrdersOther, { n: use.openDraws }), compact: true },
                   {
-                    label: "Next repayment",
-                    value: use.nextDue ? formatSar(use.nextDue.amount) : "None due",
-                    note: use.nextDue ? `due ${formatDate(use.nextDue.dueDate)}` : "Nothing outstanding",
+                    label: m.nextRepayment,
+                    value: use.nextDue ? f.money(use.nextDue.amount) : m.noneDue,
+                    note: use.nextDue ? fill(m.dueOn, { date: f.date(use.nextDue.dueDate) }) : m.nothingOutstanding,
                     compact: true,
                   },
-                  { label: "Credit band", value: facility.band, note: `review due ${formatDate(facility.reviewDue)}` },
+                  { label: m.band, value: facility.band, note: fill(m.reviewDue, { date: f.date(facility.reviewDue) }) },
                 ]}
               />
             </div>
           )}
           {facility && (
             <div data-testid="credit-facility">
-              <Panel title="Your credit cap">
+              <Panel title={m.capPanel}>
                 <div className="space-y-5">
                   <CreditCapMeter cap={facility.cap} drawn={facility.drawn} format={fmt} barOnly />
                   <Facts
                     columns={2}
                     items={[
                       {
-                        label: `Murabaha markup, ${facility.maxTenorDays} days`,
-                        value: `${(facility.profitRate * 100).toFixed(2)}% (APR ${(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr * 100).toFixed(1)}%)`,
+                        label: fill(m.markupFor, { days: facility.maxTenorDays }),
+                        value: fill(m.markupValue, { rate: f.percent(facility.profitRate, 2), apr: f.percent(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr, 1) }),
                       },
-                      { label: "Supplier payment", value: "Paid directly by the platform" },
+                      { label: m.supplierPayment, value: m.paidDirectly },
                     ]}
                   />
-                  {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">Conditions: {facility.conditions.join("; ")}</p>}
+                  {facility.conditions.length > 0 && <p className="text-sm text-ink-muted">{fill(m.conditions, { list: facility.conditions.join("; ") })}</p>}
                 </div>
               </Panel>
             </div>
@@ -113,16 +119,16 @@ export function ContractorCredit() {
 
           {cases.length === 0 ? (
             <EmptyState
-          title="No credit applications yet"
+          title={m.noApplicationsTitle}
           action={
             isPersona ? (
               <Link href="/contractor/credit/apply" className="text-sm font-medium text-stamp underline underline-offset-[3px]">
-                Apply for a credit cap
+                {m.applyFirst}
               </Link>
             ) : undefined
           }
         >
-          {contractor?.name} has not applied for a credit cap. With one, suppliers are paid directly and you repay in 30 to 90 days with a fixed Murabaha markup.
+          {fill(m.noApplications, { name: nameOf(contractor) })}
         </EmptyState>
           ) : (
             <div className="space-y-4">
@@ -138,16 +144,16 @@ export function ContractorCredit() {
 
       <div className="max-w-sm border-t border-line pt-6">
         <Select
-          label="Preview another sample contractor"
-          hint={isPersona ? "You are signed in as this contractor." : "Read-only preview of another sample contractor's applications."}
+          label={m.previewLabel}
+          hint={isPersona ? m.previewYou : m.previewOther}
           value={contractorId}
           onChange={(e) => setContractorId(e.target.value as OrgId)}
           data-testid="credit-contractor-select"
         >
           {reference.contractors.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
-              {c.id === demoPersona.contractor ? " (you)" : ""}
+              {nameOf(c)}
+              {c.id === demoPersona.contractor ? ` ${m.you}` : ""}
             </option>
           ))}
         </Select>

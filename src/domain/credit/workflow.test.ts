@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CreditCase, CreditCaseId, OrgId } from "../types";
 import { SAMPLE_CASES, bunyanAlHijaz, durratAlQassim, rawasiNajd, sahelAlSharq } from "./samples";
+import { assessCase } from "./engine";
 import { reasonCodes } from "./to-case";
 import type { CreditProfile } from "./types";
 import { availableCredit } from "./facility";
@@ -178,4 +179,35 @@ it("seeds valid ISO timestamps on every credit case and log entry", async () => 
       expect(Number.isNaN(Date.parse(iso!)), `${c.id} ${iso}`).toBe(false);
     }
   }
+});
+
+describe("Arabic", async () => {
+  const { AR_LANG } = await import("./lang");
+  const { localizedAssessment } = await import("./workflow");
+  it("writes findings, factors, policy, conditions and memo in Arabic, with the same numbers", () => {
+    const en = assessCase(durratAlQassim, "2026-11-18");
+    const ar = assessCase(durratAlQassim, "2026-11-18", AR_LANG);
+    expect(ar.score).toBe(en.score);
+    expect(ar.band).toBe(en.band);
+    expect(ar.limit).toEqual(en.limit);
+    const text = [
+      ...ar.checks.flatMap((k) => [k.label, ...k.findings]),
+      ...ar.factors.flatMap((f) => [f.label, f.whyItMatters, f.detail]),
+      ...ar.rules.flatMap((r) => [r.label, r.detail]),
+      ...ar.conditions.map((r) => r.text),
+    ];
+    for (const t of text) expect(/[؀-ۿ]/.test(t), t).toBe(true);
+    expect(text.join(" ")).not.toMatch(/\b(the|of|and|is|years|days|SIMAH score)\b/);
+  });
+
+  it("re-renders a scored case in Arabic from the date its checks ran", () => {
+    const c = run(sahelAlSharq);
+    const view = localizedAssessment(c, sahelAlSharq, AR_LANG)!;
+    expect(view.gates.map((g) => g.result)).toEqual(c.gates.map((g) => g.result));
+    expect(view.scorecard.total).toBe(c.scorecard!.total);
+    expect(view.memo).toContain("التوصية");
+    expect(view.memo).toContain("محاكاة بالذكاء الاصطناعي");
+    expect(view.memo).not.toContain("فائدة");
+    expect(localizedAssessment(shell(sahelAlSharq), sahelAlSharq, AR_LANG)).toBeNull();
+  });
 });
