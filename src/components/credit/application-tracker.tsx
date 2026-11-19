@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import { provideMoreInfo, trackerSteps } from "@/domain/credit-application";
-import { capChange } from "@/domain/credit/workflow";
+import { capChange, outcomeTerms, type OutcomeTerms } from "@/domain/credit/workflow";
 import { CREDIT_CASE_STATUS } from "@/lib/status";
-import { murabaha } from "@/domain/money";
-import type { CreditCase, CreditFacility, GateResult } from "@/domain/types";
+import type { CreditCase, CreditFacility, GateResult, ReasonCode } from "@/domain/types";
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useMessages } from "@/i18n/locale";
 import { track } from "@/lib/analytics";
-import { update } from "@/store";
+import { update, useDemo } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 import { logAction, logDetail } from "./log-text";
 import { personName, purposeText, seedText } from "./data-text";
@@ -27,7 +26,7 @@ export function StatusBadge({ status }: { status: CreditCase["status"] }) {
 }
 
 /** Contractor view of one application: progress, checks, outcome and reasons. */
-export function ApplicationTracker({ c, facility, readOnly = false }: { c: CreditCase; facility?: CreditFacility; readOnly?: boolean }) {
+export function ApplicationTracker({ c, readOnly = false }: { c: CreditCase; facility?: CreditFacility; readOnly?: boolean }) {
   const all = useMessages(credit);
   const m = all.tracker;
   const f = useFormat();
@@ -62,7 +61,7 @@ export function ApplicationTracker({ c, facility, readOnly = false }: { c: Credi
                     ))}
                 </ul>
               </section>
-              <Outcome c={c} facility={facility} readOnly={readOnly} />
+              <Outcome c={c} readOnly={readOnly} />
             </div>
           </div>
           <details className="text-sm">
@@ -82,7 +81,7 @@ export function ApplicationTracker({ c, facility, readOnly = false }: { c: Credi
   );
 }
 
-function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFacility; readOnly: boolean }) {
+function Outcome({ c, readOnly }: { c: CreditCase; readOnly: boolean }) {
   const all = useMessages(credit);
   const m = all.tracker;
   const f = useFormat();
@@ -102,7 +101,12 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
     );
   }
   if (!d || (c.status !== "approved" && c.status !== "declined")) {
-    return <p className="text-sm text-ink-muted">{m.noDecision}</p>;
+    const next = (m.next as Record<string, string>)[c.status];
+    return (
+      <p className="text-sm text-ink-muted" data-testid="credit-next">
+        {next ?? m.noDecision}
+      </p>
+    );
   }
   const approved = d.outcome === "approve";
   return (
@@ -112,7 +116,12 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
         <DecisionStamp decision={d.outcome} by={personName(d.decidedBy, credit.en as never, all)} at={f.date(d.decidedAt)} />
       </div>
       {approved && d.approvedCap !== undefined && <CapLine c={c} approved={d.approvedCap} />}
-      <p className="text-sm text-ink">{seedText(d.reasonText, credit.en as never, all)}</p>
+      {approved && <ForYou c={c} />}
+      <Reasons codes={d.reasonCodes} />
+      <div className="text-sm">
+        <p className="font-medium text-ink">{m.forYou.note}</p>
+        <p className="text-ink">{seedText(d.reasonText, credit.en as never, all)}</p>
+      </div>
       {d.conditions && d.conditions.length > 0 && (
         <div className="text-sm">
           <p className="font-medium text-ink">{m.conditions}</p>
@@ -122,15 +131,6 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
             ))}
           </ul>
         </div>
-      )}
-      {approved && facility && (
-        <p className="text-sm text-ink-muted">
-          {fill(m.facilityTerms, {
-            days: facility.maxTenorDays,
-            rate: f.percent(facility.profitRate, 2),
-            apr: f.percent(murabaha(facility.cap, facility.profitRate, facility.maxTenorDays).apr, 1),
-          })}
-        </p>
       )}
     </section>
   );
@@ -193,5 +193,73 @@ function CapLine({ c, approved }: { c: CreditCase; approved: NonNullable<NonNull
     <p className="text-sm font-medium text-ink" data-testid="credit-cap-change" data-kind={change?.kind ?? "opened"}>
       {text}
     </p>
+  );
+}
+
+const POSITIVE = new Set<ReasonCode>(["strong_liquidity", "clean_payment_history", "quality_payers"]);
+
+/** The structured reasons behind the decision, in plain words: what counted for the contractor and what held it back. */
+function Reasons({ codes }: { codes: ReasonCode[] }) {
+  const m = useMessages(credit).tracker;
+  const pos = codes.filter((x) => POSITIVE.has(x));
+  const neg = codes.filter((x) => !POSITIVE.has(x));
+  if (codes.length === 0) return null;
+  const list = (title: string, xs: ReasonCode[], tone: string, kind: string) =>
+    xs.length > 0 && (
+      <div data-testid={`credit-reasons-${kind}`}>
+        <p className="font-medium text-ink">{title}</p>
+        <ul className="mt-1 space-y-0.5">
+          {xs.map((x) => (
+            <li key={x} className="flex gap-2">
+              <span aria-hidden="true" className={tone}>
+                {kind === "for" ? "+" : "−"}
+              </span>
+              <span className="text-ink">{m.reason[x]}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  return (
+    <div className="grid gap-3 text-sm sm:grid-cols-2">
+      {list(m.forYou.strengths, pos, "text-positive", "for")}
+      {list(m.forYou.concerns, neg, "text-caution", "against")}
+    </div>
+  );
+}
+
+/** What the approval changes for the contractor: cap, band and Murabaha markup, before and after. */
+function ForYou({ c }: { c: CreditCase }) {
+  const m = useMessages(credit).tracker;
+  const f = useFormat();
+  const cases = useDemo((s) => s.creditCases);
+  const t = outcomeTerms(c, cases);
+  if (!t) return null;
+  const { before, after } = t;
+  const rate = (x: OutcomeTerms) => fill(m.forYou.rateValue, { rate: f.percent(x.profitRate, 2), apr: f.percent(x.apr, 1) });
+  const rows = [
+    { key: "cap", label: m.forYou.cap, was: before && f.money(before.cap), now: f.money(after.cap) },
+    { key: "band", label: m.forYou.band, was: before?.band, now: after.band },
+    { key: "rate", label: fill(m.forYou.rate, { days: after.tenorDays }), was: before && rate(before), now: rate(after) },
+  ];
+  return (
+    <section className="rounded-xl bg-paper p-4" data-testid="credit-for-you">
+      <h4 className="mb-2 text-sm font-semibold text-ink">{m.forYou.title}</h4>
+      <dl className="space-y-1.5 text-sm">
+        {rows.map((r) => {
+          const changed = r.was !== undefined && r.was !== null && r.was !== r.now;
+          return (
+            <div key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-3" data-testid={`credit-for-you-${r.key}`} data-changed={changed || undefined}>
+              <dt className="text-ink-muted">{r.label}</dt>
+              <dd className="text-end tabular-nums">
+                <span className={`font-semibold ${changed ? "text-positive" : "text-ink"}`}>{r.now}</span>
+                {changed && <span className="block text-xs text-ink-muted">{fill(m.forYou.was, { value: r.was! })}</span>}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+      {c.decision && <p className="mt-2 text-xs text-ink-muted">{fill(m.forYou.from, { date: f.date(c.decision.decidedAt) })}</p>}
+    </section>
   );
 }

@@ -5,7 +5,7 @@ import { assessCase } from "./engine";
 import { reasonCodes } from "./to-case";
 import type { CreditProfile } from "./types";
 import { availableCredit } from "./facility";
-import { capChange, decide, runChecks, validateDecision, type DecisionInput } from "./workflow";
+import { capChange, decide, outcomeTerms, runChecks, termsFor, validateDecision, type DecisionInput } from "./workflow";
 
 const now = "2026-11-18T12:00:00Z";
 const shell = (p: CreditProfile): CreditCase => ({
@@ -117,6 +117,20 @@ describe("decide", () => {
     expect(capChange(c)).toEqual({ kind: "kept", at: 150_000_000 });
     expect(capChange(decide(bigAsk(), approve, now).case)).toEqual({ kind: "opened", to: 100_000_000 });
     expect(capChange(run(rawasiNajd))).toBeNull();
+  });
+
+  it("explains an approval to the contractor: terms before and after", () => {
+    expect(termsFor("B", 60)).toEqual({ profitRate: 0.03, apr: (0.03 * 365) / 60 });
+    expect(termsFor("D", 30).profitRate).toBe(termsFor("C", 30).profitRate);
+    const first = decide(bigAsk(), { ...approve, approvedCapSar: 1_500_000 }, "2026-10-27T10:00:00Z");
+    const firstCase = { ...first.case, scorecard: { ...first.case.scorecard!, band: "B" as const } };
+    const second = decide({ ...bigAsk(), id: "cc_999" as CreditCaseId }, { ...approve, approvedCapSar: 1_800_000 }, now, first.facility);
+    const secondCase = { ...second.case, scorecard: { ...second.case.scorecard!, band: "A" as const } };
+    const t = outcomeTerms(secondCase, [firstCase, secondCase])!;
+    expect(t.before).toMatchObject({ cap: 150_000_000, band: "B", profitRate: 0.03 });
+    expect(t.after).toMatchObject({ cap: 180_000_000, band: "A", profitRate: 0.025 });
+    expect(outcomeTerms(firstCase, [firstCase, secondCase])!.before).toBeNull();
+    expect(outcomeTerms(run(rawasiNajd), [])).toBeNull();
   });
 
   it("requests more information with the items listed", () => {
