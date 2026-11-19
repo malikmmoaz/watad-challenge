@@ -12,7 +12,7 @@ Wording note: the brief says "bids"; the app says "offers", which is Watad's own
 - Each row is checked at desktop (1440) and mobile (390) widths. A row passes only if both do.
 - E2E column: the Playwright smoke test that covers it (`e2e/*.spec.ts`), if any.
 
-Last full pass: 18 Nov 19:35 UTC, pass 4 after the redesign (89/90 rows) · Live link: https://watad-challenge.vercel.app
+Last full pass: 19 Nov 02:45 UTC, pass 5, Arabic gate (97/98 rows) · Live link: https://watad-challenge.vercel.app
 
 Browsers tested (18 Nov 19:30, production after the redesign, full e2e suite incl. axe and keyboard): Chromium desktop 1440 + Pixel 7 on every PR; Firefox desktop 37/37; WebKit (Safari engine) desktop 37/37 and iPhone 14 34/34 (+3 desktop-only keyboard tests skipped). #80 and #81 verified fixed. Re-run: Actions → "Cross-browser e2e" → Run workflow.
 
@@ -130,7 +130,7 @@ Browsers tested (18 Nov 19:30, production after the redesign, full e2e suite inc
 | G4 | Brief | Use of AI tools explained: how AI tools were used to build this, plus what AI in the product is simulated vs would be real | Safina | #17 | – | ✅ |
 | G5 | Brief | Key assumptions listed | Safina | #17 | – | ✅ |
 | G6 | Ours | How the team built it: team, timeline, links to issues, PRs, CI runs, ADRs | Safina | #17 | – | ✅ |
-| G7 | Ours | Links to analytics and uptime dashboards / status page work for a logged-out reviewer | Tariq | #4 #5 | – | ❌ #17 |
+| G7 | Ours | Links to analytics and uptime dashboards / status page work for a logged-out reviewer | Tariq | #4 #5 | – | ⚠️ #4 |
 | G8 | Brief | These pages are in the app and linked from the landing page | Safina | #17 | smoke | ✅ |
 | G10 | Brief | Research shown: what we learned about construction procurement and credit in Saudi Arabia, and how it shaped the product | Safina | #17 | – | ✅ |
 | G11 | Brief | Explanations are brief: each topic readable in under a minute | Safina | #17 | – | ✅ |
@@ -157,11 +157,11 @@ Ours (Safina's priority, ADR 0005). Checked on a local production build in the `
 | I1 | Ours | Full Arabic with RTL: an **EN / ع** toggle in both app bars; the choice survives a reload and applies on every page | Tariq | #108 | i18n | ✅ |
 | I2 | Ours | `<html lang dir>` match the language on every page (`ar` / `rtl`, `en` / `ltr`) | Tariq | #108 | a11y (en + ar) | ✅ |
 | I3 | Ours | No serious or critical axe issues in Arabic on all 11 pages, desktop and phone | all | #108 | a11y (ar) | ✅ |
-| I4 | Ours | Every visible word is Arabic, except names, codes and figures from an allow-list | Omar, Hana, Layla, Safina | #109 | untranslated | ⚠️ #109 |
-| I5 | Ours | No sideways scroll in Arabic at 320 and 390 px | Tariq | #120 | rtl | ⚠️ #120 |
-| I6 | Ours | Money (riyal sign), numbers and dates formatted for Arabic, Latin digits, Gregorian calendar | Tariq | #108 | – | ☐ |
-| I7 | Ours | Directional icons, bars and meters mirror in RTL; numbers stay left-to-right | Layla | #106 | – | ☐ |
-| I8 | Ours | One journey per role completes in Arabic (contractor RFQ to PO, supplier offer, credit decision) | Noor | #15 | – | ☐ |
+| I4 | Ours | Every visible word is Arabic, except names, codes and figures from an allow-list | Omar, Hana, Layla, Safina | #109 | untranslated | ✅ |
+| I5 | Ours | No sideways scroll in Arabic at 320 and 390 px | Tariq | #120 | rtl | ✅ |
+| I6 | Ours | Money (riyal sign), numbers and dates formatted for Arabic, Latin digits, Gregorian calendar | Tariq | #108 | – | ✅ |
+| I7 | Ours | Directional icons, bars and meters mirror in RTL; numbers stay left-to-right | Layla | #106 | – | ✅ |
+| I8 | Ours | One journey per role completes in Arabic (contractor RFQ to PO, supplier offer, credit decision) | Noor | #15 | – | ✅ |
 
 ## What reviewers look for
 
@@ -185,6 +185,7 @@ Not pass/fail; judged at each full pass and reported to Safina with examples.
 | 18 Nov 16:25 | production, after #41 and #49 | 85/90 pass · 2 partial · 3 fail | Fixed since pass 1: About and How-we-built pages (#41: G1–G6, G8, G10, G11), offer cards on phones (#49, closes #48: A10). Checked now: E9 decline by hand passes; F5 fails, a PO over the available cap is still placed on credit (#55). Still partial: #46 (C3, H1; fix in #58). Re-checked 16:30: basket split passes (#47 closed, B18), and the full #14 credit path including repayment restores the cap. Still failing: G7 dashboards for reviewers (#4/#5), G9 walkthrough (#16, scheduled). |
 | 18 Nov 16:42 | production, after #58 and #59 | 88/90 pass · 1 partial · 1 fail | Wording fixed and verified: "Your offer (bid)", "Price the lines…", "Enter a unit price…", "Usually prices…", "Thank you for your offer" (#46 and #10 closed; C3, H1). Walkthrough merged (#61); G9 stays partial until the in-app guide ships (copy in #64, panel by Layla). F5 re-checked 16:50: Pay with credit is disabled above the available cap, with the reason; the PO goes by bank transfer (#55 closed, via #57/#63). Supplier home now lists purchase orders (#65, closes #62). Still failing: G7 dashboards for reviewers (waiting on Better Stack approval). |
 | 18 Nov 19:35 | production, main `5044548` (after the redesign #60/#68/#69/#78/#79) | 89/90 pass · 0 partial · 1 fail | Full e2e suite on production at 1440 + 412: all green (smoke, RFQ, credit, credit loop, procurement, analytics, system, keyboard; axe 0 serious/critical on 11 pages at both widths). Reviewer guide live on all three roles: 3 steps, links resolve, Hide persists, Restart tour works (G9 ✅). Walkthrough labels all present; one drift fixed: `cc_502` now needs **Run checks** first. Cross-browser: Firefox, WebKit desktop and iPhone 14 all green; #80 (narrow phones) and #81 (Safari keyboard tabs) verified fixed. Still failing: G7 dashboard links for reviewers (Better Stack approval). |
+| 19 Nov 02:45 | local production build of main `8889669` (Arabic gate) | 97/98 pass · 1 partial · 0 fail | **Arabic gate passed**: untranslated + mono 23/23 on desktop and phone with no known gaps left; RTL 11/11 at 320/390 px; axe in Arabic 11/11 on both widths; i18n + credit-ar 7/7. Arabic journeys: contractor compare → PO on credit (demo clip 5), credit application → decision (credit-ar), supplier offer → PO dispatched (offer total 128,041.00 ر.س. with VAT). Money with the riyal sign and Latin digits, Gregorian dates in Arabic. G7 partial: How we built it links a public status page (Better Stack, 200 for a logged-out reader); no public analytics dashboard. |
 
 ## Brief text and traceability
 
