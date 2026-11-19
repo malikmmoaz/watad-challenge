@@ -64,7 +64,7 @@ export const tour: Tour = {
         },
         {
           title: "Compare offers, pay with credit",
-          text: "Compare 3 offers on landed cost incl. 15% VAT, terms and credit fit. **Choose offer** → **Pay with credit**: Murabaha markup and APR shown. ★ On Block C walls, **Use this split** saves SAR 7,705.",
+          text: "Compare 3 offers on landed cost incl. 15% VAT, lead time, terms, reliability and credit fit. **Choose offer** → **Pay with credit**: the supplier is paid directly; Murabaha markup and APR shown.",
           href: "/contractor/rfq/rfq_1042",
           linkLabel: "Structure package — Block C",
         },
