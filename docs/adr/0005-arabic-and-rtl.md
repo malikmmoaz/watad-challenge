@@ -26,7 +26,7 @@ Saudi users of a procurement platform read Arabic. The demo must offer full Arab
 
 **The Arabic font loads only when Arabic is on screen.** The default font stack does not name Noto Sans Arabic (its subsets also cover arrows and symbols, so "→" would download it on English pages); Arabic switches stacks through `:lang(ar)`, and the toggle's "ع" uses the system font. Measured on a local build: 0 Arabic faces on English `/credit` and `/contractor/rfq/rfq_1042`, loaded in Arabic.
 
-**Analytics unchanged.** Events and their properties stay as in `events.ts`; the locale is not tracked.
+**Analytics.** Events and their properties are as in `events.ts`. The locale is tracked only on document events (`invoice_viewed`, `po_printed`), to see which language invoices are read and printed in; no other event carries it.
 
 ## Consequences
 
