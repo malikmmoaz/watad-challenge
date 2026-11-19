@@ -465,6 +465,17 @@ export const credit = defineMessages(
       remaining: "{amount} remaining · retention {pct}%",
     },
 
+    data: {
+      cities: { Riyadh: "Riyadh", Jeddah: "Jeddah", Dammam: "Dammam", Jubail: "Jubail", Makkah: "Makkah", Madinah: "Madinah", Tabuk: "Tabuk", Buraydah: "Buraydah" },
+      creditManager: "Reem Al-Harbi, Credit Manager (fictional)",
+      purposes: {
+        narjisMalqa: "Materials for Al Narjis Schools Complex and Al Malqa villas",
+        obhurClinic: "Finishes and MEP materials for Obhur clinic",
+        jubailWarehouses: "Steel and cables for Jubail Logistics Warehouses Phase 2",
+        contractsInHand: "Materials for contracts in hand",
+      },
+    },
+
     log: {
       applicationSubmitted: "Application submitted",
       simahConsent: "SIMAH consent given",
@@ -954,6 +965,17 @@ export const credit = defineMessages(
     fieldValue: {
       active: "نشط", unqualified: "رأي غير متحفظ", notAudited: "غير مدققة", grade: "الدرجة {n}", mediumGreen: "أخضر متوسط",
       remaining: "المتبقي {amount} · المحتجزات {pct}%",
+    },
+
+    data: {
+      cities: { Riyadh: "الرياض", Jeddah: "جدة", Dammam: "الدمام", Jubail: "الجبيل", Makkah: "مكة المكرمة", Madinah: "المدينة المنورة", Tabuk: "تبوك", Buraydah: "بريدة" },
+      creditManager: "ريم الحربي، مديرة ائتمان (خيالية)",
+      purposes: {
+        narjisMalqa: "مواد لمجمّع مدارس النرجس وفلل الملقا",
+        obhurClinic: "مواد التشطيبات والأعمال الكهروميكانيكية لمركز أبحر الصحي",
+        jubailWarehouses: "حديد وكابلات للمرحلة الثانية من مستودعات الجبيل اللوجستية",
+        contractsInHand: "مواد للعقود القائمة",
+      },
     },
 
     log: {

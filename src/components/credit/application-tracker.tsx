@@ -12,6 +12,7 @@ import { track } from "@/lib/analytics";
 import { update } from "@/store";
 import { Alert, Badge, Button, DecisionStamp, Panel, StatusTimeline, Textarea, type TimelineStep, type Tone } from "@/components/ui";
 import { logAction, logDetail } from "./log-text";
+import { personName, purposeText } from "./data-text";
 
 const GATE_TONE: Record<GateResult, Tone> = { pass: "positive", flag: "caution", fail: "negative", pending: "neutral" };
 
@@ -41,7 +42,7 @@ export function ApplicationTracker({ c, facility, readOnly = false }: { c: Credi
         aside={<StatusBadge status={c.status} />}
       >
         <div className="space-y-6">
-          <p className="text-sm text-ink-muted">{fill(m.submittedOn, { purpose: c.purpose, date: c.submittedAt ? f.date(c.submittedAt) : "" })}</p>
+          <p className="text-sm text-ink-muted">{fill(m.submittedOn, { purpose: purposeText(c.purpose, credit.en as never, all), date: c.submittedAt ? f.date(c.submittedAt) : "" })}</p>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
             <StatusTimeline label={m.progress} steps={steps} />
             <div className="space-y-5">
@@ -107,7 +108,7 @@ function Outcome({ c, facility, readOnly }: { c: CreditCase; facility?: CreditFa
     <section data-testid="credit-outcome" className="space-y-3">
       {/* The stamp is tilted on purpose; clip its corners rather than scroll sideways on phones. */}
       <div className="overflow-x-clip py-1">
-        <DecisionStamp decision={d.outcome} by={d.decidedBy} at={f.date(d.decidedAt)} />
+        <DecisionStamp decision={d.outcome} by={personName(d.decidedBy, credit.en as never, all)} at={f.date(d.decidedAt)} />
       </div>
       {approved && d.approvedCap !== undefined && <p className="text-sm font-medium text-ink">{fill(m.capApproved, { cap: f.money(d.approvedCap) })}</p>}
       <p className="text-sm text-ink">{d.reasonText}</p>

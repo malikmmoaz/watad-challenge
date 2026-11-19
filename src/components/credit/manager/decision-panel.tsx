@@ -10,6 +10,7 @@ import { Alert, Button, DecisionStamp, Input, Panel, Textarea } from "@/componen
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useMessages } from "@/i18n/locale";
+import { personName } from "../data-text";
 
 const OUTCOMES: CreditDecisionOutcome[] = ["approve", "request_info", "decline"];
 
@@ -42,7 +43,7 @@ export function DecisionPanel({ c }: { c: CreditCase }) {
       <Panel title={m.decidedTitle} aside={<span className="text-xs text-ink-muted">{m.recorded}</span>}>
         <div className="space-y-4 text-sm" data-testid="credit-decision">
           <div className="flex justify-center overflow-x-clip rounded-xl bg-paper px-2 py-6">
-            <DecisionStamp decision={d.outcome} by={d.decidedBy} at={f.dateTime(d.decidedAt)} animate={fresh} />
+            <DecisionStamp decision={d.outcome} by={personName(d.decidedBy, credit.en as never, all)} at={f.date(d.decidedAt)} animate={fresh} />
           </div>
           {d.approvedCap !== undefined && (
             <p className="flex items-baseline justify-between gap-3 border-b border-line pb-3">

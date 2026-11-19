@@ -9,6 +9,7 @@ import { CellNote, EmptyState, LoadingRows, PageHeader, SampleDataLabel, StatStr
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
+import { personName } from "../data-text";
 import { useToday } from "../use-today";
 import { useHydrated } from "../client-state";
 import { CaseStatus, useShortDate } from "./shared";
@@ -17,10 +18,11 @@ const ORDER: Record<CreditCase["status"], number> = { in_assessment: 0, document
 
 /** The credit manager's landing page: header, key figures and the queue. */
 export function CreditQueuePage() {
-  const m = useMessages(credit).queue;
+  const all = useMessages(credit);
+  const m = all.queue;
   return (
     <div className="space-y-6">
-      <PageHeader title={m.title} status={<SampleDataLabel />} meta={fill(m.intro, { manager: demoPersona.credit })} />
+      <PageHeader title={m.title} status={<SampleDataLabel />} meta={fill(m.intro, { manager: personName(demoPersona.credit, credit.en as never, all) })} />
       <CreditQueue />
     </div>
   );

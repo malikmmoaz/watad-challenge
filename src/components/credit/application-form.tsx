@@ -19,6 +19,7 @@ import { sar } from "@/domain/money";
 import { fill } from "@/i18n/core";
 import { credit } from "@/i18n/credit";
 import { useFormat, useLocale, useMessages } from "@/i18n/locale";
+import { cityName } from "./data-text";
 import type { Contractor, CreditDocumentType } from "@/domain/types";
 import { track } from "@/lib/analytics";
 import { getState, update } from "@/store";
@@ -145,7 +146,7 @@ export function ApplicationForm({ contractor }: { contractor: Contractor }) {
             {fill(m.company, {
               name: (locale === "ar" ? contractor.nameAr : undefined) ?? contractor.name,
               cr: contractor.crNumber,
-              city: contractor.city,
+              city: cityName(contractor.city, all),
               grade: contractor.classificationGrade,
               years: contractor.yearsOperating,
             })}

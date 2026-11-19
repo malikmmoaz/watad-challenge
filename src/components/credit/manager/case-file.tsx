@@ -24,6 +24,7 @@ import { ScoreReveal } from "./score-reveal";
 import { CaseStatus } from "./shared";
 import { logAction, logDetail } from "../log-text";
 import { fieldLabel, fieldValue } from "../field-text";
+import { purposeText } from "../data-text";
 
 
 /** Cases whose checks ran in this tab: their score is revealed once. */
@@ -192,7 +193,7 @@ export function CaseFile({ id }: { id: string }) {
         title={title}
         serial={c.id}
         status={<CaseStatus status={c.status} />}
-        meta={fill(m.meta, { cap: f.money(c.requestedCap), days: c.requestedTenorDays, purpose: c.purpose, date: c.submittedAt ? f.date(c.submittedAt) : m.notYet })}
+        meta={fill(m.meta, { cap: f.money(c.requestedCap), days: c.requestedTenorDays, purpose: purposeText(c.purpose, credit.en as never, all), date: c.submittedAt ? f.date(c.submittedAt) : m.notYet })}
         actions={
           canRun ? (
             <Button variant="primary" onClick={run} disabled={!profile} loading={step !== null} data-testid="credit-run-checks">
