@@ -4,7 +4,7 @@
  * file; decide is the only way a case reaches approved / declined.
  */
 import { sar } from "../money";
-import type { CreditCase, CreditDecision, EvidenceRef, CreditDecisionOutcome, CreditFacility, Halalas, ReasonCode } from "../types";
+import type { CreditBand, CreditCase, CreditDecision, EvidenceRef, CreditDecisionOutcome, CreditFacility, Halalas, ReasonCode } from "../types";
 import { assessCase } from "./engine";
 import { PROFIT_RATE_PER_30_DAYS } from "./murabaha";
 import { simulateDocuments, toAiProposal, toGates, toScorecard } from "./to-case";
@@ -79,9 +79,64 @@ export function validateDecision(c: CreditCase, d: DecisionInput): string[] {
 
 const addDays = (iso: string, days: number) => new Date(Date.parse(iso) + days * 86_400_000).toISOString().slice(0, 10);
 
+/** Flat Murabaha profit rate for the full tenor (as on CreditFacility.profitRate) and its APR, by band. */
+export function termsFor(band: CreditBand, tenorDays: number): { profitRate: number; apr: number } {
+  const per30 = band === "D" ? PROFIT_RATE_PER_30_DAYS.C : PROFIT_RATE_PER_30_DAYS[band];
+  const profitRate = Math.round(((per30 * tenorDays) / 30) * 10_000) / 10_000;
+  return { profitRate, apr: (profitRate * 365) / tenorDays };
+}
+
+export interface OutcomeTerms {
+  cap: Halalas;
+  band: CreditBand;
+  tenorDays: number;
+  profitRate: number;
+  apr: number;
+}
+
+/**
+ * What an approved case means for the contractor: the terms before it (the latest earlier
+ * approval, if any) and after it. Cap from the decision log; band and rate from each case.
+ */
+export function outcomeTerms(c: CreditCase, cases: CreditCase[]): { before: OutcomeTerms | null; after: OutcomeTerms } | null {
+  const change = capChange(c);
+  if (c.status !== "approved" || !c.decision || !change) return null;
+  const termsOf = (x: CreditCase, cap: Halalas): OutcomeTerms => {
+    const band = x.scorecard?.band ?? "C";
+    return { cap, band, tenorDays: x.requestedTenorDays, ...termsFor(band, x.requestedTenorDays) };
+  };
+  const decidedAt = c.decision.decidedAt;
+  const prev = cases
+    .filter((x) => x.id !== c.id && x.contractorId === c.contractorId && x.status === "approved" && x.decision && x.decision.decidedAt < decidedAt)
+    .sort((a, b) => b.decision!.decidedAt.localeCompare(a.decision!.decidedAt))[0];
+  const capAfter = change.kind === "kept" ? change.at : change.to;
+  const capBefore = change.kind === "raised" ? change.from : change.kind === "kept" ? change.at : undefined;
+  return {
+    before: prev && capBefore !== undefined ? termsOf(prev, capBefore) : null,
+    after: termsOf(c, capAfter),
+  };
+}
+
+export type CapChange = { kind: "opened"; to: Halalas } | { kind: "raised"; from: Halalas; to: Halalas } | { kind: "kept"; at: Halalas };
+
+/** How an approved case changed the contractor's cap, read from its decision log (null when not approved). */
+export function capChange(c: Pick<CreditCase, "log">): CapChange | null {
+  const h = (s: string) => sar(Number(s.replace(/,/g, "")));
+  for (const l of [...c.log].reverse()) {
+    if (l.action !== "Approved" || !l.detail) continue;
+    let r: RegExpMatchArray | null;
+    if ((r = l.detail.match(/^Credit cap raised from ([\d,]+) to ([\d,]+) SAR/))) return { kind: "raised", from: h(r[1]!), to: h(r[2]!) };
+    if ((r = l.detail.match(/^Credit cap kept at ([\d,]+) SAR/))) return { kind: "kept", at: h(r[1]!) };
+    if ((r = l.detail.match(/^Credit cap ([\d,]+) SAR/))) return { kind: "opened", to: h(r[1]!) };
+  }
+  return null;
+}
+
 /**
  * Records the human decision; an approval opens the credit facility, or replaces
- * the contractor's current one. Draws still outstanding on it carry over.
+ * the contractor's current one. Draws still outstanding on it carry over. A new
+ * approval never lowers an existing cap: approving less than the current cap
+ * keeps the cap and applies the new terms (band, Murabaha rate, conditions).
  */
 export function decide(c: CreditCase, d: DecisionInput, now: string, current?: CreditFacility): { case: CreditCase; facility?: CreditFacility } {
   const errors = validateDecision(c, d);
@@ -101,27 +156,36 @@ export function decide(c: CreditCase, d: DecisionInput, now: string, current?: C
   };
   const status = d.outcome === "approve" ? "approved" : d.outcome === "decline" ? "declined" : "more_info_requested";
   const action = d.outcome === "approve" ? "Approved" : d.outcome === "decline" ? "Declined" : "More information requested";
+  const sarText = (h: number) => (h / 100).toLocaleString("en-US");
+  const effectiveCap = approvedCap !== undefined && current && current.cap >= approvedCap ? current.cap : approvedCap;
+  const capDetail =
+    approvedCap === undefined
+      ? decision.reasonText
+      : !current
+        ? `Credit cap ${sarText(approvedCap)} SAR, ${c.requestedTenorDays} days`
+        : effectiveCap! > current.cap
+          ? `Credit cap raised from ${sarText(current.cap)} to ${sarText(effectiveCap!)} SAR, ${c.requestedTenorDays} days`
+          : `Credit cap kept at ${sarText(current.cap)} SAR, ${c.requestedTenorDays} days`;
   const next: CreditCase = {
     ...c,
     status,
     decision,
-    log: [...c.log, { at: now, actor: "credit_manager", action, detail: approvedCap ? `Credit cap ${(approvedCap / 100).toLocaleString("en-US")} SAR, ${c.requestedTenorDays} days` : decision.reasonText }],
+    log: [...c.log, { at: now, actor: "credit_manager", action, detail: capDetail }],
     updatedAt: now,
   };
   if (!approvedCap) return { case: next };
   const band = c.scorecard?.band ?? "C";
-  const rate = band === "D" ? PROFIT_RATE_PER_30_DAYS.C : PROFIT_RATE_PER_30_DAYS[band];
   return {
     case: next,
     facility: {
       creditCaseId: c.id,
       contractorId: c.contractorId,
-      cap: approvedCap,
+      cap: effectiveCap as Halalas,
       drawn: (current?.drawn ?? 0) as Halalas,
       band,
       maxTenorDays: c.requestedTenorDays,
       // Flat Murabaha profit rate for the full tenor, matching CreditFacility.profitRate.
-      profitRate: Math.round(((rate * c.requestedTenorDays) / 30) * 10_000) / 10_000,
+      profitRate: termsFor(band, c.requestedTenorDays).profitRate,
       conditions: decision.conditions ?? [],
       approvedAt: now,
       reviewDue: addDays(now, 182),

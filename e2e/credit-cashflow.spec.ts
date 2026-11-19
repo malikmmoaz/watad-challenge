@@ -52,7 +52,9 @@ for (const locale of ["en", "ar"] as const) {
     const before = await box();
     await chart.locator("summary").click();
     await expect(tid(page, "credit-cashflow-table").locator("tbody tr")).toHaveCount(12);
-    expect(await box()).toEqual(before);
+    const after = await box();
+    expect(Math.abs(after.top - before.top)).toBeLessThan(0.5);
+    expect(Math.abs(after.height - before.height)).toBeLessThan(0.5);
 
     const { violations } = await new AxeBuilder({ page }).include('[data-testid="credit-cashflow"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(violations.map((v) => `${v.id}: ${v.nodes[0]?.target}`)).toEqual([]);

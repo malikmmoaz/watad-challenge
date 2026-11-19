@@ -38,7 +38,7 @@ test("apply with documents and SIMAH consent, then answer a request for more inf
   await expect(page).toHaveURL(/\/apply$/);
   await expect(page.getByText(/SIMAH consent is required/i)).toBeVisible();
 
-  await tid(page, "credit-apply-cap").fill("750000");
+  await tid(page, "credit-apply-cap").fill("2000000");
   await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-simah-consent").check();

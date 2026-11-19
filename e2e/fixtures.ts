@@ -137,4 +137,15 @@ export async function expectNoHorizontalScroll(page: Page) {
   expect(overflow, "page should not scroll horizontally").toBeLessThanOrEqual(1);
 }
 
+/**
+ * Type a number into a field with real keystrokes, as a user does. Playwright's fill() sets the
+ * value programmatically, which desktop WebKit does not always surface to React for number inputs.
+ */
+export async function typeNumber(field: Locator, text: string) {
+  await field.click();
+  await field.press("ControlOrMeta+a");
+  await field.press("Backspace");
+  await field.pressSequentially(text);
+}
+
 export { expect };

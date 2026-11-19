@@ -6,7 +6,7 @@
  */
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { reference } from "@/data";
+import { demoPersona, reference } from "@/data";
 import type { Halalas } from "@/domain/types";
 import { invoice } from "@/i18n/invoice";
 import { useLocale, useMessages } from "@/i18n/locale";
@@ -15,6 +15,7 @@ import { zatcaQrPayload } from "@/lib/invoice/zatca-qr";
 import { useDemo } from "@/store";
 import { useProcurementI18n } from "../procurement/use-procurement-i18n";
 import { Alert, EmptyState, PageHeader, Panel, Table, Td, Th, THead, Tr, buttonClass } from "../ui";
+import { NotYours } from "../procurement/po-detail";
 import { PrintButton } from "./print-button";
 import { ZatcaQrCode } from "./zatca-qr-code";
 
@@ -48,6 +49,10 @@ export function TaxInvoice({ poId, viewer }: { poId: string; viewer: "contractor
         <EmptyState title={m.notFound}>{back}</EmptyState>
       </div>
     );
+  }
+
+  if ((viewer === "supplier" && po.supplierId !== demoPersona.supplier) || (viewer === "contractor" && po.contractorId !== demoPersona.contractor)) {
+    return <NotYours viewer={viewer} />;
   }
 
   const issued = po.timeline.find((e) => e.status === "invoiced");

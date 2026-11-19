@@ -1,4 +1,4 @@
-import { test, expect, tid, enterAs } from "./fixtures";
+import { test, expect, tid, enterAs, typeNumber } from "./fixtures";
 
 // Supplier offer form: a reviewer can start from the 90-day benchmark instead of inventing prices.
 
@@ -13,7 +13,7 @@ test("benchmark placeholders, and one click starts every empty price at its benc
   await expect(tid(page, "offer-summary")).toContainText("SAR 0.00");
 
   // A price the supplier already typed is kept; only empty lines are filled.
-  await prices.nth(1).fill("15.2");
+  await typeNumber(prices.nth(1), "15.2");
   await tid(page, "offer-start-benchmark").click();
   await expect(prices.nth(0)).toHaveValue("3445");
   await expect(prices.nth(1)).toHaveValue("15.2");

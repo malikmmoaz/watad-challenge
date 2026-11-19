@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { test, expect, tid, enterAs } from "./fixtures";
+import { test, expect, tid, enterAs, typeNumber } from "./fixtures";
 
 // Proves the PostHog funnels (#5): every catalogued procurement event fires exactly once per
 // user action, with the typed properties in src/lib/analytics/events.ts, and carries only ids,
@@ -61,7 +61,7 @@ test("procurement funnel: RFQ -> shortlist -> sent", async ({ page }) => {
 test("procurement funnel: offer -> compared -> awarded -> PO with credit -> every status", async ({ page }) => {
   await enterAs(page, "supplier");
   await page.goto("/supplier/rfq/rfq_1044");
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await typeNumber(tid(page, "offer-line-price").nth(0), "3380");
   await tid(page, "offer-line-price").nth(1).fill("15.4");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toBeVisible();
@@ -115,6 +115,8 @@ test("over the credit cap: po_placed says it did not fit", async ({ page }) => {
   await page.reload();
   await tid(page, "offer-row").filter({ hasText: "Rawasi" }).getByTestId("offer-choose").click();
   await expect(tid(page, "po-credit-blocked")).toBeVisible();
+  // Never silent: bank transfer is a choice the contractor makes.
+  await tid(page, "po-pay-bank").check();
   await tid(page, "po-place").click();
   await expect(tid(page, "po-confirmation")).toBeVisible();
   expect(await once(page, "po_placed", ["po_id", "payment_method", "within_credit_cap"])).toMatchObject({ payment_method: "bank_transfer", within_credit_cap: false });
@@ -123,7 +125,7 @@ test("over the credit cap: po_placed says it did not fit", async ({ page }) => {
 test("analytics carry ids, counts and enums only (no names or free text)", async ({ page }) => {
   await enterAs(page, "supplier");
   await page.goto("/supplier/rfq/rfq_1044");
-  await tid(page, "offer-line-price").nth(0).fill("3380");
+  await typeNumber(tid(page, "offer-line-price").nth(0), "3380");
   await tid(page, "offer-submit").click();
   await expect(tid(page, "offer-submitted")).toBeVisible();
   await page.goto("/contractor/rfq/rfq_1044");
@@ -140,7 +142,7 @@ test("credit funnel: apply -> case opened -> checks -> evidence -> decision -> a
   await page.goto("/contractor/credit/apply");
   await expect(tid(page, "credit-apply-form")).toBeVisible();
   expect(await once(page, "credit_application_started", [])).toEqual({});
-  await tid(page, "credit-apply-cap").fill("500000");
+  await tid(page, "credit-apply-cap").fill("2000000");
   await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-sample-docs").click(); // attaching the same files again adds nothing

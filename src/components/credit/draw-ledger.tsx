@@ -51,6 +51,49 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                 {"repaid" in message ? <Alert tone="positive" title={fill(m.repaid, { amount: f.money(message.repaid as Parameters<typeof f.money>[0]) })} /> : <Alert tone="negative" title={message.error} />}
               </div>
             )}
+            {/* Phones: one card per draw (the table needs 880px and would scroll sideways). */}
+            <ul className="divide-y divide-line sm:hidden" aria-label={m.caption}>
+              {rows.map((r) => {
+                const sup = reference.suppliers.find((x) => x.id === r.supplierId);
+                return (
+                  <li key={r.poId} className="space-y-2 p-4 text-sm" data-testid={`credit-draw-${r.poId}`} data-state={r.state}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link href={`/contractor/po/${r.poId}`} className="font-mono text-xs text-stamp underline underline-offset-[3px]">
+                          {r.poId}
+                        </Link>
+                        <p className="text-ink-muted">{(locale === "ar" ? sup?.nameAr : undefined) ?? sup?.name ?? r.supplierId}</p>
+                      </div>
+                      <Badge tone={STATE_TONE[r.state]}>{m.state[r.state]}</Badge>
+                    </div>
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
+                      <dt className="text-ink-muted">{m.colTotal}</dt>
+                      <dd className="text-end tabular-nums">{f.money(r.principal)}</dd>
+                      <dt className="text-ink-muted">{m.colMarkup}</dt>
+                      <dd className="text-end tabular-nums">
+                        {f.money(r.markup)}
+                        <span className="block text-xs text-ink-muted">{fill(m.rateNote, { rate: f.percent(r.profitRate, 2), days: r.tenorDays, apr: f.percent(r.apr, 1) })}</span>
+                      </dd>
+                      <dt className="text-ink-muted">{m.colRepay}</dt>
+                      <dd className="text-end font-semibold tabular-nums text-ink">{f.money(r.totalRepayable)}</dd>
+                      <dt className="text-ink-muted">{m.colDue}</dt>
+                      <dd className="text-end">
+                        {f.date(r.dueDate)}
+                        {r.state !== "repaid" && (
+                          <span className="block text-xs text-ink-muted">{r.daysToDue >= 0 ? fill(m.inDays, { n: r.daysToDue }) : fill(m.daysLate, { n: -r.daysToDue })}</span>
+                        )}
+                      </dd>
+                    </dl>
+                    {!readOnly && r.state !== "repaid" && (
+                      <Button size="sm" className="w-full" onClick={() => repay(r.poId)} aria-label={fill(m.repayLabel, { amount: f.money(r.totalRepayable), po: r.poId })} data-testid={`credit-repay-${r.poId}`}>
+                        {m.repay}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="hidden sm:block">
             <Table caption={m.caption} minWidth={880} className="rounded-none border-0 shadow-none">
               <THead>
                 <tr>
@@ -103,6 +146,7 @@ export function DrawLedger({ contractorId, readOnly = false }: { contractorId: s
                 ))}
               </tbody>
             </Table>
+            </div>
             <p className="border-t border-line px-5 py-3 text-xs text-ink-muted">{m.footnote}</p>
           </div>
         )}

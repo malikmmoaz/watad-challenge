@@ -8,7 +8,7 @@ async function applyAsContractor(page: Page) {
   await enterAs(page, "contractor");
   await tid(page, "contractor-credit-link").click();
   await tid(page, "credit-apply-start").click();
-  await tid(page, "credit-apply-cap").fill("750000");
+  await tid(page, "credit-apply-cap").fill("2000000");
   await tid(page, "credit-apply-purpose").fill("Rebar and ready-mix for Al Narjis Schools Complex, phase 2");
   await tid(page, "credit-apply-sample-docs").click();
   await tid(page, "credit-apply-simah-consent").check();

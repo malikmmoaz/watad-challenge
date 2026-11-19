@@ -40,8 +40,9 @@ for (const locale of ["en", "ar"] as const) {
     await expect(tid(page, "credit-what-if-delta-score")).toContainText(`\u2212${Number(today) - lower}`);
     await expect(tid(page, "credit-what-if-sim-score")).toHaveAttribute("data-move", "worse");
     const after = await box();
-    expect(after.height).toBe(before.height);
-    expect(after.top).toBe(before.top);
+    // Within half a pixel: Firefox reports sub-pixel positions that differ in the last decimals.
+    expect(Math.abs(after.height - before.height)).toBeLessThan(0.5);
+    expect(Math.abs(after.top - before.top)).toBeLessThan(0.5);
 
     // The real decision is untouched.
     await expect(tid(page, "credit-case-status")).toHaveAttribute("data-status", "in_assessment");
