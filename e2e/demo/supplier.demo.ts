@@ -9,9 +9,12 @@ test("3-supplier-offer-and-po", async ({ page }) => {
   await show(page, row, 1200);
   await press(page, row.getByTestId("inbox-open"));
   await beat(page, 1200);
+  // Start from the 90-day benchmark (#159), then undercut it on rebar: the supplier still sets the price.
+  await press(page, tid(page, "offer-start-benchmark"));
+  await beat(page, 1200);
   const prices = page.getByTestId("offer-line-price").filter({ visible: true });
+  await expect(prices.nth(1)).toHaveValue("15.81");
   await type(page, prices.nth(0), "3380");
-  await type(page, prices.nth(1), "15.40");
   await type(page, tid(page, "offer-delivery"), "2500");
   await type(page, tid(page, "offer-lead-time"), "3");
   await show(page, tid(page, "offer-summary"), 2000);
