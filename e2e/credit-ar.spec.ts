@@ -97,14 +97,16 @@ test("apply, request more information, answer it and approve, all in Arabic", as
   await expect(tid(page, "credit-decision")).toContainText("الحد الائتماني");
 });
 
-test("Arabic credit pages have no serious or critical accessibility issues", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const path of ["/contractor/credit", "/contractor/credit/apply", "/credit", "/credit/cases/cc_502"]) {
+// One page per test, each in a fresh tab: with cache components, routes visited earlier stay in
+// the DOM (hidden), and scanning four of them in one tab crashed Firefox.
+for (const path of ["/contractor/credit", "/contractor/credit/apply", "/credit", "/credit/cases/cc_502"]) {
+  test(`Arabic credit page ${path} has no serious or critical accessibility issues`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(path);
     await ready(page);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).exclude("[hidden]").analyze();
     const blocking = violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes[0]?.target}`);
     expect(blocking, `serious/critical a11y issues on ${path} (ar)`).toEqual([]);
-  }
-});
+  });
+}
