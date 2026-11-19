@@ -1,11 +1,256 @@
-/** Supplier portal: inbox, offer (bid) form, awards and POs. Owner: Omar. */
+/**
+ * Supplier portal: matched request, offer (bid) form, awards and POs. Owner: Omar.
+ * Arabic: Modern Standard Arabic in Watad's terms (عروض، الحد الائتماني، أمر شراء، طلب عروض أسعار);
+ * credit is مرابحة with a نسبة الربح, never فائدة. Company names are never translated.
+ * Placeholders: {name}, filled with fill() or <T values>; money and dates come pre-formatted (useFormat).
+ */
 import { defineMessages } from "./core";
 
 export const supplier = defineMessages(
   {
-    home: { title: "Supplier portal" },
+  "request": {
+    "eyebrow": "Supplier · request for quotation",
+    "allRequests": "All requests",
+    "open": "Open for offers",
+    "awarded": "Awarded",
+    "offersClose": "Offers close {when}",
+    "notAvailable": "Request not available",
+    "notInvited": "You were not invited to this request",
+    "notInvitedBody": "The platform shows each supplier only the requests it was matched with or invited to.",
+    "backToRequests": "Back to requests",
+    "whatIsRequested": "What is requested",
+    "deliveryAndPayment": "Delivery and payment",
+    "deliverTo": "Deliver to",
+    "requiredBy": "Required on site by",
+    "preferredTerms": "Preferred terms",
+    "payment": "Payment",
+    "paymentCredit": "From the contractor's approved credit cap: the financier pays you directly, the contractor repays the financier",
+    "paymentDirect": "Paid by the contractor on agreed terms",
+    "whyMatched": "Why you were matched: you stock {categories} and deliver to {city}.",
+    "closed": "Closed"
   },
+  "award": {
+    "chose": "{contractor} chose your offer",
+    "won": "You won this order",
+    "openPo": "Open purchase order",
+    "notSelected": "Not selected this time",
+    "notSelectedBody": "The contractor chose another offer. Thank you for your offer.",
+    "summaryCredit": "{po} · {total} incl. VAT · paid to you directly from the contractor's credit cap once you invoice",
+    "summaryBank": "{po} · {total} incl. VAT · bank transfer on your terms"
+  },
+  "offer": {
+    "sentTitle": "Offer sent to {contractor}",
+    "sentBody": "They compare it side by side with the other invited suppliers. You can revise or withdraw it until they choose.",
+    "theContractor": "the contractor",
+    "yours": "Your offer",
+    "revise": "Revise",
+    "withdraw": "Withdraw",
+    "sentOn": "Sent {when} · valid until {valid}",
+    "lineSummary": "{qty} × {price}",
+    "status": {
+      "submitted": "Sent to contractor",
+      "awarded": "Won",
+      "not_selected": "Not selected",
+      "withdrawn": "Withdrawn",
+      "expired": "Expired"
+    },
+    "terms": "Delivery {delivery} · {days} days · {terms}",
+    "madeInSaudiSuffix": " · Made in Saudi"
+  },
+  "form": {
+    "title": "Your offer (bid)",
+    "intro": "Price the lines you can supply. Leave a price empty to skip a line. Prices are per unit, in SAR excluding VAT. Every invited supplier sees the same request.",
+    "cannotSubmit": "Cannot submit",
+    "benchmark": "{spec} · 90-day benchmark {price} per unit (sample data)",
+    "noBenchmark": "n/a",
+    "unitPrice": "Unit price (SAR)",
+    "quantity": "Quantity you can supply",
+    "availability": "Availability",
+    "stock": {
+      "in_stock": "In stock",
+      "partial": "Partly in stock",
+      "made_to_order": "Made to order"
+    },
+    "brand": "Brand",
+    "alternative": "Offering an alternative to the requested spec",
+    "alternativeHow": "How the alternative differs",
+    "deliveryFee": "Delivery fee for the order (SAR)",
+    "leadTime": "Lead time (days)",
+    "paymentTerms": "Payment terms",
+    "validDays": "Offer valid for (days)",
+    "madeInSaudi": "Made in Saudi (local content)",
+    "madeInSaudiHint": "Counts towards the 10% local-content preference when the contractor ranks offers.",
+    "notes": "Notes for the contractor",
+    "optional": "optional",
+    "summary": "Goods {goods} + delivery {delivery} + 15% VAT {vat} = {total}",
+    "submit": "Submit offer",
+    "vsInLine": "Your goods price is in line with the 90-day benchmark for these quantities. Contractors see this comparison.",
+    "vsAbove": "Your goods price is {pct}% above the 90-day benchmark for these quantities. Contractors see this comparison.",
+    "vsBelow": "Your goods price is {pct}% below the 90-day benchmark for these quantities. Contractors see this comparison."
+  },
+  "errors": {
+    "linesNone": "Enter a unit price for at least one line.",
+    "notInRequest": "This line is not in the request.",
+    "price": "Enter a price of 0 or more.",
+    "quantity": "Enter the quantity you can supply.",
+    "atMost": "At most the {qty} requested.",
+    "brand": "Name the brand you will supply.",
+    "alternative": "Say how the alternative differs from the spec.",
+    "deliveryFee": "Enter a delivery fee of 0 or more.",
+    "leadTime": "Lead time is 1 to 120 whole days.",
+    "validDays": "Valid for 1 to 60 days.",
+    "requestNotFound": "Request not found.",
+    "notInvited": "You were not invited to this request.",
+    "alreadyAwarded": "The contractor has already awarded this request.",
+    "notOpen": "This request is not open for offers."
+  },
+  "pos": {
+    "title": "Purchase orders",
+    "intro": "Orders you won. Accept, dispatch and invoice from here; credit orders are paid to you directly once you invoice.",
+    "empty": "No purchase orders yet",
+    "emptyBody": "When a contractor chooses your offer, the purchase order appears here for you to accept.",
+    "caption": "Your purchase orders",
+    "po": "Purchase order",
+    "status": "Status",
+    "nextStep": "Your next step",
+    "total": "Total incl. VAT",
+    "placed": "Placed {when}",
+    "payCredit": "Pay with credit",
+    "payBank": "Bank transfer",
+    "waitDelivery": "Waiting for the contractor to confirm delivery",
+    "waitTransfer": "Waiting for the contractor's bank transfer",
+    "paidFromCap": "Paid to you directly from the contractor's credit cap",
+    "paid": "Paid",
+    "cancelled": "Cancelled",
+    "waitContractor": "Waiting for the contractor",
+    "needsYou": " · {n} need you",
+    "needsYouOne": " · 1 needs you"
+  },
+  "home": {
+    "title": "Supplier portal"
+  }
+},
   {
-    home: { title: "بوابة المورّد" },
+  "request": {
+    "eyebrow": "المورّد · طلب عروض أسعار",
+    "allRequests": "كل الطلبات",
+    "open": "مفتوح لتلقي العروض",
+    "awarded": "تمت الترسية",
+    "offersClose": "تُغلق العروض {when}",
+    "notAvailable": "الطلب غير متاح",
+    "notInvited": "لم تُدعَ إلى هذا الطلب",
+    "notInvitedBody": "تعرض المنصة لكل مورّد الطلبات التي طابقته أو دُعي إليها فقط.",
+    "backToRequests": "العودة إلى الطلبات",
+    "whatIsRequested": "المطلوب",
+    "deliveryAndPayment": "التسليم والدفع",
+    "deliverTo": "التسليم إلى",
+    "requiredBy": "مطلوب في الموقع بتاريخ",
+    "preferredTerms": "الشروط المفضّلة",
+    "payment": "الدفع",
+    "paymentCredit": "من الحد الائتماني المعتمد للمقاول: تدفع لك جهة التمويل مباشرة، ويسدّد المقاول لجهة التمويل",
+    "paymentDirect": "يدفع المقاول وفق الشروط المتفق عليها",
+    "whyMatched": "سبب المطابقة: توفّر {categories} وتسلّم إلى {city}.",
+    "closed": "مغلق"
   },
+  "award": {
+    "chose": "اختارت {contractor} عرضك",
+    "won": "رسا عليك هذا الطلب",
+    "openPo": "فتح أمر الشراء",
+    "notSelected": "لم يُختَر عرضك هذه المرة",
+    "notSelectedBody": "اختار المقاول عرضًا آخر. شكرًا لتقديم عرضك.",
+    "summaryCredit": "{po} · {total} شامل الضريبة · يُدفع لك مباشرة من الحد الائتماني للمقاول بعد إصدار الفاتورة",
+    "summaryBank": "{po} · {total} شامل الضريبة · تحويل بنكي وفق شروطك"
+  },
+  "offer": {
+    "sentTitle": "أُرسل العرض إلى {contractor}",
+    "sentBody": "يقارنه المقاول جنبًا إلى جنب مع عروض الموردين المدعوين الآخرين، ويمكنك تعديله أو سحبه حتى يختار.",
+    "theContractor": "المقاول",
+    "yours": "عرضك",
+    "revise": "تعديل",
+    "withdraw": "سحب",
+    "sentOn": "أُرسل {when} · صالح حتى {valid}",
+    "lineSummary": "{qty} × {price}",
+    "status": {
+      "submitted": "أُرسل إلى المقاول",
+      "awarded": "رسا عليك",
+      "not_selected": "لم يُختَر",
+      "withdrawn": "مسحوب",
+      "expired": "منتهي"
+    },
+    "terms": "التوصيل {delivery} · {days} يوم · {terms}",
+    "madeInSaudiSuffix": " · صنع في السعودية"
+  },
+  "form": {
+    "title": "عرضك (العطاء)",
+    "intro": "سعّر البنود التي يمكنك توريدها، واترك السعر فارغًا لتخطي أي بند. الأسعار للوحدة بالريال السعودي دون ضريبة القيمة المضافة، ويرى كل الموردين المدعوين الطلب نفسه.",
+    "cannotSubmit": "تعذّر الإرسال",
+    "benchmark": "{spec} · السعر المرجعي لآخر 90 يومًا {price} للوحدة (بيانات تجريبية)",
+    "noBenchmark": "غير متاح",
+    "unitPrice": "سعر الوحدة (ريال)",
+    "quantity": "الكمية التي يمكنك توريدها",
+    "availability": "التوفر",
+    "stock": {
+      "in_stock": "متوفر",
+      "partial": "متوفر جزئيًا",
+      "made_to_order": "حسب الطلب"
+    },
+    "brand": "العلامة التجارية",
+    "alternative": "أقدّم بديلًا للمواصفات المطلوبة",
+    "alternativeHow": "وجه اختلاف البديل",
+    "deliveryFee": "رسوم التوصيل للطلب (ريال)",
+    "leadTime": "مدة التوريد (أيام)",
+    "paymentTerms": "شروط الدفع",
+    "validDays": "مدة صلاحية العرض (أيام)",
+    "madeInSaudi": "صنع في السعودية (محتوى محلي)",
+    "madeInSaudiHint": "يُحتسب ضمن أفضلية المحتوى المحلي 10% عند ترتيب المقاول للعروض.",
+    "notes": "ملاحظات للمقاول",
+    "optional": "اختياري",
+    "summary": "المواد {goods} + التوصيل {delivery} + الضريبة 15% {vat} = {total}",
+    "submit": "إرسال العرض",
+    "vsInLine": "سعر المواد في عرضك متماشٍ مع السعر المرجعي لآخر 90 يومًا لهذه الكميات. ويرى المقاولون هذه المقارنة.",
+    "vsAbove": "سعر المواد في عرضك أعلى من السعر المرجعي لآخر 90 يومًا لهذه الكميات بنسبة {pct}٪. ويرى المقاولون هذه المقارنة.",
+    "vsBelow": "سعر المواد في عرضك أقل من السعر المرجعي لآخر 90 يومًا لهذه الكميات بنسبة {pct}٪. ويرى المقاولون هذه المقارنة."
+  },
+  "errors": {
+    "linesNone": "أدخِل سعر الوحدة لبند واحد على الأقل.",
+    "notInRequest": "هذا البند غير موجود في الطلب.",
+    "price": "أدخِل سعرًا يساوي صفرًا أو أكثر.",
+    "quantity": "أدخِل الكمية التي يمكنك توريدها.",
+    "atMost": "بحد أقصى {qty} كما هو مطلوب.",
+    "brand": "حدّد العلامة التجارية التي ستورّدها.",
+    "alternative": "وضّح كيف يختلف البديل عن المواصفات.",
+    "deliveryFee": "أدخِل رسوم توصيل تساوي صفرًا أو أكثر.",
+    "leadTime": "مدة التوريد من 1 إلى 120 يومًا كاملًا.",
+    "validDays": "صلاحية العرض من 1 إلى 60 يومًا.",
+    "requestNotFound": "الطلب غير موجود.",
+    "notInvited": "لم تُدعَ إلى هذا الطلب.",
+    "alreadyAwarded": "رسّى المقاول هذا الطلب مسبقًا.",
+    "notOpen": "هذا الطلب غير مفتوح لتلقي العروض."
+  },
+  "pos": {
+    "title": "أوامر الشراء",
+    "intro": "الطلبات التي رست عليك. اقبلها واشحنها وأصدر فواتيرها من هنا؛ وتُدفع لك طلبات الائتمان مباشرة بعد إصدار الفاتورة.",
+    "empty": "لا توجد أوامر شراء بعد",
+    "emptyBody": "عندما يختار مقاول عرضك، يظهر أمر الشراء هنا لتقبله.",
+    "caption": "أوامر الشراء الخاصة بك",
+    "po": "أمر الشراء",
+    "status": "الحالة",
+    "nextStep": "خطوتك التالية",
+    "total": "الإجمالي شامل الضريبة",
+    "placed": "صدر في {when}",
+    "payCredit": "الدفع بالائتمان",
+    "payBank": "تحويل بنكي",
+    "waitDelivery": "بانتظار تأكيد المقاول للاستلام",
+    "waitTransfer": "بانتظار التحويل البنكي من المقاول",
+    "paidFromCap": "دُفع لك مباشرة من الحد الائتماني للمقاول",
+    "paid": "مدفوع",
+    "cancelled": "ملغى",
+    "waitContractor": "بانتظار المقاول",
+    "needsYou": " · {n} بانتظارك",
+    "needsYouOne": " · 1 بانتظارك"
+  },
+  "home": {
+    "title": "بوابة المورّد"
+  }
+},
 );
