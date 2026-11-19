@@ -1,3 +1,4 @@
+import { EN, fill, type CreditLang } from './lang';
 import type { CheckId, CheckResult, ConsistencyResult, CreditProfile, DocKey, FailKind } from './types';
 
 export const VAT_RATE = 0.15;
@@ -5,12 +6,12 @@ export const VAT_RATE = 0.15;
 /** Deviation thresholds between VAT-declared revenue and the other two sources. */
 export const CONSISTENCY = { minorGap: 0.15, inconsistent: 0.35 } as const;
 
-const CHECK_META: Record<CheckId, { label: string; order: number; costSar: number; evidence: DocKey[] }> = {
-  cr: { label: 'Commercial Registration', order: 1, costSar: 0, evidence: ['cr'] },
-  vat: { label: 'ZATCA VAT returns', order: 2, costSar: 5, evidence: ['vat_returns'] },
-  bank: { label: 'Bank statements', order: 3, costSar: 15, evidence: ['bank_statements', 'vat_returns'] },
-  financials: { label: 'Audited financials (Qawaem)', order: 4, costSar: 25, evidence: ['financials_qawaem', 'vat_returns'] },
-  simah: { label: 'SIMAH credit report', order: 5, costSar: 60, evidence: ['simah_report'] },
+const CHECK_META: Record<CheckId, { order: number; costSar: number; evidence: DocKey[] }> = {
+  cr: { order: 1, costSar: 0, evidence: ['cr'] },
+  vat: { order: 2, costSar: 5, evidence: ['vat_returns'] },
+  bank: { order: 3, costSar: 15, evidence: ['bank_statements', 'vat_returns'] },
+  financials: { order: 4, costSar: 25, evidence: ['financials_qawaem', 'vat_returns'] },
+  simah: { order: 5, costSar: 60, evidence: ['simah_report'] },
 };
 
 export const CHECK_ORDER: CheckId[] = ['cr', 'vat', 'bank', 'financials', 'simah'];
@@ -52,61 +53,60 @@ interface Outcome {
 const fail = (failKind: FailKind, finding: string): Outcome => ({ status: 'fail', failKind, findings: [finding] });
 const fromFlags = (flags: string[], ok: string): Outcome =>
   flags.length > 0 ? { status: 'flag', findings: flags } : { status: 'pass', findings: [ok] };
-const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
-type Runner = (c: CreditProfile, asOf: string) => Outcome;
+type Runner = (c: CreditProfile, asOf: string, L: CreditLang) => Outcome;
 
 const RUNNERS: Record<CheckId, Runner> = {
-  cr: (c, asOf) => {
-    if (!c.cr || !c.documentsProvided.includes('cr')) return fail('incomplete', 'Commercial Registration not provided.');
-    if (c.cr.status !== 'active') return fail('adverse', `Commercial Registration is ${c.cr.status}.`);
+  cr: (c, asOf, { m }) => {
+    if (!c.cr || !c.documentsProvided.includes('cr')) return fail('incomplete', m.checks.crMissing);
+    if (c.cr.status !== 'active') return fail('adverse', fill(m.checks.crStatus, { status: c.cr.status }));
     const days = daysBetween(asOf, c.cr.expiresOn);
-    if (days < 0) return fail('adverse', 'Commercial Registration has expired.');
-    return fromFlags(days < 60 ? [`CR expires in ${days} days.`] : [], 'CR active and in date.');
+    if (days < 0) return fail('adverse', m.checks.crExpired);
+    return fromFlags(days < 60 ? [fill(m.checks.crExpiresIn, { days })] : [], m.checks.crOk);
   },
-  vat: (c) => {
-    if (!c.vat || !c.documentsProvided.includes('vat_returns')) return fail('incomplete', 'VAT returns not provided.');
-    if (!c.vat.registered) return fail('adverse', 'Not registered for VAT with ZATCA.');
+  vat: (c, _asOf, { m }) => {
+    if (!c.vat || !c.documentsProvided.includes('vat_returns')) return fail('incomplete', m.checks.vatMissing);
+    if (!c.vat.registered) return fail('adverse', m.checks.vatNotRegistered);
     return fromFlags(
-      c.vat.lateFilings >= 2 ? [`${c.vat.lateFilings} late VAT filings in the last 12 months.`] : [],
-      'VAT registered, filings on time.',
+      c.vat.lateFilings >= 2 ? [fill(m.checks.vatLate, { n: c.vat.lateFilings })] : [],
+      m.checks.vatOk,
     );
   },
-  bank: (c) => {
-    if (!c.bank || !c.documentsProvided.includes('bank_statements')) return fail('incomplete', 'Bank statements not provided.');
-    if (c.bank.monthsProvided < 6) return fail('incomplete', `Only ${c.bank.monthsProvided} months of statements; 6 required.`);
+  bank: (c, _asOf, { m, pct }) => {
+    if (!c.bank || !c.documentsProvided.includes('bank_statements')) return fail('incomplete', m.checks.bankMissing);
+    if (c.bank.monthsProvided < 6) return fail('incomplete', fill(m.checks.bankMonths, { n: c.bank.monthsProvided }));
     const dev = checkConsistency(c).bankVsVatDeviation ?? 0;
     if (dev > CONSISTENCY.inconsistent)
-      return fail('incomplete', `Bank inflows differ from VAT-declared revenue by ${pct(dev)}; explanation required.`);
+      return fail('incomplete', fill(m.checks.bankGapFail, { pct: pct(dev) }));
     const flags: string[] = [];
-    if (dev > CONSISTENCY.minorGap) flags.push(`Bank inflows differ from VAT-declared revenue by ${pct(dev)}.`);
-    if (c.bank.returnedCheques >= 3) flags.push(`${c.bank.returnedCheques} returned cheques in the period.`);
-    if (c.bank.negativeBalanceDays > 15) flags.push(`${c.bank.negativeBalanceDays} days overdrawn.`);
-    return fromFlags(flags, 'Statements complete; inflows reconcile with VAT returns.');
+    if (dev > CONSISTENCY.minorGap) flags.push(fill(m.checks.bankGap, { pct: pct(dev) }));
+    if (c.bank.returnedCheques >= 3) flags.push(fill(m.checks.bankReturned, { n: c.bank.returnedCheques }));
+    if (c.bank.negativeBalanceDays > 15) flags.push(fill(m.checks.bankOverdrawn, { n: c.bank.negativeBalanceDays }));
+    return fromFlags(flags, m.checks.bankOk);
   },
-  financials: (c) => {
+  financials: (c, _asOf, { m, pct }) => {
     if (!c.financials || !c.documentsProvided.includes('financials_qawaem'))
-      return fail('incomplete', 'Financial statements not provided.');
+      return fail('incomplete', m.checks.finMissing);
     const dev = checkConsistency(c).financialsVsVatDeviation ?? 0;
     if (dev > CONSISTENCY.inconsistent)
-      return fail('incomplete', `Reported revenue differs from VAT-declared revenue by ${pct(dev)}; explanation required.`);
-    if (c.financials.netWorthSar <= 0) return fail('adverse', 'Negative net worth.');
+      return fail('incomplete', fill(m.checks.finGapFail, { pct: pct(dev) }));
+    if (c.financials.netWorthSar <= 0) return fail('adverse', m.checks.finNegativeWorth);
     const flags: string[] = [];
-    if (dev > CONSISTENCY.minorGap) flags.push(`Reported revenue differs from VAT-declared revenue by ${pct(dev)}.`);
-    if (!c.financials.audited) flags.push('Financial statements are not audited.');
-    if (c.financials.netProfitSar < 0) flags.push('Net loss in the latest year.');
-    return fromFlags(flags, 'Audited financials reconcile with VAT returns.');
+    if (dev > CONSISTENCY.minorGap) flags.push(fill(m.checks.finGap, { pct: pct(dev) }));
+    if (!c.financials.audited) flags.push(m.checks.finUnaudited);
+    if (c.financials.netProfitSar < 0) flags.push(m.checks.finLoss);
+    return fromFlags(flags, m.checks.finOk);
   },
-  simah: (c) => {
-    if (!c.simah.consent) return fail('incomplete', 'SIMAH consent not given.');
-    if (!c.simah.report) return fail('incomplete', 'SIMAH report not yet retrieved.');
+  simah: (c, _asOf, { m, sarShort }) => {
+    if (!c.simah.consent) return fail('incomplete', m.checks.simahNoConsent);
+    if (!c.simah.report) return fail('incomplete', m.checks.simahNotRetrieved);
     const r = c.simah.report;
     if (r.unsettledDefaultSar > 0)
-      return fail('adverse', `Unsettled SIMAH default of SAR ${r.unsettledDefaultSar.toLocaleString('en-US')}.`);
+      return fail('adverse', fill(m.checks.simahDefault, { amount: sarShort(r.unsettledDefaultSar) }));
     const flags: string[] = [];
-    if (r.score < 600) flags.push(`SIMAH score ${r.score} is below 600.`);
-    if (r.delinquencies12m > 0) flags.push(`${r.delinquencies12m} delinquencies in the last 12 months.`);
-    return fromFlags(flags, `SIMAH score ${r.score}, no defaults.`);
+    if (r.score < 600) flags.push(fill(m.checks.simahLowScore, { score: r.score }));
+    if (r.delinquencies12m > 0) flags.push(fill(m.checks.simahDelinquencies, { n: r.delinquencies12m }));
+    return fromFlags(flags, fill(m.checks.simahOk, { score: r.score }));
   },
 };
 
@@ -114,14 +114,14 @@ const RUNNERS: Record<CheckId, Runner> = {
  * Runs the checks cheapest first and stops at the first failure: later, more
  * expensive checks (SIMAH last) are reported as skipped rather than paid for.
  */
-export function runGatedChecks(c: CreditProfile, asOf: string): CheckResult[] {
+export function runGatedChecks(c: CreditProfile, asOf: string, L: CreditLang = EN): CheckResult[] {
   let gateClosed = false;
   return CHECK_ORDER.map((id) => {
-    const meta = { id, ...CHECK_META[id] };
+    const meta = { id, label: L.m.checks.label[id], ...CHECK_META[id] };
     if (gateClosed) {
-      return { ...meta, costSar: 0, status: 'skipped' as const, findings: ['Not run: an earlier check failed.'] };
+      return { ...meta, costSar: 0, status: 'skipped' as const, findings: [L.m.checks.notRunEarlierFailed] };
     }
-    const outcome = RUNNERS[id](c, asOf);
+    const outcome = RUNNERS[id](c, asOf, L);
     if (outcome.status === 'fail') gateClosed = true;
     return { ...meta, ...outcome };
   });

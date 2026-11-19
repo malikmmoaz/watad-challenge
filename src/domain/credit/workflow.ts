@@ -8,6 +8,7 @@ import type { CreditCase, CreditDecision, EvidenceRef, CreditDecisionOutcome, Cr
 import { assessCase } from "./engine";
 import { PROFIT_RATE_PER_30_DAYS } from "./murabaha";
 import { simulateDocuments, toAiProposal, toGates, toScorecard } from "./to-case";
+import type { CreditLang } from "./lang";
 import type { Assessment, CreditProfile } from "./types";
 
 /** Runs documents, gated checks, scorecard and the AI proposal; the case moves to review. */
@@ -125,5 +126,23 @@ export function decide(c: CreditCase, d: DecisionInput, now: string, current?: C
       approvedAt: now,
       reviewDue: addDays(now, 182),
     },
+  };
+}
+
+/**
+ * The engine's text for a case in another language. Checks store English; the
+ * screens re-run the same deterministic assessment (same profile, request and
+ * date the checks ran) in the reader's language. Null when the case has not
+ * been scored by the engine (hand-written seed cases keep their stored text).
+ */
+export function localizedAssessment(c: CreditCase, profile: CreditProfile | undefined, L: CreditLang) {
+  const ran = [...c.log].reverse().find((l) => l.action === "Gated checks run (simulated)");
+  if (!profile || !ran || !c.scorecard) return null;
+  const p: CreditProfile = { ...profile, id: c.id, request: { capSar: c.requestedCap / 100, tenorDays: c.requestedTenorDays } };
+  const assessment = assessCase(p, ran.at.slice(0, 10), L);
+  return {
+    gates: toGates(assessment),
+    scorecard: toScorecard(assessment, L),
+    memo: toAiProposal(p, assessment, L).memo,
   };
 }
