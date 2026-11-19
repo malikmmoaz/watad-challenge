@@ -47,9 +47,9 @@ export function RtlSpecimen() {
         <tbody>
           {(
             [
-              ["رواسي لتجارة مواد البناء", 56099300, 4, 96, "recommended"],
-              ["سواري لتوزيع الحديد والإسمنت", 50744325, 7, 88, "default"],
-              ["خليج للاستيراد", 53433600, 16, 45, "default"],
+              ["رواسي لتجارة مواد البناء", 48816925, 4, 96, "recommended"],
+              ["سواري لتوزيع الحديد والإسمنت", 44295700, 7, 88, "default"],
+              ["خليج للاستيراد", 46605475, 16, 45, "default"],
             ] as const
           ).map(([name, cost, days, score, state]) => (
             <Tr key={name} state={state}>
