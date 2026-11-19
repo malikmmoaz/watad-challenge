@@ -1,9 +1,11 @@
 # Handoff: Noor (QA & demo)
 
-Updated 18 Nov 16:15 UTC.
+Updated 19 Nov 03:45 UTC.
 
-- **#16 checklist:** pass 2 on production recorded in `docs/BRIEF-CHECKLIST.md` (84/90). Open bugs: #46, #47 (Omar), #55 (Omar + Hana); dashboards for reviewers (#4/#5, Tariq).
-- **#15 e2e:** suite on main covers smoke, contractor RFQ (upload + catalog), credit application. PR #40 adds the full credit loop (apply → request more info → reply → approve); needs a review and merge.
-- **Next:** pass 2 after #46–#48 and #17 land; then the reviewer walkthrough (`docs/WALKTHROUGH.md` + in-app tour text) and the How-this-was-built page with Safina (hours 13–21).
-- **Running e2e on srv1041554:** see `e2e/README.md`. Against production: `PLAYWRIGHT_BASE_URL=https://watad-challenge.vercel.app pnpm exec playwright test <file>`; run one or two files at a time to stay under the 30 s local_exec limit.
-- **Gotchas:** `cacheComponents` keeps hidden routes in the DOM, so use `tid()`. The store hydrates from localStorage after first paint, so wait for elements instead of counting right after a reload. Never `pkill -f` a pattern that appears in your own command line.
+- **Never run automated tests against production** (Vercel Security Checkpoint incident, see `docs/incidents.md`). The Playwright config refuses it. Use a local production build (the default) or a PR preview. The final pre-freeze production check is one manual browser visit.
+- **#16 checklist:** pass 5 (Arabic gate) is on main: 97/98 rows in `docs/BRIEF-CHECKLIST.md`; G7 is the only ⚠️ (#4).
+- **Demo clips:** 5 clips in `docs/demo` (4 roles + Arabic), recorded by the `demo-videos` workflow on a local build (#145). Re-record with that workflow if a filmed screen changes.
+- **#15 e2e:** activity feed (`activity.spec.ts`, Omar), tax invoice and print (`invoice.spec.ts`, Omar) and what-if (`credit-what-if.spec.ts`, Hana, #144) have their own specs. Branch `test/15-tonight-features` adds the PO and supplier invoice pages to `e2e/pages.ts` (axe, RTL, untranslated sweep). To do: the opened what-if panel in the Arabic 320/390 overflow check after #144 merges.
+- **Cross-browser:** dispatch `cross-browser.yml` with an empty `base_url` (local build) after the last feature merges, by 10:00 UTC; update "Browsers tested" in the checklist.
+- **Running e2e on srv1041554:** `. ~/watad-team/env.sh` (this cd's into the SHARED `~/watad-team/repo`; `cd ~/watad-team/wt/noor || exit 1` before any git command). Chromium needs `LD_LIBRARY_PATH=~/watad-team/.cache/chromium-libs/root/usr/lib/x86_64-linux-gnu`. Use `E2E_PORT=3112` (ports 3100-3199).
+- **Gotchas:** `cacheComponents` keeps hidden routes in the DOM, so use `tid()`. The store hydrates from localStorage after first paint. In Arabic, `ready()` waits for an Arabic header. Never `pkill -f` a pattern in your own command line; kill by port.
